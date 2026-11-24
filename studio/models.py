@@ -91,7 +91,7 @@ class TestRun(models.Model):
     finished_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        indexes = [models.Index(fields=["organization", "-started_at"])]
+        indexes = [models.Index(fields=["organization", "-started_at"], name="studio_test_organiz_6ce6cf_idx")]
         constraints = [models.CheckConstraint(condition=Q(status__in=["pending", "passed", "failed", "inconclusive", "error"]), name="valid_run_status")]
 
     def clean(self):
@@ -113,4 +113,4 @@ class AuditEvent(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        indexes = [models.Index(fields=["organization", "-created_at"])]
+        indexes = [models.Index(fields=["organization", "-created_at"], name="studio_audi_organiz_7a1263_idx")]
