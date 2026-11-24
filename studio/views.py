@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction, connection
+from django.db.models import Count, Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
@@ -65,6 +66,7 @@ def create_organization(request):
 def organization(request, slug):
     member = membership_for(request, slug)
     projects = Project.objects.filter(organization=member.organization).order_by("-created_at")
+    projects = projects.annotate(scenario_count=Count("scenarios", distinct=True))
     return render(request, "studio/organization.html", {"member": member, "projects": projects})
 
 
@@ -81,15 +83,18 @@ def create_project(request, slug):
             return redirect("studio:project", slug=slug, project_id=project.pk)
     else:
         form = ProjectForm()
-    return render(request, "studio/form.html", {"form": form, "heading": "New project", "member": member})
+    return render(request, "studio/form.html", {"form": form, "heading": "New project", "member": member, "form_type": "project"})
 
 
 @login_required
 def project(request, slug, project_id):
     member = membership_for(request, slug)
     item = get_object_or_404(Project, pk=project_id, organization=member.organization)
-    scenarios = Scenario.objects.filter(project=item, organization=member.organization).order_by("-created_at")
-    return render(request, "studio/project.html", {"member": member, "project": item, "scenarios": scenarios})
+    scenarios = Scenario.objects.filter(project=item, organization=member.organization).annotate(run_count=Count("runs")).order_by("-created_at")
+    runs = TestRun.objects.filter(organization=member.organization, scenario__project=item).select_related("scenario").order_by("-started_at")[:8]
+    total_runs = TestRun.objects.filter(organization=member.organization, scenario__project=item)
+    metrics = {"total": total_runs.count(), "passed": total_runs.filter(status="passed").count(), "failed": total_runs.filter(status="failed").count(), "pending": total_runs.filter(status="pending").count()}
+    return render(request, "studio/project.html", {"member": member, "project": item, "scenarios": scenarios, "recent_runs": runs, "metrics": metrics})
 
 
 @login_required
@@ -111,7 +116,7 @@ def create_scenario(request, slug, project_id):
                 return redirect("studio:project", slug=slug, project_id=project_id)
     else:
         form = ScenarioForm(initial={"input_data": {}, "expected": {"status": "ok"}})
-    return render(request, "studio/form.html", {"form": form, "heading": "New test scenario", "member": member})
+    return render(request, "studio/form.html", {"form": form, "heading": "New test scenario", "member": member, "form_type": "scenario", "project": item})
 
 
 @login_required
@@ -133,8 +138,13 @@ def start_run(request, slug, scenario_id):
 def run_detail(request, slug, run_id):
     member = membership_for(request, slug)
     run = get_object_or_404(TestRun.objects.select_related("scenario"), pk=run_id, organization=member.organization)
+    comparison = []
+    for key, expected in run.expected_snapshot.items():
+        present = key in run.observed
+        actual = run.observed.get(key)
+        comparison.append({"field": key, "expected": expected, "actual": actual, "present": present, "matches": present and actual == expected})
     return render(request, "studio/run.html", {
-        "member": member, "run": run,
+        "member": member, "run": run, "comparison": comparison,
         "expected_pretty": json.dumps(run.expected_snapshot, indent=2),
         "observed_pretty": json.dumps(run.observed, indent=2),
         "evidence_pretty": json.dumps(run.evidence, indent=2),

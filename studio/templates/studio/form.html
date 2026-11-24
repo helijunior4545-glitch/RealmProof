@@ -1,4 +1,45 @@
 {% extends "studio/base.html" %}
 {% block title %}{{ heading }}{% endblock %}
-{% block content %}<div class="narrow"><span class="eyebrow">WORKSPACE / CREATE</span><h1>{{ heading }}</h1><p class="muted">Define what you intend to verify before starting a run.</p>
-<div class="panel"><form method="post">{% csrf_token %}{{ form.as_p }}<button class="button primary">Save</button></form></div></div>{% endblock %}
+{% block context_label %}STUDIO / NEW {{ form_type|upper }}{% endblock %}
+{% block content %}
+<div class="breadcrumbs"><a href="{% url 'studio:dashboard' %}">Overview</a><span>/</span><a href="{% url 'studio:organization' member.organization.slug %}">{{ member.organization.name }}</a><span>/</span>{% if project %}<a href="{% url 'studio:project' member.organization.slug project.pk %}">{{ project.name }}</a><span>/</span>{% endif %}<span>{{ heading }}</span></div>
+{% if form_type == "scenario" %}
+  <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> SCENARIO BUILDER</div><h1>Start with intent.</h1><p class="lede">Create a reproducible contract test in three focused steps. Advanced inputs remain accessible without clutter.</p></div><span class="outline-chip">03 STEPS</span></div>
+  <div class="builder-layout" data-scenario-builder>
+    <aside class="builder-rail" aria-label="Scenario steps">
+      <div class="builder-rail-title">TEST DESIGN</div>
+      <button class="builder-step is-active" type="button" data-step-link="0"><span class="step-number">01</span><span><strong>Intent</strong><small>Choose the behavior</small></span></button>
+      <button class="builder-step" type="button" data-step-link="1"><span class="step-number">02</span><span><strong>Inputs</strong><small>Define initial state</small></span></button>
+      <button class="builder-step" type="button" data-step-link="2"><span class="step-number">03</span><span><strong>Assertions</strong><small>Set expected outcome</small></span></button>
+      <div class="rail-tip"><span class="tip-icon">⌁</span><strong>Keep the hypothesis visible</strong><p>What should happen matters more than which buttons you press.</p></div>
+    </aside>
+    <form method="post" class="builder-form panel" data-wizard-form>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="notice error-note">{{ form.non_field_errors }}</div>{% endif %}
+      <section class="wizard-page" data-step-panel="0">
+        <div class="eyebrow">STEP 01 / INTENT</div><h2>What behavior should be verified?</h2><p class="helper">Pick a test category and describe the outcome in plain English.</p>
+        <div class="field">{{ form.name.label_tag }}{{ form.name }}{{ form.name.errors }}</div>
+        <div class="field">{{ form.family.label_tag }}{{ form.family }}{{ form.family.errors }}</div>
+        <div class="field">{{ form.objective.label_tag }}{{ form.objective }}{% if form.objective.help_text %}<p class="field-help">{{ form.objective.help_text }}</p>{% endif %}{{ form.objective.errors }}</div>
+        <div class="preset-section"><span class="eyebrow">START FROM AN EXAMPLE</span><div class="presets"><button type="button" class="preset" data-preset="insufficient">Insufficient balance ↗</button><button type="button" class="preset" data-preset="permission">Unauthorized action ↗</button><button type="button" class="preset" data-preset="valid">Valid transfer ↗</button></div><p class="field-help">Examples only prefill the form; they do not execute a contract.</p></div>
+      </section>
+      <section class="wizard-page" data-step-panel="1">
+        <div class="eyebrow">STEP 02 / PREPARE</div><h2>What is the initial state?</h2><p class="helper">Provide a JSON object containing inputs and the starting state used by your scenario.</p>
+        <div class="field">{{ form.input_data.label_tag }}{{ form.input_data }}{{ form.input_data.errors }}<p class="field-help">{{ form.input_data.help_text }}</p></div>
+        <div class="json-feedback" data-json-feedback="id_input_data" aria-live="polite"></div>
+        <div class="inline-note">This version stores input definitions. Automatic Gno execution is not connected yet.</div>
+      </section>
+      <section class="wizard-page" data-step-panel="2">
+        <div class="eyebrow">STEP 03 / VERIFY</div><h2>What outcome proves success?</h2><p class="helper">Write the assertions you expect to hold. A rejected transaction can be a passing test.</p>
+        <div class="field">{{ form.expected.label_tag }}{{ form.expected }}{{ form.expected.errors }}<p class="field-help">{{ form.expected.help_text }}</p></div>
+        <div class="json-feedback" data-json-feedback="id_expected" aria-live="polite"></div>
+        <div class="assertion-guide"><strong>Remember the distinction</strong><div><span>Execution status</span><code>reverted</code></div><div><span>Assertion verdict</span><code class="code-success">passed</code></div><p>It is a pass when the observed outcome matches the intended assertion.</p></div>
+      </section>
+      <div class="wizard-actions"><button type="button" class="button secondary" data-wizard-back hidden>← Back</button><span class="step-counter" data-step-count>STEP 1 OF 3</span><button class="button primary" type="button" data-wizard-next>Continue →</button><button class="button primary" type="submit" data-wizard-submit hidden>Save scenario →</button></div>
+    </form>
+  </div>
+{% else %}
+  <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> PROJECT CONFIGURATION</div><h1>{{ heading }}</h1><p class="lede">Organize related scenarios into one focused verification project.</p></div></div>
+  <section class="panel form-panel"><form method="post">{% csrf_token %}{{ form.as_p }}<div class="form-actions"><button type="submit" class="button primary">Create project →</button></div></form></section>
+{% endif %}
+{% endblock %}

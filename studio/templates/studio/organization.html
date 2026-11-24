@@ -1,12 +1,20 @@
 {% extends "studio/base.html" %}
 {% block title %}{{ member.organization.name }}{% endblock %}
+{% block context_label %}WORKSPACES / {{ member.organization.name|upper }}{% endblock %}
 {% block content %}
-<div class="heading"><div><span class="eyebrow">ORGANIZATION / {{ member.role|upper }}</span><h1>{{ member.organization.name }}</h1><p class="muted">Projects and evidence are scoped to this organization.</p></div>
-{% if member.role != "viewer" %}<a class="button primary" href="{% url 'studio:create_project' member.organization.slug %}">+ New project</a>{% endif %}</div>
-<div class="section-title">Projects</div>
-<div class="cards">
+<div class="breadcrumbs"><a href="{% url 'studio:dashboard' %}">Overview</a><span>/</span><span>{{ member.organization.name }}</span></div>
+<div class="page-heading">
+  <div><div class="eyebrow"><span class="eyebrow-line"></span> ORGANIZATION · {{ member.role|upper }}</div><h1>{{ member.organization.name }}</h1><p class="lede">One workspace. Focused projects. Fully scoped scenarios and evidence.</p></div>
+  {% if member.role != "viewer" %}<a class="button primary" href="{% url 'studio:create_project' member.organization.slug %}">+ Create project</a>{% endif %}
+</div>
+<div class="section-heading"><div><span class="eyebrow">YOUR PROJECTS</span><h2>Projects <span class="count-chip">{{ projects|length }}</span></h2></div></div>
+<div class="workspace-grid">
 {% for project in projects %}
-<a class="card" href="{% url 'studio:project' member.organization.slug project.pk %}"><span class="card-symbol">◇</span><strong>{{ project.name }}</strong><small>{{ project.description|default:"No description"|truncatechars:85 }}</small></a>
-{% empty %}<div class="empty">No projects yet. Start with a dedicated testing project.</div>{% endfor %}
+  <a class="workspace-tile project-tile" href="{% url 'studio:project' member.organization.slug project.pk %}">
+    <span class="workspace-tile-icon">◇</span><span class="workspace-tile-content"><strong>{{ project.name }}</strong><small>{{ project.description|default:"No description"|truncatechars:95 }}</small><span class="mini-count">{{ project.scenario_count }} scenario{{ project.scenario_count|pluralize }}</span></span><span class="tile-arrow">↗</span>
+  </a>
+{% empty %}
+  <div class="empty-state"><span class="empty-icon">◇</span><h3>No projects configured</h3><p>Create your first project to organize contract verification scenarios.</p></div>
+{% endfor %}
 </div>
 {% endblock %}

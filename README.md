@@ -12,7 +12,7 @@ The studio organizes test scenarios into valid behavior, invalid inputs, access 
 
 ## Features implemented
 
-- English-first Django web studio with accessible, responsive layout.
+- English-first dark-console Django studio with a three-step intent-driven scenario builder, responsive workbench, and progressive evidence inspection.
 - Organizational workspaces with membership-based access and project-scoped workflows.
 - Scenarios with version-at-run snapshots of inputs and expected JSON.
 - Deterministic, explicit-field assertion comparisons.
@@ -47,7 +47,7 @@ DJANGO_DEBUG=1 python manage.py test
 DJANGO_DEBUG=1 python manage.py check
 ```
 
-See [Getting Started](docs/GETTING_STARTED.md) and [Architecture](docs/ARCHITECTURE.md) for security boundaries, production configuration, and limitations.
+See [Console Workflow](docs/CONSOLE_WORKFLOW.md), [Getting Started](docs/GETTING_STARTED.md) and [Architecture](docs/ARCHITECTURE.md) for security boundaries, production configuration, and limitations.
 
 ## Gno component
 

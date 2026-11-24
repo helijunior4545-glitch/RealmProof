@@ -1,23 +1,39 @@
 {% extends "studio/base.html" %}
 {% block title %}Overview{% endblock %}
+{% block context_label %}OVERVIEW{% endblock %}
 {% block content %}
-<div class="heading"><div><span class="eyebrow">OVERVIEW</span><h1>Your workspaces</h1><p class="muted">Build confidence with explicit, reproducible test scenarios.</p></div></div>
-<div class="section-title">Organizations <span class="counter">{{ memberships|length }}</span></div>
-<div class="cards">
+<div class="page-heading">
+  <div><div class="eyebrow"><span class="eyebrow-line"></span> CONTROL CENTER</div>
+    <h1>Build confidence in every contract.</h1>
+    <p class="lede">Define intent, compare evidence, and investigate results without losing technical depth.</p>
+  </div>
+  <span class="outline-chip">01 / WORKSPACES</span>
+</div>
+<div class="overview-callout">
+  <span class="callout-icon">⌁</span>
+  <div><strong>Intent-driven testing</strong><p>Start with the behavior you expect. The console keeps verdicts separate from execution results.</p></div>
+  <span class="chip subtle">LOCAL MODE</span>
+</div>
+<div class="section-heading"><div><span class="eyebrow">YOUR ORGANIZATIONS</span><h2>Workspaces <span class="count-chip">{{ memberships|length }}</span></h2></div></div>
+<div class="workspace-grid">
   {% for membership in memberships %}
-    <a class="card" href="{% url 'studio:organization' membership.organization.slug %}">
-      <span class="card-symbol">▣</span>
-      <strong>{{ membership.organization.name }}</strong>
-      <small>{{ membership.get_role_display }} · Open workspace →</small>
+    <a class="workspace-tile" href="{% url 'studio:organization' membership.organization.slug %}">
+      <span class="workspace-tile-icon">⬡</span>
+      <span class="workspace-tile-content"><strong>{{ membership.organization.name }}</strong><small>{{ membership.get_role_display }} access · Isolated workspace</small></span>
+      <span class="tile-arrow">↗</span>
     </a>
   {% empty %}
-    <div class="empty">No organizations yet. Create a workspace to get started.</div>
+    <div class="empty-state"><span class="empty-icon">⬡</span><h3>No workspaces yet</h3><p>Create an organization to start building reproducible scenarios.</p></div>
   {% endfor %}
 </div>
-<div class="panel narrow"><h2>Create organization</h2>
-<form method="post" action="{% url 'studio:create_organization' %}">{% csrf_token %}
-  <label>Name <input name="name" maxlength="120" required placeholder="Your team"></label>
-  <label>Slug <input name="slug" maxlength="50" pattern="[a-z0-9_-]+" required placeholder="your-team"></label>
-  <button class="button primary" type="submit">Create workspace</button>
-</form></div>
+<section class="panel create-workspace" aria-labelledby="workspace-heading">
+  <div class="panel-head"><div><span class="eyebrow">GET STARTED</span><h2 id="workspace-heading">New workspace</h2></div><span class="muted-tag">STEP 01</span></div>
+  <p class="helper">Keep projects, testing data, and members separated by organization.</p>
+  <form method="post" action="{% url 'studio:create_organization' %}" class="inline-create">
+    {% csrf_token %}
+    <label>Organization name<input name="name" maxlength="120" required placeholder="e.g. Verification Labs"></label>
+    <label>Workspace slug<input name="slug" maxlength="50" pattern="[a-z0-9_-]+" required placeholder="verification-labs"></label>
+    <button class="button primary" type="submit">Create workspace <span aria-hidden="true">→</span></button>
+  </form>
+</section>
 {% endblock %}

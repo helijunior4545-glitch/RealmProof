@@ -86,3 +86,100 @@ class TenancyTests(TestCase):
         self.assertEqual(self.client.post(url, {"observed": '{"balance":999}'}).status_code, 302)
         run.refresh_from_db()
         self.assertEqual(run.observed["balance"], 10)
+
+
+class ConsoleFlowTests(TestCase):
+    """Protect the user journey, tenant boundaries, and truthful evidence labels."""
+
+    def setUp(self):
+        User = get_user_model()
+        self.owner = User.objects.create_user(username="console-owner", password="test-password-123")
+        self.outsider = User.objects.create_user(username="console-outsider", password="test-password-123")
+        self.org = Organization.objects.create(name="Console Labs", slug="console-labs")
+        self.other = Organization.objects.create(name="Outside", slug="outside-labs")
+        Membership.objects.create(organization=self.org, user=self.owner, role="owner")
+        Membership.objects.create(organization=self.other, user=self.outsider, role="owner")
+        self.project = Project.objects.create(organization=self.org, name="Treasury")
+        self.scenario = Scenario.objects.create(
+            organization=self.org, project=self.project, name="Reject overspend",
+            family="invalid", objective="Transfer above balance should revert",
+            input_data={"balance": 100, "amount": 150},
+            expected={"status": "reverted", "balance": 100},
+        )
+        self.client.force_login(self.owner)
+
+    def test_dashboard_describes_intent_and_local_scope(self):
+        response = self.client.get(reverse("studio:dashboard"))
+        self.assertContains(response, "Build confidence in every contract.")
+        self.assertContains(response, "No chain connected")
+        self.assertContains(response, 'name="viewport"')
+
+    def test_project_workbench_shows_scenario_and_environment_boundary(self):
+        response = self.client.get(reverse("studio:project", args=[self.org.slug, self.project.pk]))
+        self.assertContains(response, "TESTING WORKBENCH")
+        self.assertContains(response, self.scenario.name)
+        self.assertContains(response, "Not connected")
+        self.assertContains(response, "Recent runs")
+
+    def test_scenario_builder_has_three_steps_and_templates(self):
+        response = self.client.get(reverse("studio:create_scenario", args=[self.org.slug, self.project.pk]))
+        self.assertContains(response, "Start with intent.")
+        self.assertContains(response, 'data-step-panel="0"')
+        self.assertContains(response, 'data-step-panel="1"')
+        self.assertContains(response, 'data-step-panel="2"')
+        self.assertContains(response, 'data-preset="insufficient"')
+
+    def test_scenario_builder_persists_expected_outcome(self):
+        import json
+        response = self.client.post(
+            reverse("studio:create_scenario", args=[self.org.slug, self.project.pk]),
+            {
+                "name": "New failure case",
+                "family": "invalid",
+                "objective": "Expected contract rejection",
+                "input_data": json.dumps({"amount": 999}),
+                "expected": json.dumps({"status": "reverted"}),
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        scenario = Scenario.objects.get(name="New failure case")
+        self.assertEqual(scenario.expected, {"status": "reverted"})
+        self.assertEqual(scenario.organization, self.org)
+
+    def test_run_console_separates_verdict_from_execution(self):
+        response = self.client.post(reverse("studio:start_run", args=[self.org.slug, self.scenario.pk]))
+        self.assertEqual(response.status_code, 302)
+        run = TestRun.objects.get()
+        response = self.client.get(reverse("studio:run_detail", args=[self.org.slug, run.pk]))
+        self.assertContains(response, "ASSERTION VERDICT")
+        self.assertContains(response, "Not executed")
+        self.assertContains(response, "does not currently submit transactions")
+        self.client.post(
+            reverse("studio:evaluate_run", args=[self.org.slug, run.pk]),
+            {"observed": '{"status":"reverted","balance":100}'},
+        )
+        run.refresh_from_db()
+        self.assertEqual(run.status, "passed")
+        response = self.client.get(reverse("studio:run_detail", args=[self.org.slug, run.pk]))
+        self.assertContains(response, "User supplied")
+        self.assertContains(response, "unverified")
+        self.assertContains(response, "MATCH")
+        self.assertContains(response, "Raw technical evidence")
+
+    def test_failed_assertion_is_explained_as_mismatch(self):
+        self.client.post(reverse("studio:start_run", args=[self.org.slug, self.scenario.pk]))
+        run = TestRun.objects.get()
+        self.client.post(
+            reverse("studio:evaluate_run", args=[self.org.slug, run.pk]),
+            {"observed": '{"status":"success","balance":0}'},
+        )
+        response = self.client.get(reverse("studio:run_detail", args=[self.org.slug, run.pk]))
+        self.assertContains(response, "MISMATCH")
+        self.assertContains(response, "FAILED")
+
+    def test_unrelated_tenant_cannot_open_console_run(self):
+        self.client.post(reverse("studio:start_run", args=[self.org.slug, self.scenario.pk]))
+        run = TestRun.objects.get()
+        self.client.force_login(self.outsider)
+        response = self.client.get(reverse("studio:run_detail", args=[self.other.slug, run.pk]))
+        self.assertEqual(response.status_code, 404)

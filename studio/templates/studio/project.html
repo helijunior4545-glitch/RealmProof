@@ -1,13 +1,49 @@
 {% extends "studio/base.html" %}
 {% block title %}{{ project.name }}{% endblock %}
+{% block context_label %}PROJECT / {{ project.name|upper }}{% endblock %}
 {% block content %}
-<div class="heading"><div><a class="crumb" href="{% url 'studio:organization' member.organization.slug %}">← {{ member.organization.name }}</a><h1>{{ project.name }}</h1><p class="muted">{{ project.description|default:"Organize contract scenarios and their evidence." }}</p></div>
-{% if member.role != "viewer" %}<a class="button primary" href="{% url 'studio:create_scenario' member.organization.slug project.pk %}">+ New scenario</a>{% endif %}</div>
-<div class="section-title">Test scenarios <span class="counter">{{ scenarios|length }}</span></div>
-<div class="panel">
-{% for scenario in scenarios %}
-<div class="scenario"><div><span class="eyebrow">{{ scenario.get_family_display }}</span><h3>{{ scenario.name }}</h3><p class="muted">{{ scenario.objective|truncatechars:160 }}</p></div>
-{% if member.role != "viewer" %}<form method="post" action="{% url 'studio:start_run' member.organization.slug scenario.pk %}">{% csrf_token %}<button class="button secondary">Create run →</button></form>{% endif %}</div>
-{% empty %}<div class="empty">No scenarios yet. Define the initial state, objective, and expected result.</div>{% endfor %}
+<div class="breadcrumbs"><a href="{% url 'studio:dashboard' %}">Overview</a><span>/</span><a href="{% url 'studio:organization' member.organization.slug %}">{{ member.organization.name }}</a><span>/</span><span>{{ project.name }}</span></div>
+<div class="page-heading">
+  <div><div class="eyebrow"><span class="eyebrow-line"></span> TESTING WORKBENCH</div><h1>{{ project.name }}</h1><p class="lede">{{ project.description|default:"Organize contract behavior, assertions, and supporting evidence." }}</p></div>
+  {% if member.role != "viewer" %}<a class="button primary" href="{% url 'studio:create_scenario' member.organization.slug project.pk %}">+ New scenario <span aria-hidden="true">→</span></a>{% endif %}
+</div>
+<div class="metric-grid">
+  <div class="metric"><span class="metric-label">TOTAL RUNS</span><strong>{{ metrics.total }}</strong><small>Recorded attempts</small></div>
+  <div class="metric"><span class="metric-label">MATCHED ASSERTIONS</span><strong class="status-passed">{{ metrics.passed }}</strong><small>Evidence comparisons</small></div>
+  <div class="metric"><span class="metric-label">MISMATCHED</span><strong class="status-failed">{{ metrics.failed }}</strong><small>Requires investigation</small></div>
+  <div class="metric"><span class="metric-label">AWAITING EVIDENCE</span><strong class="status-pending">{{ metrics.pending }}</strong><small>Not executed on-chain</small></div>
+</div>
+<div class="workbench-grid">
+  <section class="panel" aria-labelledby="scenarios-title">
+    <div class="panel-head"><div><span class="eyebrow">01 / DEFINE INTENT</span><h2 id="scenarios-title">Test scenarios <span class="count-chip">{{ scenarios|length }}</span></h2></div></div>
+    {% for scenario in scenarios %}
+      <div class="scenario-row">
+        <div class="scenario-glyph">◇</div>
+        <div class="scenario-main"><span class="eyebrow">{{ scenario.get_family_display }}</span><h3>{{ scenario.name }}</h3><p>{{ scenario.objective|truncatechars:140 }}</p><small>{{ scenario.run_count }} run{{ scenario.run_count|pluralize }}</small></div>
+        {% if member.role != "viewer" %}<form method="post" action="{% url 'studio:start_run' member.organization.slug scenario.pk %}">{% csrf_token %}<button type="submit" class="button secondary small-button">Create run →</button></form>{% endif %}
+      </div>
+    {% empty %}
+      <div class="empty-state in-panel"><span class="empty-icon">⌘</span><h3>Define your first test intent</h3><p>Start with what a contract should do, then define how to prove it.</p>
+        {% if member.role != "viewer" %}<a class="button secondary" href="{% url 'studio:create_scenario' member.organization.slug project.pk %}">Create a scenario</a>{% endif %}
+      </div>
+    {% endfor %}
+  </section>
+  <div>
+    <section class="panel compact-panel">
+      <div class="panel-head"><div><span class="eyebrow">EXECUTION STATUS</span><h2>Environment</h2></div><span class="chip amber">LOCAL ONLY</span></div>
+      <p class="helper">Runs in this version record intent and evaluate externally supplied JSON. No Gno transaction is submitted by the console.</p>
+      <div class="env-line"><span>Chain execution</span><strong>Not connected</strong></div>
+      <div class="env-line"><span>Evidence provenance</span><strong>User supplied</strong></div>
+      <div class="env-line"><span>Verification engine</span><strong>Deterministic</strong></div>
+    </section>
+    <section class="panel compact-panel">
+      <div class="panel-head"><div><span class="eyebrow">02 / INVESTIGATE</span><h2>Recent runs</h2></div></div>
+      {% for run in recent_runs %}
+        <a class="recent-row" href="{% url 'studio:run_detail' member.organization.slug run.pk %}"><span class="status-indicator status-{{ run.status }}"></span><span class="recent-info"><strong>{{ run.scenario.name|truncatechars:28 }}</strong><small>{{ run.started_at|date:"M j, Y · H:i" }} UTC</small></span><span class="run-state status-{{ run.status }}">{{ run.get_status_display }}</span></a>
+      {% empty %}
+        <p class="helper">Create a run from a scenario to begin collecting comparison evidence.</p>
+      {% endfor %}
+    </section>
+  </div>
 </div>
 {% endblock %}

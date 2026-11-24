@@ -1,18 +1,55 @@
 {% extends "studio/base.html" %}
 {% block title %}{{ run.scenario.name }}{% endblock %}
+{% block context_label %}RUN / {{ run.id|truncatechars:15 }}{% endblock %}
 {% block content %}
-<a class="crumb" href="{% url 'studio:project' member.organization.slug run.scenario.project_id %}">← Project scenarios</a>
-<div class="heading"><div><span class="eyebrow">TEST RUN / {{ run.id }}</span><h1>{{ run.scenario.name }}</h1><p class="muted">{{ run.scenario.objective }}</p></div></div>
-<div class="metric-grid"><div class="metric"><span class="eyebrow">VERDICT</span><strong class="status-{{ run.status }}">{{ run.get_status_display }}</strong></div>
-<div class="metric"><span class="eyebrow">EXECUTION</span><strong>{{ run.execution_status }}</strong></div>
-<div class="metric"><span class="eyebrow">EVIDENCE</span><strong>{% if run.execution_status == "external_evidence" %}User supplied{% else %}Not collected{% endif %}</strong></div></div>
-{% if run.reason %}<div class="notice">{{ run.reason }}</div>{% endif %}
-<div class="columns"><div class="panel"><h2>Expected</h2><pre>{{ expected_pretty }}</pre></div><div class="panel"><h2>Observed</h2><pre>{{ observed_pretty }}</pre></div></div>
-{% if run.status == "pending" and member.role != "viewer" %}
-<div class="panel narrow"><h2>Evaluate external evidence</h2><p class="muted">Provide observed JSON collected independently. This does not send a transaction or verify on-chain authenticity.</p>
-<form method="post" action="{% url 'studio:evaluate_run' member.organization.slug run.id %}">{% csrf_token %}
-<label>Observed result (JSON object)<textarea name="observed" rows="6" required placeholder='{"status":"ok"}'></textarea></label>
-<button type="submit" class="button primary">Evaluate assertions</button></form></div>
-{% endif %}
-<details class="panel"><summary>Technical evidence</summary><pre>{{ evidence_pretty }}</pre></details>
+<div class="breadcrumbs"><a href="{% url 'studio:dashboard' %}">Overview</a><span>/</span><a href="{% url 'studio:organization' member.organization.slug %}">{{ member.organization.name }}</a><span>/</span><a href="{% url 'studio:project' member.organization.slug run.scenario.project_id %}">{{ run.scenario.project.name }}</a><span>/</span><span>Test run</span></div>
+<div class="page-heading">
+  <div><div class="eyebrow"><span class="eyebrow-line"></span> TEST RUN / {{ run.id }}</div><h1>{{ run.scenario.name }}</h1><p class="lede">{{ run.scenario.objective }}</p></div>
+  <a class="button secondary" href="{% url 'studio:project' member.organization.slug run.scenario.project_id %}">← All scenarios</a>
+</div>
+<div class="stage-track" aria-label="Verification workflow">
+  <div class="stage done"><span>01</span><strong>Prepare</strong></div>
+  <div class="stage {% if run.status != 'pending' %}done{% else %}current{% endif %}"><span>02</span><strong>Evaluate</strong></div>
+  <div class="stage {% if run.status != 'pending' %}current{% endif %}"><span>03</span><strong>Investigate</strong></div>
+</div>
+<div class="result-overview">
+  <div class="verdict-box"><span class="eyebrow">ASSERTION VERDICT</span><strong class="verdict status-{{ run.status }}">{{ run.get_status_display|upper }}</strong><p>{{ run.reason }}</p></div>
+  <div class="run-facts"><div><span>EXECUTION STATUS</span><strong>{% if run.execution_status == "not_executed" %}Not executed{% elif run.execution_status == "external_evidence" %}External evidence{% else %}{{ run.execution_status }}{% endif %}</strong></div><div><span>PROVENANCE</span><strong>{% if run.execution_status == "external_evidence" %}User supplied · unverified{% else %}No evidence available{% endif %}</strong></div><div><span>CREATED</span><strong>{{ run.started_at|date:"M j, Y · H:i" }} UTC</strong></div></div>
+</div>
+<div class="inline-note important-note"><strong>Verification boundary:</strong> This console does not currently submit transactions to Gno.land or verify chain authenticity. A passing assertion means supplied JSON matched the expectation, not that a blockchain transaction was proven.</div>
+<div class="run-layout">
+  <section class="panel" aria-labelledby="assertions-heading">
+    <div class="panel-head"><div><span class="eyebrow">EXPECTED VS OBSERVED</span><h2 id="assertions-heading">Assertion details</h2></div><span class="count-chip">{{ comparison|length }} fields</span></div>
+    {% if run.status == "pending" %}
+      <div class="empty-state in-panel"><span class="empty-icon">⌁</span><h3>Awaiting evidence</h3><p>The scenario is prepared. Add independent observed values to evaluate the assertions.</p></div>
+    {% else %}
+      <div class="comparison-list">{% for item in comparison %}
+        <div class="comparison-row"><div class="comparison-field"><span class="status-indicator {% if item.matches %}status-passed{% else %}status-failed{% endif %}"></span><code>{{ item.field }}</code></div><div><span class="compare-label">EXPECTED</span><code>{{ item.expected }}</code></div><div><span class="compare-label">OBSERVED</span><code>{% if item.present %}{{ item.actual }}{% else %}Field missing{% endif %}</code></div><span class="comparison-result {% if item.matches %}status-passed{% else %}status-failed{% endif %}">{% if item.matches %}MATCH{% else %}MISMATCH{% endif %}</span></div>
+      {% empty %}<p class="helper">No assertions were defined. The verdict is inconclusive.</p>{% endfor %}</div>
+    {% endif %}
+  </section>
+  <aside>
+    <section class="panel compact-panel">
+      <div class="panel-head"><div><span class="eyebrow">SOURCE DATA</span><h2>Input snapshot</h2></div></div>
+      <pre>{{ run.input_snapshot|default:"{}" }}</pre>
+    </section>
+    {% if run.status == "pending" and member.role != "viewer" %}
+      <section class="panel compact-panel">
+        <div class="panel-head"><div><span class="eyebrow">MANUAL EVIDENCE</span><h2>Evaluate observed values</h2></div></div>
+        <p class="helper">Paste observed JSON obtained independently. This action never sends a blockchain transaction.</p>
+        <form method="post" action="{% url 'studio:evaluate_run' member.organization.slug run.id %}" data-evidence-form>
+          {% csrf_token %}<label for="observed-json">Observed values (JSON object)</label><textarea id="observed-json" name="observed" class="code-input" rows="7" required spellcheck="false" placeholder='{"status": "reverted"}'></textarea>
+          <div class="json-feedback" data-json-feedback="observed-json" aria-live="polite"></div>
+          <button class="button primary block-button" type="submit">Evaluate assertions →</button>
+        </form>
+      </section>
+    {% else %}
+      <section class="panel compact-panel"><div class="panel-head"><div><span class="eyebrow">EVIDENCE SOURCE</span><h2>Provenance</h2></div></div><div class="env-line"><span>Source</span><strong>{% if run.execution_status == "external_evidence" %}User supplied{% else %}Not collected{% endif %}</strong></div><div class="env-line"><span>Verified on chain</span><strong class="status-failed">No</strong></div><div class="env-line"><span>Record status</span><strong>Read-only</strong></div></section>
+    {% endif %}
+  </aside>
+</div>
+<details class="panel technical-panel">
+  <summary><span><span class="eyebrow">ADVANCED INSPECTION</span><strong>Raw technical evidence</strong></span><span class="summary-arrow">⌄</span></summary>
+  <div class="technical-grid"><div><span class="eyebrow">EXPECTED JSON</span><pre>{{ expected_pretty }}</pre></div><div><span class="eyebrow">OBSERVED JSON</span><pre>{{ observed_pretty }}</pre></div><div><span class="eyebrow">EVIDENCE JSON</span><pre>{{ evidence_pretty }}</pre></div></div>
+</details>
 {% endblock %}

@@ -4,30 +4,49 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <title>{% block title %}RealmProof{% endblock %} | RealmProof</title>
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b0d12">
+  <title>{% block title %}Console{% endblock %} · RealmProof</title>
   <link href="{% static 'studio/app.css' %}" rel="stylesheet">
+  <script src="{% static 'studio/console.js' %}" defer></script>
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <a href="{% url 'studio:dashboard' %}" class="brand"><span class="brand-mark">◆</span> RealmProof</a>
-      <div class="sidebar-label">WORKSPACE</div>
-      <a class="sidebar-link" href="{% url 'studio:dashboard' %}">◫ &nbsp; Overview</a>
-      <div class="sidebar-spacer"></div>
-      <div class="small">Independent developer tooling for Gno.land</div>
-      {% if user.is_authenticated %}
-        <div class="profile">{{ user.username }}</div>
-        <form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="link-button">Sign out</button></form>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="{% url 'studio:dashboard' %}" aria-label="RealmProof home">
+        <span class="brand-icon" aria-hidden="true">◈</span>
+        <span class="brand-name">realm<span>proof</span><small>CONSOLE</small></span>
+      </a>
+      <div class="nav-group-label">WORKSPACE</div>
+      <a class="nav-link" href="{% url 'studio:dashboard' %}"><span aria-hidden="true">▦</span> Overview</a>
+      {% if member %}
+      <div class="nav-group-label nav-group-gap">ACTIVE ORGANIZATION</div>
+      <a class="nav-link" href="{% url 'studio:organization' member.organization.slug %}"><span aria-hidden="true">⬡</span> {{ member.organization.name|truncatechars:19 }}</a>
       {% endif %}
-    </aside>
-    <main class="main">
-      <header class="topbar"><span>Testing & verification studio</span><span class="env-pill"><span class="dot"></span> Local workspace</span></header>
-      <div class="content">
-        {% for message in messages %}<div class="notice">{{ message }}</div>{% endfor %}
-        {% block content %}{% endblock %}
+      <div class="sidebar-bottom">
+        <div class="sidebar-meta"><span class="status-dot"></span> LOCAL DEVELOPMENT <span class="muted-tag">v0.2</span></div>
+        <div class="sidebar-note">Independent developer tooling for the Gno.land ecosystem.</div>
+        {% if user.is_authenticated %}
+          <div class="account-box"><span class="avatar">{{ user.username|slice:":1"|upper }}</span><span class="account-name">{{ user.username }}</span></div>
+          <form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="nav-link logout" type="submit">↪ &nbsp; Sign out</button></form>
+        {% endif %}
       </div>
-    </main>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="topbar-location"><span class="topbar-prefix">REALMPROOF</span><span class="topbar-slash">/</span> {% block context_label %}CONSOLE{% endblock %}</div>
+        <div class="topbar-right">
+          <span class="connection"><span class="status-dot"></span> Local workspace</span>
+          <span class="topbar-divider"></span>
+          <span class="topbar-security">No chain connected</span>
+        </div>
+      </header>
+      <main class="content" id="main-content">
+        {% for message in messages %}<div class="notice" role="status">{{ message }}</div>{% endfor %}
+        {% block content %}{% endblock %}
+      </main>
+      <footer class="footer">RealmProof · Intent first. Evidence always. <span>Not affiliated with Gno.land</span></footer>
+    </div>
   </div>
 </body>
 </html>

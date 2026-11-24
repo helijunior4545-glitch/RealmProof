@@ -1,15 +1,8 @@
 {% extends "studio/base.html" %}
 {% block title %}Sign in{% endblock %}
+{% block context_label %}AUTHENTICATION{% endblock %}
 {% block content %}
-<section class="narrow">
-  <span class="eyebrow">SECURE ACCESS</span>
-  <h1>Welcome back.</h1>
-  <p class="muted">Sign in to your testing workspace.</p>
-  <div class="panel">
-    <form method="post">{% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="button primary">Sign in</button>
-    </form>
-  </div>
-</section>
+<div class="signin-wrap"><div class="eyebrow"><span class="eyebrow-line"></span> SECURE CONSOLE ACCESS</div><h1>Welcome back.</h1><p class="lede">Sign in to manage your contract verification workspaces.</p>
+<div class="panel signin-panel"><div class="panel-head"><div><span class="eyebrow">REALMPROOF ACCOUNT</span><h2>Sign in</h2></div><span class="muted-tag">LOCAL</span></div><form method="post">{% csrf_token %}{{ form.as_p }}<button class="button primary block-button" type="submit">Sign in →</button></form></div>
+</div>
 {% endblock %}
