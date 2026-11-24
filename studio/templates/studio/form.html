@@ -1,0 +1,4 @@
+{% extends "studio/base.html" %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}<div class="narrow"><span class="eyebrow">WORKSPACE / CREATE</span><h1>{{ heading }}</h1><p class="muted">Define what you intend to verify before starting a run.</p>
+<div class="panel"><form method="post">{% csrf_token %}{{ form.as_p }}<button class="button primary">Save</button></form></div></div>{% endblock %}

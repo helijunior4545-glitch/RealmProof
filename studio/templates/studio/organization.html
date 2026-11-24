@@ -1,0 +1,12 @@
+{% extends "studio/base.html" %}
+{% block title %}{{ member.organization.name }}{% endblock %}
+{% block content %}
+<div class="heading"><div><span class="eyebrow">ORGANIZATION / {{ member.role|upper }}</span><h1>{{ member.organization.name }}</h1><p class="muted">Projects and evidence are scoped to this organization.</p></div>
+{% if member.role != "viewer" %}<a class="button primary" href="{% url 'studio:create_project' member.organization.slug %}">+ New project</a>{% endif %}</div>
+<div class="section-title">Projects</div>
+<div class="cards">
+{% for project in projects %}
+<a class="card" href="{% url 'studio:project' member.organization.slug project.pk %}"><span class="card-symbol">◇</span><strong>{{ project.name }}</strong><small>{{ project.description|default:"No description"|truncatechars:85 }}</small></a>
+{% empty %}<div class="empty">No projects yet. Start with a dedicated testing project.</div>{% endfor %}
+</div>
+{% endblock %}

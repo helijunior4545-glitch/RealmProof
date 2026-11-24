@@ -1,0 +1,13 @@
+{% extends "studio/base.html" %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+<div class="heading"><div><a class="crumb" href="{% url 'studio:organization' member.organization.slug %}">← {{ member.organization.name }}</a><h1>{{ project.name }}</h1><p class="muted">{{ project.description|default:"Organize contract scenarios and their evidence." }}</p></div>
+{% if member.role != "viewer" %}<a class="button primary" href="{% url 'studio:create_scenario' member.organization.slug project.pk %}">+ New scenario</a>{% endif %}</div>
+<div class="section-title">Test scenarios <span class="counter">{{ scenarios|length }}</span></div>
+<div class="panel">
+{% for scenario in scenarios %}
+<div class="scenario"><div><span class="eyebrow">{{ scenario.get_family_display }}</span><h3>{{ scenario.name }}</h3><p class="muted">{{ scenario.objective|truncatechars:160 }}</p></div>
+{% if member.role != "viewer" %}<form method="post" action="{% url 'studio:start_run' member.organization.slug scenario.pk %}">{% csrf_token %}<button class="button secondary">Create run →</button></form>{% endif %}</div>
+{% empty %}<div class="empty">No scenarios yet. Define the initial state, objective, and expected result.</div>{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "studio/base.html" %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<div class="heading"><div><span class="eyebrow">OVERVIEW</span><h1>Your workspaces</h1><p class="muted">Build confidence with explicit, reproducible test scenarios.</p></div></div>
+<div class="section-title">Organizations <span class="counter">{{ memberships|length }}</span></div>
+<div class="cards">
+  {% for membership in memberships %}
+    <a class="card" href="{% url 'studio:organization' membership.organization.slug %}">
+      <span class="card-symbol">▣</span>
+      <strong>{{ membership.organization.name }}</strong>
+      <small>{{ membership.get_role_display }} · Open workspace →</small>
+    </a>
+  {% empty %}
+    <div class="empty">No organizations yet. Create a workspace to get started.</div>
+  {% endfor %}
+</div>
+<div class="panel narrow"><h2>Create organization</h2>
+<form method="post" action="{% url 'studio:create_organization' %}">{% csrf_token %}
+  <label>Name <input name="name" maxlength="120" required placeholder="Your team"></label>
+  <label>Slug <input name="slug" maxlength="50" pattern="[a-z0-9_-]+" required placeholder="your-team"></label>
+  <button class="button primary" type="submit">Create workspace</button>
+</form></div>
+{% endblock %}

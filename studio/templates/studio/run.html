@@ -1,0 +1,18 @@
+{% extends "studio/base.html" %}
+{% block title %}{{ run.scenario.name }}{% endblock %}
+{% block content %}
+<a class="crumb" href="{% url 'studio:project' member.organization.slug run.scenario.project_id %}">← Project scenarios</a>
+<div class="heading"><div><span class="eyebrow">TEST RUN / {{ run.id }}</span><h1>{{ run.scenario.name }}</h1><p class="muted">{{ run.scenario.objective }}</p></div></div>
+<div class="metric-grid"><div class="metric"><span class="eyebrow">VERDICT</span><strong class="status-{{ run.status }}">{{ run.get_status_display }}</strong></div>
+<div class="metric"><span class="eyebrow">EXECUTION</span><strong>{{ run.execution_status }}</strong></div>
+<div class="metric"><span class="eyebrow">EVIDENCE</span><strong>{% if run.execution_status == "external_evidence" %}User supplied{% else %}Not collected{% endif %}</strong></div></div>
+{% if run.reason %}<div class="notice">{{ run.reason }}</div>{% endif %}
+<div class="columns"><div class="panel"><h2>Expected</h2><pre>{{ expected_pretty }}</pre></div><div class="panel"><h2>Observed</h2><pre>{{ observed_pretty }}</pre></div></div>
+{% if run.status == "pending" and member.role != "viewer" %}
+<div class="panel narrow"><h2>Evaluate external evidence</h2><p class="muted">Provide observed JSON collected independently. This does not send a transaction or verify on-chain authenticity.</p>
+<form method="post" action="{% url 'studio:evaluate_run' member.organization.slug run.id %}">{% csrf_token %}
+<label>Observed result (JSON object)<textarea name="observed" rows="6" required placeholder='{"status":"ok"}'></textarea></label>
+<button type="submit" class="button primary">Evaluate assertions</button></form></div>
+{% endif %}
+<details class="panel"><summary>Technical evidence</summary><pre>{{ evidence_pretty }}</pre></details>
+{% endblock %}

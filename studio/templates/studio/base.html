@@ -1,0 +1,33 @@
+{% load static i18n %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>{% block title %}RealmProof{% endblock %} | RealmProof</title>
+  <link href="{% static 'studio/app.css' %}" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a href="{% url 'studio:dashboard' %}" class="brand"><span class="brand-mark">◆</span> RealmProof</a>
+      <div class="sidebar-label">WORKSPACE</div>
+      <a class="sidebar-link" href="{% url 'studio:dashboard' %}">◫ &nbsp; Overview</a>
+      <div class="sidebar-spacer"></div>
+      <div class="small">Independent developer tooling for Gno.land</div>
+      {% if user.is_authenticated %}
+        <div class="profile">{{ user.username }}</div>
+        <form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="link-button">Sign out</button></form>
+      {% endif %}
+    </aside>
+    <main class="main">
+      <header class="topbar"><span>Testing & verification studio</span><span class="env-pill"><span class="dot"></span> Local workspace</span></header>
+      <div class="content">
+        {% for message in messages %}<div class="notice">{{ message }}</div>{% endfor %}
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+</body>
+</html>

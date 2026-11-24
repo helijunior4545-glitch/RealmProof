@@ -1,0 +1,15 @@
+{% extends "studio/base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<section class="narrow">
+  <span class="eyebrow">SECURE ACCESS</span>
+  <h1>Welcome back.</h1>
+  <p class="muted">Sign in to your testing workspace.</p>
+  <div class="panel">
+    <form method="post">{% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="button primary">Sign in</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
