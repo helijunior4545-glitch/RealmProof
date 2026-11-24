@@ -14,9 +14,9 @@
 </div>
 <div class="result-overview">
   <div class="verdict-box"><span class="eyebrow">ASSERTION VERDICT</span><strong class="verdict status-{{ run.status }}">{{ run.get_status_display|upper }}</strong><p>{{ run.reason }}</p></div>
-  <div class="run-facts"><div><span>EXECUTION STATUS</span><strong>{% if run.execution_status == "not_executed" %}Not executed{% elif run.execution_status == "external_evidence" %}External evidence{% else %}{{ run.execution_status }}{% endif %}</strong></div><div><span>PROVENANCE</span><strong>{% if run.execution_status == "external_evidence" %}User supplied · unverified{% else %}No evidence available{% endif %}</strong></div><div><span>CREATED</span><strong>{{ run.started_at|date:"M j, Y · H:i" }} UTC</strong></div></div>
+  <div class="run-facts"><div><span>EXECUTION STATUS</span><strong>{% if run.execution_status == "not_executed" %}Not executed{% elif run.execution_status == "external_evidence" %}External evidence{% else %}{{ run.execution_status }}{% endif %}</strong></div><div><span>PROVENANCE</span><strong>{% if run.execution_status == "external_evidence" %}User supplied · unverified{% elif run.execution_status == "local_gno" %}Local Gno execution · not on-chain{% else %}No evidence available{% endif %}</strong></div><div><span>CREATED</span><strong>{{ run.started_at|date:"M j, Y · H:i" }} UTC</strong></div></div>
 </div>
-<div class="inline-note important-note"><strong>Verification boundary:</strong> This console does not currently submit transactions to Gno.land or verify chain authenticity. A passing assertion means supplied JSON matched the expectation, not that a blockchain transaction was proven.</div>
+<div class="inline-note important-note"><strong>Verification boundary:</strong> This console does not currently submit transactions to Gno.land or verify chain authenticity. A passing assertion means observed values matched expectations, not that a blockchain transaction was proven.</div>
 <div class="run-layout">
   <section class="panel" aria-labelledby="assertions-heading">
     <div class="panel-head"><div><span class="eyebrow">EXPECTED VS OBSERVED</span><h2 id="assertions-heading">Assertion details</h2></div><span class="count-chip">{{ comparison|length }} fields</span></div>
@@ -33,7 +33,7 @@
       <div class="panel-head"><div><span class="eyebrow">SOURCE DATA</span><h2>Input snapshot</h2></div></div>
       <pre>{{ run.input_snapshot|default:"{}" }}</pre>
     </section>
-    {% if run.status == "pending" and member.role != "viewer" %}
+    {% if run.status == "pending" and run.execution_status == "not_executed" and member.role != "viewer" %}
       <section class="panel compact-panel">
         <div class="panel-head"><div><span class="eyebrow">MANUAL EVIDENCE</span><h2>Evaluate observed values</h2></div></div>
         <p class="helper">Paste observed JSON obtained independently. This action never sends a blockchain transaction.</p>
@@ -44,7 +44,7 @@
         </form>
       </section>
     {% else %}
-      <section class="panel compact-panel"><div class="panel-head"><div><span class="eyebrow">EVIDENCE SOURCE</span><h2>Provenance</h2></div></div><div class="env-line"><span>Source</span><strong>{% if run.execution_status == "external_evidence" %}User supplied{% else %}Not collected{% endif %}</strong></div><div class="env-line"><span>Verified on chain</span><strong class="status-failed">No</strong></div><div class="env-line"><span>Record status</span><strong>Read-only</strong></div></section>
+      <section class="panel compact-panel"><div class="panel-head"><div><span class="eyebrow">EVIDENCE SOURCE</span><h2>Provenance</h2></div></div><div class="env-line"><span>Source</span><strong>{% if run.execution_status == "external_evidence" %}User supplied{% elif run.execution_status == "local_gno" %}Local Gno CLI{% else %}Not collected{% endif %}</strong></div><div class="env-line"><span>Verified on chain</span><strong class="status-failed">No</strong></div><div class="env-line"><span>Record status</span><strong>Read-only</strong></div></section>
     {% endif %}
   </aside>
 </div>

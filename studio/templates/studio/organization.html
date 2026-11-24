@@ -7,6 +7,7 @@
   <div><div class="eyebrow"><span class="eyebrow-line"></span> ORGANIZATION · {{ member.role|upper }}</div><h1>{{ member.organization.name }}</h1><p class="lede">One workspace. Focused projects. Fully scoped scenarios and evidence.</p></div>
   {% if member.role != "viewer" %}<a class="button primary" href="{% url 'studio:create_project' member.organization.slug %}">+ Create project</a>{% endif %}
 </div>
+{% if member.role != "viewer" %}<section class="panel"><h2>Demo Lab</h2><p class="helper">Create six executable Gno transfer scenarios.</p><form method="post" action="{% url 'studio:create_demo' member.organization.slug %}">{% csrf_token %}<button class="button primary">Create transfer demo</button></form></section>{% endif %}
 <div class="section-heading"><div><span class="eyebrow">YOUR PROJECTS</span><h2>Projects <span class="count-chip">{{ projects|length }}</span></h2></div></div>
 <div class="workspace-grid">
 {% for project in projects %}

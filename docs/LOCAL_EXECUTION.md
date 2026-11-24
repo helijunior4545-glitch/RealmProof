@@ -1,0 +1,2 @@
+# Local execution
+Install the official Gno CLI and ensure `gno` is on the server PATH (or set REALMPROOF_GNO_BINARY). Create a Transfer Demo Lab from an organization and execute any scenario. Each run invokes the trusted bundled function in a fresh temporary directory. No arbitrary uploaded code, public-chain transaction, or VM security sandbox is provided. The Django integration tests mock the CLI; real CLI compatibility must be verified separately.\n

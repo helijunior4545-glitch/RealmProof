@@ -20,7 +20,7 @@
       <div class="scenario-row">
         <div class="scenario-glyph">◇</div>
         <div class="scenario-main"><span class="eyebrow">{{ scenario.get_family_display }}</span><h3>{{ scenario.name }}</h3><p>{{ scenario.objective|truncatechars:140 }}</p><small>{{ scenario.run_count }} run{{ scenario.run_count|pluralize }}</small></div>
-        {% if member.role != "viewer" %}<form method="post" action="{% url 'studio:start_run' member.organization.slug scenario.pk %}">{% csrf_token %}<button type="submit" class="button secondary small-button">Create run →</button></form>{% endif %}
+        {% if member.role != "viewer" %}<form method="post" action="{% if scenario.input_data.engine == 'transfer' %}{% url 'studio:execute_scenario' member.organization.slug scenario.pk %}{% else %}{% url 'studio:start_run' member.organization.slug scenario.pk %}{% endif %}">{% csrf_token %}<button type="submit" class="button secondary small-button">{% if scenario.input_data.engine == "transfer" %}Execute Gno →{% else %}Create run →{% endif %}</button></form>{% endif %}
       </div>
     {% empty %}
       <div class="empty-state in-panel"><span class="empty-icon">⌘</span><h3>Define your first test intent</h3><p>Start with what a contract should do, then define how to prove it.</p>
@@ -31,7 +31,7 @@
   <div>
     <section class="panel compact-panel">
       <div class="panel-head"><div><span class="eyebrow">EXECUTION STATUS</span><h2>Environment</h2></div><span class="chip amber">LOCAL ONLY</span></div>
-      <p class="helper">Runs in this version record intent and evaluate externally supplied JSON. No Gno transaction is submitted by the console.</p>
+      <p class="helper">Bundled transfer scenarios execute locally using the Gno CLI. Other scenarios accept external evidence. No public chain transaction is submitted.</p>
       <div class="env-line"><span>Chain execution</span><strong>Not connected</strong></div>
       <div class="env-line"><span>Evidence provenance</span><strong>User supplied</strong></div>
       <div class="env-line"><span>Verification engine</span><strong>Deterministic</strong></div>

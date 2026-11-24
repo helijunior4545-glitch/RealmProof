@@ -11,6 +11,9 @@ from django.views.decorators.http import require_GET, require_POST
 from .forms import ProjectForm, ScenarioForm
 from .models import AuditEvent, Membership, Organization, Project, Scenario, TestRun
 from .services import parse_json_object, record_evaluation
+from . import engine
+from django.utils import timezone
+import subprocess
 
 WRITE_ROLES = ("owner", "admin", "editor")
 
@@ -157,7 +160,7 @@ def evaluate_run(request, slug, run_id):
     member = membership_for(request, slug, write=True)
     with transaction.atomic():
         run = get_object_or_404(TestRun.objects.select_for_update(), pk=run_id, organization=member.organization)
-        if run.status != "pending":
+        if run.status != "pending" or run.execution_status != "not_executed":
             messages.error(request, "This run is immutable after evaluation.")
             return redirect("studio:run_detail", slug=slug, run_id=run.pk)
         try:
@@ -182,3 +185,41 @@ def health(request):
     except Exception:
         return JsonResponse({"status": "unhealthy"}, status=503)
     return JsonResponse({"status": "ok"})
+
+@login_required
+@require_POST
+def create_demo(request, slug):
+    member = membership_for(request, slug, write=True)
+    with transaction.atomic():
+        item = Project.objects.create(organization=member.organization, name="Transfer Demo Lab", description="Real local Gno function execution with isolated inputs.")
+        for name, family, balance, amount, authorized, status, final in engine.CASES:
+            Scenario.objects.create(organization=member.organization, project=item, name=name, family=family,
+                objective="Verify transfer outcome and final balance.",
+                input_data={"engine": "transfer", "balance": balance, "amount": amount, "authorized": authorized},
+                expected={"status": status, "balance": final, "state_changed": final != balance})
+        audit(member.organization, request.user, "demo.created", item.pk)
+    return redirect("studio:project", slug=slug, project_id=item.pk)
+
+
+@login_required
+@require_POST
+def execute_scenario(request, slug, scenario_id):
+    member = membership_for(request, slug, write=True)
+    scenario = get_object_or_404(Scenario, pk=scenario_id, organization=member.organization)
+    if scenario.input_data.get("engine") != "transfer":
+        raise Http404("No supported execution adapter.")
+    run = TestRun.objects.create(organization=member.organization, scenario=scenario, initiated_by=request.user,
+        input_snapshot=scenario.input_data, expected_snapshot=scenario.expected, status="pending",
+        execution_status="local_running")
+    try:
+        observed, evidence = engine.execute(run.input_snapshot)
+    except (RuntimeError, ValueError, OSError, subprocess.TimeoutExpired) as exc:
+        run.status = "error"
+        run.execution_status = "local_error"
+        run.reason = str(exc)[:2400]
+        run.finished_at = timezone.now()
+        run.save()
+    else:
+        record_evaluation(run, observed, execution_status="local_gno", evidence=evidence)
+    audit(member.organization, request.user, "run.local_execution", run.pk)
+    return redirect("studio:run_detail", slug=slug, run_id=run.pk)

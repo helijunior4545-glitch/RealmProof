@@ -12,5 +12,7 @@ urlpatterns = [
     path("organizations/<slug:slug>/runs/<uuid:run_id>/", views.run_detail, name="run_detail"),
     path("organizations/<slug:slug>/scenarios/<uuid:scenario_id>/run/", views.start_run, name="start_run"),
     path("organizations/<slug:slug>/runs/<uuid:run_id>/evaluate/", views.evaluate_run, name="evaluate_run"),
+    path("organizations/<slug:slug>/demo/", views.create_demo, name="create_demo"),
+    path("organizations/<slug:slug>/scenarios/<uuid:scenario_id>/execute/", views.execute_scenario, name="execute_scenario"),
     path("health/", views.health, name="health"),
 ]
