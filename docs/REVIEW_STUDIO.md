@@ -1,0 +1,2 @@
+# Review Studio
+Expiring signed bearer links expose frozen local run snapshots, not live tenant access. Only editors, admins and owners can publish. Anonymous viewers cannot execute or edit. Do not publish confidential data. Links expire after 24 hours; individual revocation and interactive tester sessions are not implemented. Reference: Tenderly public SDK and documentation, https://github.com/Tenderly/tenderly-sdk and https://github.com/Tenderly/tenderly-docs. No third-party code copied.

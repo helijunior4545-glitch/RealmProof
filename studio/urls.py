@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, review
 
 app_name = "studio"
 urlpatterns = [
@@ -14,5 +14,7 @@ urlpatterns = [
     path("organizations/<slug:slug>/runs/<uuid:run_id>/evaluate/", views.evaluate_run, name="evaluate_run"),
     path("organizations/<slug:slug>/demo/", views.create_demo, name="create_demo"),
     path("organizations/<slug:slug>/scenarios/<uuid:scenario_id>/execute/", views.execute_scenario, name="execute_scenario"),
+    path("organizations/<slug:slug>/projects/<uuid:project_id>/review/", review.publish, name="publish_review"),
+    path("review/<str:token>/", review.open_review, name="open_review"),
     path("health/", views.health, name="health"),
 ]
