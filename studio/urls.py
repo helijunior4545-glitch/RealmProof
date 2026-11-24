@@ -16,5 +16,7 @@ urlpatterns = [
     path("organizations/<slug:slug>/scenarios/<uuid:scenario_id>/execute/", views.execute_scenario, name="execute_scenario"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/review/", review.publish, name="publish_review"),
     path("review/<str:token>/", review.open_review, name="open_review"),
+    path("review/<str:token>/replay/", review.replay, name="replay_review"),
+    path("organizations/<slug:slug>/reviews/<uuid:event_id>/revoke/", review.revoke, name="revoke_review"),
     path("health/", views.health, name="health"),
 ]
