@@ -24,3 +24,27 @@ class ChainTests(SimpleTestCase):
         rpc.return_value={"hash":"B"*64}
         with self.assertRaises(chain.ChainError):
             chain.transaction("testnet","A"*64)
+
+    @patch("studio.chain.status")
+    @patch("studio.chain.rpc")
+    def test_block_receipt_without_index(self, rpc, status):
+        import hashlib
+        import base64
+        raw = b"test transaction"
+        digest = base64.b64encode(hashlib.sha256(raw).digest()).decode()
+        status.return_value = {"chain_id": "onyx-1", "height": 42, "catching_up": False}
+        block = {"block": {"header": {"chain_id": "onyx-1", "height": "42"},
+                           "data": {"txs": [base64.b64encode(raw).decode()]}}}
+        receipt = {"ResponseBase": {"Error": None, "Log": "msg:0,success:true,log:,events:[]"}}
+        results = {"height": "42", "results": {"deliver_tx": [receipt]}}
+        rpc.side_effect = [block, results]
+        result = chain.transaction("testnet", digest, "42")
+        self.assertEqual(result["execution"], "passed")
+        self.assertEqual(result["package_availability"], "unverified")
+        self.assertEqual(result["index"], 0)
+        receipt["ResponseBase"]["Error"] = {"message": "failed"}
+        rpc.side_effect = [block, results]
+        self.assertEqual(chain.transaction("testnet", digest, "42")["execution"], "failed")
+        rpc.side_effect = [block, results]
+        with self.assertRaises(chain.ChainError):
+            chain.transaction("testnet", "a"*64, "42")

@@ -1,4 +1,7 @@
 """Bounded read-only access to documented Gno RPC endpoints."""
+import base64
+import binascii
+import hashlib
 import json
 import re
 from urllib.request import Request, build_opener, HTTPRedirectHandler
@@ -18,7 +21,7 @@ class NoRedirect(HTTPRedirectHandler):
         return None
 
 def rpc(network, method, params=None):
-    if network not in NETWORKS or method not in {"status", "tx"}:
+    if network not in NETWORKS or method not in {"status", "tx", "block", "block_results"}:
         raise ChainError("Unsupported network or method.")
     url = NETWORKS[network][1] + "/" + method
     if params:
@@ -48,11 +51,58 @@ def status(network):
     except (KeyError, ValueError, TypeError) as exc:
         raise ChainError("Unexpected status response.") from exc
 
-def transaction(network, digest):
-    if not re.fullmatch(r"[0-9a-fA-F]{64}", digest):
-        raise ChainError("Enter a 64-character hexadecimal transaction hash.")
-    status(network)
-    result = rpc(network, "tx", {"hash":"0x"+digest.upper()})
-    if str(result.get("hash","")).removeprefix("0x").upper() != digest.upper():
-        raise ChainError("Transaction identity mismatch.")
-    return result
+def normalize_hash(value):
+    if re.fullmatch(r"(?:0x)?[0-9a-fA-F]{64}", value):
+        return bytes.fromhex(value.removeprefix("0x"))
+    try:
+        raw = base64.b64decode(value, validate=True)
+        if len(raw) == 32:
+            return raw
+    except (ValueError, binascii.Error):
+        pass
+    raise ChainError("Enter a SHA-256 transaction hash in hexadecimal or Base64.")
+
+def transaction(network, digest, height=None):
+    target = normalize_hash(digest)
+    if height is None:
+        status(network)
+        result = rpc(network, "tx", {"hash": "0x" + target.hex().upper()})
+        if normalize_hash(str(result.get("hash", ""))) != target:
+            raise ChainError("Transaction identity mismatch.")
+        return result
+    if not re.fullmatch(r"[1-9][0-9]{0,17}", str(height)):
+        raise ChainError("Enter a positive block height.")
+    node = status(network)
+    if node["catching_up"] or int(height) > node["height"]:
+        raise ChainError("Block is not available on the synchronized node.")
+    params = {"height": str(height)}
+    block = rpc(network, "block", params)
+    receipts = rpc(network, "block_results", params)
+    try:
+        header = block["block"]["header"]
+        if header["chain_id"] != node["chain_id"] or int(header["height"]) != int(height) or int(receipts["height"]) != int(height):
+            raise ChainError("Block identity mismatch.")
+        txs = block["block"]["data"]["txs"] or []
+        results = receipts["results"]["deliver_tx"] or []
+        if not isinstance(txs, list) or not isinstance(results, list) or len(txs) != len(results):
+            raise ChainError("Transaction and receipt counts differ.")
+        matches = []
+        for index, encoded in enumerate(txs):
+            raw = base64.b64decode(encoded, validate=True)
+            if hashlib.sha256(raw).digest() == target:
+                matches.append((index, len(raw)))
+        if len(matches) != 1:
+            raise ChainError("Transaction not uniquely matched in block.")
+        index, size = matches[0]
+        receipt = results[index]
+        response = receipt["ResponseBase"]
+        error = response["Error"]
+        log = response.get("Log", "")
+        verdict = "failed" if error is not None or "success:false" in log else "passed" if "success:true" in log else "unknown"
+        return {"chain_id": node["chain_id"], "height": int(height), "index": index,
+                "hash_hex": target.hex(), "hash_base64": base64.b64encode(target).decode(),
+                "size_bytes": size, "inclusion": "matched_rpc_block",
+                "execution": verdict, "package_availability": "unverified",
+                "receipt": receipt, "trust": "RPC-reported block and receipt; not a consensus proof"}
+    except (KeyError, TypeError, ValueError, AttributeError, binascii.Error) as exc:
+        raise ChainError("Unexpected block or receipt response.") from exc
