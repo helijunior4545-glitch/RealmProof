@@ -19,7 +19,7 @@
       </a>
       <div class="nav-group-label">WORKSPACE</div>
       <a class="nav-link" href="{% url 'studio:public_demo' %}"><span aria-hidden="true">▦</span> Overview</a>
-      {% if user.is_authenticated %}<a class="nav-link" href="{% url 'studio:dashboard' %}">Developer workspace</a>{% endif %}
+      {% if user.is_authenticated %}<a class="nav-link" href="{% url 'studio:dashboard' %}">My workspaces</a>{% endif %}
       {% if member %}
       <div class="nav-group-label nav-group-gap">ACTIVE ORGANIZATION</div>
       <a class="nav-link" href="{% url 'studio:organization' member.organization.slug %}"><span aria-hidden="true">⬡</span> {{ member.organization.name|truncatechars:19 }}</a>
@@ -28,8 +28,8 @@
         <div class="sidebar-meta"><span class="status-dot"></span> REALMPROOF STUDIO <span class="muted-tag">v0.2</span></div>
         <div class="sidebar-note">Independent developer tooling for the Gno.land ecosystem.</div>
         {% if user.is_authenticated %}
-          <div class="account-box"><span class="avatar">{{ user.username|slice:":1"|upper }}</span><span class="account-name">{{ user.username }}</span></div>
-          <form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="nav-link logout" type="submit">↪ &nbsp; Sign out</button></form>
+          <div class="account-box"><span class="avatar">{{ user.username|slice:":1"|upper }}</span><span class="account-name">{% if request.session.realmproof_guest %}Guest session{% else %}{{ user.username }}{% endif %}</span></div>
+          <form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="nav-link logout" type="submit">↪ &nbsp; {% if request.session.realmproof_guest %}End session{% else %}Sign out{% endif %}</button></form>
         {% endif %}
       </div>
     </aside>

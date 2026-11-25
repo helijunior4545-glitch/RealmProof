@@ -1,9 +1,11 @@
 from django.urls import path
-from . import views, review, suites, builder, public_demo
+from . import views, review, suites, builder, public_demo, guest
 
 app_name = "studio"
 urlpatterns = [
-    path("", public_demo.home, name="public_demo"),
+    path("", guest.entry, name="public_demo"),
+    path("guest/start/", guest.start, name="guest_start"),
+    path("reference/", public_demo.home, name="reference_demo"),
     path("workspace/", views.dashboard, name="dashboard"),
     path("organizations/new/", views.create_organization, name="create_organization"),
     path("organizations/<slug:slug>/", views.organization, name="organization"),

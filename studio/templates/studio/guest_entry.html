@@ -1,0 +1,12 @@
+{% extends "studio/base.html" %}
+{% block title %}Welcome{% endblock %}
+{% block context_label %}START{% endblock %}
+{% block content %}
+<div class="page-heading"><div><div class="eyebrow">OPEN VERIFICATION STUDIO</div><h1>Build confidence in every contract.</h1><p class="lede">The complete RealmProof console. No registration required to explore.</p></div></div>
+<div class="workspace-grid">
+<section class="panel"><h2>Developer workspace</h2><p>Create projects, configure scenarios, build demos, inspect evidence and export results in your own isolated workspace.</p><form method="post" action="{% url 'studio:guest_start' %}">{% csrf_token %}<button class="button primary" name="mode" value="developer">Open workspace →</button></form></section>
+<section class="panel"><h2>Test and review</h2><p>Open a prepared transfer project with six scenarios in the same full console. Explore assertions, execution and reports.</p><form method="post" action="{% url 'studio:guest_start' %}">{% csrf_token %}<button class="button primary" name="mode" value="review">Explore test project →</button></form></section>
+</div>
+<p class="helper">Guest access expires after 24 hours. Export results before ending your session. Gno execution requires an installed CLI; testnet integration is not yet available.</p>
+<p><a href="{% url 'login' %}">Sign in to an existing account</a> · <a href="{% url 'studio:reference_demo' %}">Reference simulation</a></p>
+{% endblock %}
