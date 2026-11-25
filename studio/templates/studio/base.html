@@ -5,12 +5,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#0b0d12">
+  <meta name="theme-color" content="#000000">
   <title>{% block title %}Console{% endblock %} · RealmProof</title>
   <link href="{% static 'studio/app.css' %}" rel="stylesheet">
   <script src="{% static 'studio/console.js' %}" defer></script>
   <link href="{% static 'studio/objects.css' %}" rel="stylesheet">
   {% block extra_head %}{% endblock %}
+  <link href="{% static 'studio/chromatic.css' %}" rel="stylesheet">
 </head>
 <body>
   <div class="app-shell">
@@ -20,16 +21,16 @@
         <span class="brand-name">realm<span>proof</span><small>CONSOLE</small></span>
       </a>
       <div class="nav-group-label">PLATFORM</div>
-      <a class="nav-link" href="{% url 'studio:public_demo' %}"><span class="rp-object rp-stack" aria-hidden="true"><i></i><b></b><em></em></span> Overview</a>
-      {% if user.is_authenticated %}<a class="nav-link" href="{% url 'studio:reference_demo' %}"><span class="rp-object rp-orbit" aria-hidden="true"><i></i><b></b><em></em></span> Reference demo</a>{% endif %}
+      <a class="nav-link chroma-amber" {% if request.resolver_match.url_name == 'public_demo' %}aria-current="page"{% endif %} href="{% url 'studio:public_demo' %}"><span class="rp-object rp-stack" aria-hidden="true"><i></i><b></b><em></em></span> Overview</a>
+      {% if user.is_authenticated %}<a class="nav-link chroma-pink" {% if request.resolver_match.url_name == 'reference_demo' %}aria-current="page"{% endif %} href="{% url 'studio:reference_demo' %}"><span class="rp-object rp-orbit" aria-hidden="true"><i></i><b></b><em></em></span> Reference demo</a>{% endif %}
       
-      {% if user.is_authenticated %}<a class="nav-link" href="{% url 'studio:dashboard' %}"><span class="rp-object rp-cube" aria-hidden="true"><i></i><b></b><em></em></span> My workspaces</a>{% endif %}
+      {% if user.is_authenticated %}<a class="nav-link chroma-violet" {% if request.resolver_match.url_name == 'dashboard' %}aria-current="page"{% endif %} href="{% url 'studio:dashboard' %}"><span class="rp-object rp-cube" aria-hidden="true"><i></i><b></b><em></em></span> My workspaces</a>{% endif %}
       {% if member %}
       <div class="nav-group-label nav-group-gap">WORKSPACE / {{ member.organization.name|truncatechars:16 }}</div>
-      <a class="nav-link" href="{% url 'studio:organization' member.organization.slug %}"><span class="rp-object rp-vault" aria-hidden="true"><i></i><b></b><em></em></span> {{ member.organization.name|truncatechars:19 }}</a>
-      <a class="nav-link" href="{% url 'studio:network' member.organization.slug %}"><span class="t-nav-glyph">⌕</span> Network explorer</a>
-      <a class="nav-link" href="{% url 'studio:ledger_lab' member.organization.slug %}"><span class="t-nav-glyph">◇</span> Ledger validation lab</a>
-      <a class="nav-link" href="{% url 'studio:native_catalog' member.organization.slug %}"><span class="t-nav-glyph">▤</span> Native test catalog</a>
+      <a class="nav-link chroma-green" {% if request.resolver_match.url_name == 'organization' %}aria-current="page"{% endif %} href="{% url 'studio:organization' member.organization.slug %}"><span class="rp-object rp-vault" aria-hidden="true"><i></i><b></b><em></em></span> {{ member.organization.name|truncatechars:19 }}</a>
+      <a class="nav-link chroma-cyan" {% if request.resolver_match.url_name == 'network' %}aria-current="page"{% endif %} href="{% url 'studio:network' member.organization.slug %}"><span class="t-nav-glyph">⌕</span> Network explorer</a>
+      <a class="nav-link chroma-violet" {% if request.resolver_match.url_name == 'ledger_lab' %}aria-current="page"{% endif %} href="{% url 'studio:ledger_lab' member.organization.slug %}"><span class="t-nav-glyph">◇</span> Ledger validation lab</a>
+      <a class="nav-link chroma-orange" {% if request.resolver_match.url_name == 'native_catalog' %}aria-current="page"{% endif %} href="{% url 'studio:native_catalog' member.organization.slug %}"><span class="t-nav-glyph">▤</span> Native test catalog</a>
       {% endif %}
       <div class="sidebar-bottom">
         <div class="sidebar-meta"><span class="status-dot"></span> REALMPROOF STUDIO <span class="muted-tag">v0.2</span></div>
