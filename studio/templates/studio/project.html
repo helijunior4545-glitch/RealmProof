@@ -4,9 +4,9 @@
 {% block content %}{% comment %}Project actions are placed after the workbench heading.{% endcomment %}<div class="breadcrumbs"><a href="{% url 'studio:dashboard' %}">Overview</a><span>/</span><a href="{% url 'studio:organization' member.organization.slug %}">{{ member.organization.name }}</a><span>/</span><span>{{ project.name }}</span></div>
 <div class="page-heading">
   <div><div class="eyebrow"><span class="eyebrow-line"></span> TESTING WORKBENCH</div><h1>{{ project.name }}</h1><p class="lede">{{ project.description|default:"Organize contract behavior, assertions, and supporting evidence." }}</p></div>
-  {% if member.role != "viewer" %}<a class="button primary" href="{% url 'studio:create_scenario' member.organization.slug project.pk %}">+ New scenario <span aria-hidden="true">→</span></a>{% endif %}
+  {% if member.role != "viewer" %}<a class="button secondary" href="{% url 'studio:create_scenario' member.organization.slug project.pk %}">+ New scenario <span aria-hidden="true">→</span></a>{% endif %}
 </div>
-<div class="metric-grid">
+{% if user.username == "hackathon_demo_public" %}<div class="guided-banner"><div><span class="eyebrow">GUIDED DEMO · STEP 01</span><h2>Start with a valid transfer</h2><p>Run the prepared scenario, then inspect the assertion results. Local execution requires the Gno CLI.</p></div>{% for scenario in scenarios %}{% if scenario.name == "Valid transfer" and scenario.input_data.engine == "transfer" %}<form method="post" action="{% url 'studio:execute_scenario' member.organization.slug scenario.pk %}">{% csrf_token %}<button class="button primary" type="submit">▶ Run first test</button></form>{% endif %}{% endfor %}</div>{% endif %}<div class="metric-grid">
   <div class="metric"><span class="metric-label">TOTAL RUNS</span><strong>{{ metrics.total }}</strong><small>Recorded attempts</small></div>
   <div class="metric"><span class="metric-label">MATCHED ASSERTIONS</span><strong class="status-passed">{{ metrics.passed }}</strong><small>Evidence comparisons</small></div>
   <div class="metric"><span class="metric-label">MISMATCHED</span><strong class="status-failed">{{ metrics.failed }}</strong><small>Requires investigation</small></div>
@@ -45,7 +45,7 @@
     </section>
   </div>
 </div>
-<div class="workspace-grid"><section class="panel"><h2>Regression suite</h2><p class="helper">Queue up to 20 trusted local scenarios for the execution worker.</p>{% if member.role != "viewer" %}<form method="post" action="{% url 'studio:queue_suite' member.organization.slug project.pk %}">{% csrf_token %}<button class="button primary">Queue regression suite</button></form>{% endif %}<a class="button secondary" href="{% url 'studio:export_project' member.organization.slug project.pk %}">Export evidence JSON</a></section>
-{% if member.role != "viewer" %}<section class="panel review-launch"><div><span class="eyebrow">COLLABORATION / REVIEW</span><h2>Publish a tester preview</h2><p class="helper">Share a frozen copy of completed local runs and assertions. Link expires after 24 hours.</p></div><form method="post" action="{% url 'studio:publish_review' member.organization.slug project.pk %}">{% csrf_token %}<button class="button primary">Publish preview ↗</button></form></section>{% endif %}
-</div>
+<details class="panel action-disclosure"><summary class="disclosure-title">Advanced project actions · regression, export and sharing</summary><div class="workspace-grid"><section class="panel"><h2>Regression suite</h2><p class="helper">Queue up to 20 trusted local scenarios for the execution worker.</p>{% if member.role != "viewer" %}<form method="post" action="{% url 'studio:queue_suite' member.organization.slug project.pk %}">{% csrf_token %}<button class="button secondary">Queue regression suite</button></form>{% endif %}<a class="button secondary" href="{% url 'studio:export_project' member.organization.slug project.pk %}">Export evidence JSON</a></section>
+{% if member.role != "viewer" %}<section class="panel review-launch"><div><span class="eyebrow">COLLABORATION / REVIEW</span><h2>Publish a tester preview</h2><p class="helper">Share a frozen copy of completed local runs and assertions. Link expires after 24 hours.</p></div><form method="post" action="{% url 'studio:publish_review' member.organization.slug project.pk %}">{% csrf_token %}<button class="button secondary">Publish preview ↗</button></form></section>{% endif %}
+</div></details>
 {% endblock %}

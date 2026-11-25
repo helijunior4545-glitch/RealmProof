@@ -27,6 +27,10 @@ def start(request):
         if len(memberships) == 1 and memberships[0].organization.slug.startswith("review-") and memberships[0].role == "editor":
             login(request, user)
             request.session.set_expiry(3600)
+            from .models import Project
+            project = Project.objects.filter(organization=memberships[0].organization, name="Transfer verification lab").order_by("created_at").first()
+            if project:
+                return redirect("studio:project", slug=memberships[0].organization.slug, project_id=project.pk)
             return redirect("studio:organization", slug=memberships[0].organization.slug)
     logger.warning("Demo launch rejected: configured=%s authenticated=%s", bool(username and password), bool(user))
     messages.error(request, "Demo access is temporarily unavailable. Please try again later.")

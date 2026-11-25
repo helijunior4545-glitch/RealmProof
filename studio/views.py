@@ -43,6 +43,9 @@ def dashboard(request):
 @login_required
 @require_POST
 def create_organization(request):
+    if request.user.username == "hackathon_demo_public":
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied("The shared demo cannot create organizations.")
     name, slug = request.POST.get("name", "").strip(), request.POST.get("slug", "").strip().lower()
     from django.core.validators import validate_slug
     try:

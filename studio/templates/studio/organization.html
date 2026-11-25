@@ -7,7 +7,6 @@
   <div><div class="eyebrow"><span class="eyebrow-line"></span> ORGANIZATION · {{ member.role|upper }}</div><h1>{{ member.organization.name }}</h1><p class="lede">One workspace. Focused projects. Fully scoped scenarios and evidence.</p></div>
   {% if member.role != "viewer" %}<a class="button primary" href="{% url 'studio:create_project' member.organization.slug %}">+ Create project</a>{% endif %}
 </div>
-{% if member.role != "viewer" %}<section class="panel"><h2>Demo Lab</h2><a class="button primary" href="{% url 'studio:demo_builder' member.organization.slug %}">Build custom demo →</a><p class="helper">Create six executable Gno transfer scenarios.</p><form method="post" action="{% url 'studio:create_demo' member.organization.slug %}">{% csrf_token %}<button class="button primary">Create transfer demo</button></form></section>{% endif %}
 <div class="section-heading"><div><span class="eyebrow">YOUR PROJECTS</span><h2>Projects <span class="count-chip">{{ projects|length }}</span></h2></div></div>
 <div class="workspace-grid">
 {% for project in projects %}
@@ -18,4 +17,5 @@
   <div class="empty-state"><span class="empty-icon">◇</span><h3>No projects configured</h3><p>Create your first project to organize contract verification scenarios.</p></div>
 {% endfor %}
 </div>
+{% if member.role != "viewer" %}<details class="panel action-disclosure"><summary class="disclosure-title">Demo templates and builder</summary><a class="button secondary" href="{% url 'studio:demo_builder' member.organization.slug %}">Build custom demo →</a><p class="helper">Create six executable Gno transfer scenarios.</p><form method="post" action="{% url 'studio:create_demo' member.organization.slug %}">{% csrf_token %}<button class="button secondary">Create transfer demo</button></form></details>{% endif %}
 {% endblock %}

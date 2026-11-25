@@ -27,7 +27,7 @@
     <div class="empty-state"><span class="empty-icon">⬡</span><h3>No workspaces yet</h3><p>Create an organization to start building reproducible scenarios.</p></div>
   {% endfor %}
 </div>
-<section class="panel create-workspace" aria-labelledby="workspace-heading">
+{% if user.username != "hackathon_demo_public" %}<details class="panel create-workspace"><summary class="disclosure-title">Create a private workspace</summary><section aria-labelledby="workspace-heading">
   <div class="panel-head"><div><span class="eyebrow">GET STARTED</span><h2 id="workspace-heading">New workspace</h2></div><span class="muted-tag">STEP 01</span></div>
   <p class="helper">Keep projects, testing data, and members separated by organization.</p>
   <form method="post" action="{% url 'studio:create_organization' %}" class="inline-create">
@@ -36,5 +36,5 @@
     <label>Workspace slug<input name="slug" maxlength="50" pattern="[a-z0-9_-]+" required placeholder="verification-labs"></label>
     <button class="button primary" type="submit">Create workspace <span aria-hidden="true">→</span></button>
   </form>
-</section>
+</section></details>{% endif %}
 {% endblock %}
