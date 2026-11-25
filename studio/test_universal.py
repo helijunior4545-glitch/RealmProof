@@ -8,8 +8,8 @@ from .universal import SUITES, catalog, execute
 class RegistryTests(SimpleTestCase):
     def test_registry_has_fifteen_categories(self):
         self.assertEqual(len(catalog()), 15)
-        self.assertEqual(sum(s.checks for s in SUITES.values()), 35)
-        self.assertFalse(next(c for c in catalog() if c["key"] == "fuzz")["suites"])
+        self.assertEqual(sum(s.checks for s in SUITES.values()), 765)
+        self.assertTrue(next(c for c in catalog() if c["key"] == "fuzz")["suites"])
 
     @patch("studio.universal.engine.execute")
     def test_transfer_comparison(self, run):

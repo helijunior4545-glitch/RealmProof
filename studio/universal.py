@@ -1,7 +1,8 @@
 """Versioned trusted-suite registry. Categories describe intent, not coverage."""
 from dataclasses import dataclass
 import subprocess
-from . import engine, ledger_lab
+from . import engine, ledger_lab, specialized
+from functools import partial
 from .services import evaluate
 
 CATEGORIES = (
@@ -44,6 +45,9 @@ SUITES = {
     "transfer-v1": Suite("transfer-v1", "Transfer behavior", ("unit", "functional", "boundary", "negative", "permission", "regression"), len(engine.CASES), transfer),
     "ledger-v1": Suite("ledger-v1", "Ledger lifecycle", ("functional", "state", "boundary", "negative", "permission", "invariant", "regression"), len(ledger_lab.CASES), ledger),
 }
+
+for kind, (count, seed) in specialized.SPECS.items():
+    SUITES[kind + "-v1"] = Suite(kind + "-v1", kind.title() + " campaign", (kind,), count, partial(specialized.run, kind))
 
 def execute(key, progress=None):
     suite = SUITES[key]
