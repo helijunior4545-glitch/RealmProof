@@ -2,7 +2,7 @@ from unittest.mock import patch
 from django.test import SimpleTestCase, TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from .models import Organization, Membership, AuditEvent
+from .models import Organization, Membership, AuditEvent, UniversalJob
 from .universal import SUITES, catalog, execute
 
 class RegistryTests(SimpleTestCase):
@@ -35,14 +35,18 @@ class TenantTests(TestCase):
         self.client.force_login(self.user)
         self.url = reverse("studio:universal", args=[self.org.slug])
 
-    @patch("studio.universal_views.execute")
+    @patch("studio.universal_queue.execute")
     def test_persistence_and_isolation(self, run):
         run.return_value = {"execution": "completed", "verdict": "passed", "rows": []}
         self.assertEqual(self.client.post(self.url, {"suite": "ledger-v1"}).status_code, 302)
+        run.assert_not_called()
+        self.assertEqual(UniversalJob.objects.get().status, 'queued')
+        from .universal_queue import process_one
+        self.assertTrue(process_one())
         self.assertEqual(AuditEvent.objects.get().organization, self.org)
         self.assertEqual(self.client.get(reverse("studio:universal", args=[self.other.slug])).status_code, 404)
 
-    @patch("studio.universal_views.execute")
+    @patch("studio.universal_queue.execute")
     def test_viewer_cannot_execute(self, run):
         self.member.role = "viewer"
         self.member.save()

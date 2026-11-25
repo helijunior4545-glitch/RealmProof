@@ -114,3 +114,21 @@ class AuditEvent(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["organization", "-created_at"], name="studio_audi_organiz_7a1263_idx")]
+
+
+class UniversalJob(models.Model):
+    id = models.UUIDField(primary_key=True, default=uid, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    suite = models.CharField(max_length=40)
+    status = models.CharField(max_length=16, default="queued")
+    token = models.UUIDField(null=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True)
+    finished_at = models.DateTimeField(null=True)
+    result = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["status", "created_at"], name="rp_job_queue_idx")]
+        constraints = [models.CheckConstraint(condition=Q(status__in=["queued", "running", "completed", "error"]), name="rp_job_valid_status"),
+                       models.UniqueConstraint(fields=["organization"], condition=Q(status="running"), name="rp_job_one_running")]
