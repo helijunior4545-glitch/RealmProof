@@ -1,0 +1,23 @@
+/* Original illustrated industrial machines; local SVG assets, no external runtime. */
+.factory-icon,.rp-object{display:inline-block;position:relative;flex:none;width:48px;height:48px;background:var(--machine) center/contain no-repeat;filter:drop-shadow(0 4px 4px #000);transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .3s;isolation:isolate}
+.factory-reactor{--machine:url("factory/reactor.svg");--machine-light:#b77aff}
+.factory-assembly{--machine:url("factory/assembly.svg");--machine-light:#ffb34d}
+.factory-scanner{--machine:url("factory/scanner.svg");--machine-light:#ff72cc}
+.factory-vault{--machine:url("factory/vault.svg");--machine-light:#38f5a2}
+.factory-network{--machine:url("factory/network.svg");--machine-light:#35ddff}
+.factory-engine{--machine:url("factory/engine.svg");--machine-light:#a979ff}
+.factory-archive{--machine:url("factory/archive.svg");--machine-light:#ff9650}
+.rp-cube{--machine:url("factory/reactor.svg");--machine-light:#b77aff}.rp-stack{--machine:url("factory/assembly.svg");--machine-light:#ffb34d}.rp-orbit{--machine:url("factory/network.svg");--machine-light:#35ddff}.rp-vault{--machine:url("factory/vault.svg");--machine-light:#38f5a2}
+.rp-object i,.rp-object b,.rp-object em{display:none!important}
+.factory-icon:after,.rp-object:after{content:"";position:absolute;inset:15% 12% 8%;border-radius:50%;background:radial-gradient(ellipse at 50% 60%,var(--machine-light,#b77aff),transparent 65%);opacity:0;mix-blend-mode:screen;pointer-events:none;transition:opacity .3s;z-index:-1}
+.nav-link .factory-icon,.nav-link .rp-object{width:44px;height:44px;margin:0;flex-shrink:0}
+.sidebar .nav-link{gap:8px;padding:5px 9px;min-height:54px;overflow:visible}
+.brand-icon .factory-icon{width:49px;height:49px}
+.brand-icon{width:49px;height:49px;flex-shrink:0}
+.nav-link:hover .factory-icon,.nav-link:hover .rp-object,.workspace-tile:hover .rp-object{transform:translateY(-3px) rotate(-4deg) scale(1.12);filter:drop-shadow(0 0 8px var(--machine-light,#b77aff))}
+.nav-link:hover .factory-icon:after,.nav-link:hover .rp-object:after,.nav-link[aria-current=page] .factory-icon:after{opacity:.32}
+.nav-link[aria-current=page] .factory-icon{filter:drop-shadow(0 0 6px var(--machine-light))}
+.rp-hero-art .rp-object{animation:factory-float 5s ease-in-out infinite;transform:rotate(-8deg)}
+.rp-hero-art .rp-orbit{animation-delay:-1.6s}.rp-hero-art .rp-vault{animation-delay:-3s}
+@keyframes factory-float{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-9px) rotate(-4deg)}}
+@media(prefers-reduced-motion:reduce){.factory-icon,.rp-object,.rp-hero-art .rp-object{animation:none!important;transition:none!important;transform:none!important}}
