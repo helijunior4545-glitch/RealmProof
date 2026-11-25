@@ -1,5 +1,5 @@
 {% extends "studio/base.html" %}{% block title %}Demo Builder{% endblock %}{% block content %}
-<div class="page-heading"><div><span class="eyebrow">STUDIO / NEW DEMONSTRATION</span><h1>Build a test experience</h1><p class="lede">Configure a trusted Gno transfer function, define assertions and publish evidence after execution.</p></div><span class="chip amber">LOCAL GNO</span></div>
+<div class="page-heading rp-heading"><span class="rp-object rp-stack" aria-hidden="true"><i></i><b></b><em></em></span><div><span class="eyebrow">STUDIO / NEW DEMONSTRATION</span><h1>Build a test experience</h1><p class="lede">Configure a trusted Gno transfer function, define assertions and publish evidence after execution.</p></div><span class="chip amber">LOCAL GNO</span></div>
 <form method="post" class="builder-grid">{% csrf_token %}<div>
 <section class="panel"><span class="eyebrow">01 / PRESENTATION</span><h2>Demo identity</h2>{{ form.title.as_field_group }}{{ form.description.as_field_group }}{{ form.scenario.as_field_group }}{{ form.objective.as_field_group }}</section>
 <section class="panel"><span class="eyebrow">02 / EXECUTION</span><h2>Function parameters</h2><pre>Transfer(balance, amount, authorized)</pre>{{ form.balance.as_field_group }}{{ form.amount.as_field_group }}{{ form.authorized.as_field_group }}</section>

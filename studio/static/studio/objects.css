@@ -1,0 +1,37 @@
+/* Original spatial icon system. No external assets or runtime dependencies. */
+:root{--rp-indigo:#7565ef;--rp-mint:#77e2ca;--rp-ink:#101521}
+body{background:#0e121c}
+.app-shell{background:radial-gradient(ellipse at 78% 0%,#23213b 0,transparent 42%),#0e121c}
+.sidebar{background:#111622;border-right:1px solid #282e40}
+.topbar{background:#111622e8}
+.panel,.metric,.workspace-tile,.verdict-box,.run-facts{background:linear-gradient(145deg,#1d2535,#141a27);border-color:#333c51;border-radius:16px}
+.panel,.workspace-tile{box-shadow:0 8px 24px #0002}
+.page-heading h1{letter-spacing:-.045em}
+.button,.jury-cta{border-radius:10px}
+.button.primary,.jury-cta{background:linear-gradient(135deg,#9280ff,#5d51ce);box-shadow:0 5px 0 #3b3286,0 12px 24px #6352dd30;color:white}
+.button.primary:hover,.jury-cta:hover{filter:brightness(1.12)}
+.rp-object{--top:#b8a9ff;--left:#7360dc;--right:#443b97;display:inline-block;position:relative;width:38px;height:38px;flex:none;vertical-align:middle;isolation:isolate;filter:drop-shadow(0 5px 5px #0005)}
+.rp-object i,.rp-object b,.rp-object em{position:absolute;display:block;inset:0;background:var(--top);clip-path:polygon(50% 4%,95% 28%,50% 53%,5% 28%)}
+.rp-object b{background:linear-gradient(155deg,var(--top),var(--left) 55%);clip-path:polygon(5% 28%,50% 53%,50% 96%,5% 71%)}
+.rp-object em{background:linear-gradient(130deg,var(--left),var(--right));clip-path:polygon(50% 53%,95% 28%,95% 71%,50% 96%)}
+.rp-vault{--top:#b3ffe5;--left:#459e9a;--right:#225d6e}
+.rp-stack{--top:#ffdaa0;--left:#ca8556;--right:#7e4c66}
+.rp-orbit{--top:#a9deff;--left:#5d9cdf;--right:#3e4fa8}
+.rp-orbit i,.rp-orbit b,.rp-orbit em{border-radius:50%;clip-path:none;inset:12%;background:radial-gradient(circle at 32% 23%,var(--top),var(--left) 44%,var(--right) 80%)}
+.rp-orbit b{inset:25% 0;transform:rotate(-35deg);background:transparent;border:3px solid #b7ddff;box-shadow:0 2px 3px #253d77}
+.rp-orbit em{display:none}
+.nav-link .rp-object{width:24px;height:24px;margin-right:8px}
+.brand-icon .rp-object{width:33px;height:33px}
+.workspace-tile-icon,.scenario-glyph,.callout-icon,.brand-icon{background:transparent!important;border:0!important}
+.rp-heading{position:relative}
+.rp-heading>.rp-object{width:64px;height:64px;align-self:flex-start;margin-right:8px}
+.rp-landing{position:relative;overflow:hidden;text-align:left!important;padding-right:42%!important;min-height:490px}
+.rp-hero-art{position:absolute;right:2%;top:5%;width:40%;height:75%;display:grid;place-items:center;pointer-events:none}
+.rp-hero-art .rp-object{position:absolute;width:52%;height:auto;aspect-ratio:1;transform:rotate(-12deg);filter:drop-shadow(10px 22px 14px #0008)}
+.rp-hero-art .rp-orbit{width:27%;right:0;top:9%;transform:rotate(10deg)}
+.rp-hero-art .rp-vault{width:32%;left:0;bottom:6%;transform:rotate(12deg)}
+.rp-rings{position:absolute;width:90%;aspect-ratio:1;border:1px solid #766bb966;border-radius:50%;transform:rotateX(55deg) rotate(-20deg);box-shadow:0 0 0 22px #776bb912,0 0 0 44px #776bb90b}
+.rp-art-label{position:absolute;bottom:-8%;font-size:9px;letter-spacing:.15em;color:#b0b7c9}
+.workspace-tile:hover{transform:translateY(-3px);border-color:#9582ed}
+@media(max-width:780px){.rp-landing{padding-right:24px!important;padding-top:160px!important;min-height:0}.rp-hero-art{top:12px;right:20px;width:140px;height:130px}.rp-art-label{display:none}.rp-heading>.rp-object{width:40px;height:40px}.sidebar .nav-link{display:flex}.sidebar{height:auto}.app-shell{min-height:100vh}}
+@media(prefers-reduced-motion:reduce){.workspace-tile,.button,.jury-cta,.rp-object{transition:none!important;animation:none!important;transform:none!important}}

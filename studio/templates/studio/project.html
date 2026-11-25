@@ -2,7 +2,7 @@
 {% block title %}{{ project.name }}{% endblock %}
 {% block context_label %}PROJECT / {{ project.name|upper }}{% endblock %}
 {% block content %}{% comment %}Project actions are placed after the workbench heading.{% endcomment %}<div class="breadcrumbs"><a href="{% url 'studio:dashboard' %}">Overview</a><span>/</span><a href="{% url 'studio:organization' member.organization.slug %}">{{ member.organization.name }}</a><span>/</span><span>{{ project.name }}</span></div>
-<div class="page-heading">
+<div class="page-heading rp-heading"><span class="rp-object rp-cube" aria-hidden="true"><i></i><b></b><em></em></span>
   <div><div class="eyebrow"><span class="eyebrow-line"></span> TESTING WORKBENCH</div><h1>{{ project.name }}</h1><p class="lede">{{ project.description|default:"Organize contract behavior, assertions, and supporting evidence." }}</p></div>
   {% if member.role != "viewer" %}<a class="button secondary" href="{% url 'studio:create_scenario' member.organization.slug project.pk %}">+ New scenario <span aria-hidden="true">→</span></a>{% endif %}
 </div>
@@ -17,7 +17,7 @@
     <div class="panel-head"><div><span class="eyebrow">01 / DEFINE INTENT</span><h2 id="scenarios-title">Test scenarios <span class="count-chip">{{ scenarios|length }}</span></h2></div></div>
     {% for scenario in scenarios %}
       <div class="scenario-row">
-        <div class="scenario-glyph">◇</div>
+        <div class="scenario-glyph"><span class="rp-object rp-orbit" aria-hidden="true"><i></i><b></b><em></em></span></div>
         <div class="scenario-main"><span class="eyebrow">{{ scenario.get_family_display }}</span><h3>{{ scenario.name }}</h3><p>{{ scenario.objective|truncatechars:140 }}</p><small>{{ scenario.run_count }} run{{ scenario.run_count|pluralize }}</small></div>
         {% if member.role != "viewer" %}<form method="post" action="{% if scenario.input_data.engine == 'transfer' %}{% url 'studio:execute_scenario' member.organization.slug scenario.pk %}{% else %}{% url 'studio:start_run' member.organization.slug scenario.pk %}{% endif %}">{% csrf_token %}<button type="submit" class="button secondary small-button">{% if scenario.input_data.engine == "transfer" %}Execute Gno →{% else %}Create run →{% endif %}</button></form>{% endif %}
       </div>

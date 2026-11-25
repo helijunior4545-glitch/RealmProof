@@ -3,7 +3,7 @@
 {% block context_label %}RUN / {{ run.id|truncatechars:15 }}{% endblock %}
 {% block content %}
 <div class="breadcrumbs"><a href="{% url 'studio:dashboard' %}">Overview</a><span>/</span><a href="{% url 'studio:organization' member.organization.slug %}">{{ member.organization.name }}</a><span>/</span><a href="{% url 'studio:project' member.organization.slug run.scenario.project_id %}">{{ run.scenario.project.name }}</a><span>/</span><span>Test run</span></div>
-<div class="page-heading">
+<div class="page-heading rp-heading"><span class="rp-object rp-orbit" aria-hidden="true"><i></i><b></b><em></em></span>
   <div><div class="eyebrow"><span class="eyebrow-line"></span> TEST RUN / {{ run.id }}</div><h1>{{ run.scenario.name }}</h1><p class="lede">{{ run.scenario.objective }}</p></div>
   <a class="button secondary" href="{% url 'studio:project' member.organization.slug run.scenario.project_id %}">{% if run.status != "pending" %}Continue testing →{% else %}← All scenarios{% endif %}</a>
 </div>

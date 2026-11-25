@@ -4,7 +4,7 @@
 {% block content %}
 <div class="breadcrumbs"><a href="{% url 'studio:dashboard' %}">Overview</a><span>/</span><a href="{% url 'studio:organization' member.organization.slug %}">{{ member.organization.name }}</a><span>/</span>{% if project %}<a href="{% url 'studio:project' member.organization.slug project.pk %}">{{ project.name }}</a><span>/</span>{% endif %}<span>{{ heading }}</span></div>
 {% if form_type == "scenario" %}
-  <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> SCENARIO BUILDER</div><h1>Start with intent.</h1><p class="lede">Create a reproducible contract test in three focused steps. Advanced inputs remain accessible without clutter.</p></div><span class="outline-chip">03 STEPS</span></div>
+  <div class="page-heading rp-heading"><span class="rp-object rp-stack" aria-hidden="true"><i></i><b></b><em></em></span><div><div class="eyebrow"><span class="eyebrow-line"></span> SCENARIO BUILDER</div><h1>Start with intent.</h1><p class="lede">Create a reproducible contract test in three focused steps. Advanced inputs remain accessible without clutter.</p></div><span class="outline-chip">03 STEPS</span></div>
   <div class="builder-layout" data-scenario-builder>
     <aside class="builder-rail" aria-label="Scenario steps">
       <div class="builder-rail-title">TEST DESIGN</div>

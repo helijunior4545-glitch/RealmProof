@@ -2,7 +2,7 @@
 {% block title %}Overview{% endblock %}
 {% block context_label %}OVERVIEW{% endblock %}
 {% block content %}
-<div class="page-heading">
+<div class="page-heading rp-heading"><span class="rp-object rp-cube" aria-hidden="true"><i></i><b></b><em></em></span>
   <div><div class="eyebrow"><span class="eyebrow-line"></span> CONTROL CENTER</div>
     <h1>Build confidence in every contract.</h1>
     <p class="lede">Define intent, compare evidence, and investigate results without losing technical depth.</p>
@@ -10,7 +10,7 @@
   <span class="outline-chip">01 / WORKSPACES</span>
 </div>
 <div class="overview-callout">
-  <span class="callout-icon">⌁</span>
+  <span class="callout-icon"><span class="rp-object rp-stack" aria-hidden="true"><i></i><b></b><em></em></span></span>
   <div><strong>Intent-driven testing</strong><p>Start with the behavior you expect. The console keeps verdicts separate from execution results.</p></div>
   <span class="chip subtle">VERIFICATION MODE</span>
 </div>
@@ -19,7 +19,7 @@
 <div class="workspace-grid">
   {% for membership in memberships %}
     <a class="workspace-tile" href="{% url 'studio:organization' membership.organization.slug %}">
-      <span class="workspace-tile-icon">⬡</span>
+      <span class="workspace-tile-icon"><span class="rp-object rp-vault" aria-hidden="true"><i></i><b></b><em></em></span></span>
       <span class="workspace-tile-content"><strong>{{ membership.organization.name }}</strong><small>{{ membership.get_role_display }} access · Isolated workspace</small></span>
       <span class="tile-arrow">↗</span>
     </a>
