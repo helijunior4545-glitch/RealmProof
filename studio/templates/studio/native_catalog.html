@@ -7,12 +7,7 @@
 <div class="tw">
 <div class="tw-page-title"><div><div class="tw-crumb">TEST STUDIO <span>/</span> UPSTREAM SUITES</div><h1>Native Test Catalog</h1><p>Searchable inventory of installed Gno test suites, grouped by runtime and source area.</p></div><a class="tw-outline" href="{% url 'studio:ledger_lab' member.organization.slug %}">Open validation lab →</a></div>
 <div class="tw-rail"><a class="tw-active" href="#tw-catalog-overview">Overview</a><a href="#tw-test-results">Tests &amp; functions</a><a href="#tw-catalog-source">Source provenance</a></div>
-<div class="tw-stats" id="tw-catalog-overview">
-<div class="tw-stat"><span class="tw-overline">DISCOVERED CHECKS</span><strong>{{ metrics.tests }}</strong><small>Not executed</small></div>
-<div class="tw-stat"><span class="tw-overline">PACKAGES</span><strong>{{ metrics.packages }}</strong><small>Source directories</small></div>
-<div class="tw-stat"><span class="tw-overline">SOURCE FILES</span><strong>{{ metrics.files }}</strong><small>Test definitions</small></div>
-<div class="tw-stat"><span class="tw-overline">VERIFIED RESULTS</span><strong class="tw-warning">None</strong><small>Inventory only</small></div>
-</div>
+<section class="pi-strip pi-catalog" id="tw-catalog-overview" aria-label="Native inventory summary"><div class="pi-dial"><div class="pi-ring"><strong>{{ metrics.tests }}</strong></div><div><span class="pi-label">Discovered checks</span><small>Not executed</small></div></div><div class="pi-matrix"><span class="pi-label">Source inventory</span><div class="pi-outcomes"><div><strong>{{ metrics.packages }}</strong><small>Packages</small></div><div><strong>{{ metrics.files }}</strong><small>Source files</small></div></div><span class="pi-ruler" aria-hidden="true"></span></div><div class="pi-state"><span class="pi-wave" aria-hidden="true"><svg viewBox="0 0 48 32"><path d="M1 16H10L15 6 22 26 29 10 34 16H47" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span><div><span class="pi-label">Verified results</span><strong><span class="tw-warning">None</span></strong><small>Inventory only</small></div></div></section>
 <div class="tw-layout tw-layout-catalog">
 <aside class="tw-stack">
 <section class="tw-card"><div class="tw-card-heading"><div><span class="tw-overline">01 / FILTERS</span><h2>Refine test inventory</h2></div></div>
