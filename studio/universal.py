@@ -1,7 +1,7 @@
 """Versioned trusted-suite registry. Categories describe intent, not coverage."""
 from dataclasses import dataclass
 import subprocess
-from . import engine, ledger_lab, specialized
+from . import engine, ledger_lab, specialized, mutation
 from functools import partial
 from .services import evaluate
 
@@ -48,6 +48,8 @@ SUITES = {
 
 for kind, (count, seed) in specialized.SPECS.items():
     SUITES[kind + "-v1"] = Suite(kind + "-v1", kind.title() + " campaign", (kind,), count, partial(specialized.run, kind))
+
+SUITES["mutation-v1"] = Suite("mutation-v1", "Mutation detection", ("mutation",), mutation.COUNT, mutation.run)
 
 def execute(key, progress=None):
     suite = SUITES[key]
