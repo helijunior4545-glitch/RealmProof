@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views, review, suites, builder, public_demo, guest
 
-from . import network, ledger_views, catalog_views
+from . import network, ledger_views, catalog_views, universal_views
 
 app_name = "studio"
 urlpatterns = [
@@ -29,5 +29,6 @@ urlpatterns = [
     path("organizations/<slug:slug>/network/", network.overview, name="network"),
     path("organizations/<slug:slug>/ledger-lab/", ledger_views.overview, name="ledger_lab"),
     path("organizations/<slug:slug>/native-tests/", catalog_views.overview, name="native_catalog"),
+    path("organizations/<slug:slug>/universal/", universal_views.overview, name="universal"),
     path("health/", views.health, name="health"),
 ]

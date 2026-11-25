@@ -33,6 +33,7 @@
       <a class="nav-link chroma-cyan" {% if request.resolver_match.url_name == 'network' %}aria-current="page"{% endif %} href="{% url 'studio:network' member.organization.slug %}"><span class="factory-icon factory-network" aria-hidden="true"></span> Network explorer</a>
       <a class="nav-link chroma-violet" {% if request.resolver_match.url_name == 'ledger_lab' %}aria-current="page"{% endif %} href="{% url 'studio:ledger_lab' member.organization.slug %}"><span class="factory-icon factory-engine" aria-hidden="true"></span> Ledger validation lab</a>
       <a class="nav-link chroma-orange" {% if request.resolver_match.url_name == 'native_catalog' %}aria-current="page"{% endif %} href="{% url 'studio:native_catalog' member.organization.slug %}"><span class="factory-icon factory-archive" aria-hidden="true"></span> Native test catalog</a>
+      <a class="nav-link chroma-violet" href="{% url 'studio:universal' member.organization.slug %}"><span class="factory-icon factory-engine" aria-hidden="true"></span> Universal test engine</a>
       {% endif %}
       <div class="sidebar-bottom">
         <div class="sidebar-meta"><span class="status-dot"></span> REALMPROOF STUDIO <span class="muted-tag">v0.2</span></div>
