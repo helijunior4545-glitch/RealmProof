@@ -35,13 +35,17 @@ func TestScenario(t *testing.T) {
     fmt.Println("REALMPROOF_RESULT", status, balance)
 }
 """ % (balance, amount, str(authorized).lower())
+    env = os.environ.copy()
+    local_root = Path.home() / '.gno' / 'source'
+    if not env.get('GNOROOT') and (local_root / 'gnovm' / 'stdlibs').is_dir():
+        env['GNOROOT'] = str(local_root)
     started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix="realmproof-") as directory:
         root = Path(directory)
         (root / "transfer.gno").write_text(source)
         (root / "transfer_test.gno").write_text(harness)
-        (root / "gnomod.toml").write_text('module = "gno.land/p/realmproof/transfer"\n')
-        result = subprocess.run([binary, "test", "-v", "."], cwd=root, stdin=subprocess.DEVNULL,
+        (root / "gno.mod").write_text("module gno.land/p/realmproof/transfer\n")
+        result = subprocess.run([binary, "test", "-v", "."], cwd=root, env=env, stdin=subprocess.DEVNULL,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=20,
                                 text=True, errors="replace")
     output = result.stdout
