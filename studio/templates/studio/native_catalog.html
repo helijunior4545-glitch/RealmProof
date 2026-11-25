@@ -1,14 +1,37 @@
 {% extends "studio/base.html" %}
-{% load static i18n %}
+{% load static %}
 {% block title %}Native test catalog{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'studio/network.css' %}">{% endblock %}
-{% block content %}<div class="nx">
-<header class="nx-heading"><div><span class="eyebrow">TEST STUDIO / UPSTREAM COVERAGE</span><h1>Native test catalog</h1><p>Explore administrator-installed Gno reference suites without copying or executing them.</p></div><a class="button secondary" href="{% url 'studio:ledger_lab' member.organization.slug %}">Run ledger lab →</a></header>
-<div class="nx-metrics"><div><span>Discovered checks</span><strong>{{ metrics.tests }}</strong></div><div><span>Packages</span><strong>{{ metrics.packages }}</strong></div><div><span>Source files</span><strong>{{ metrics.files }}</strong></div><div><span>Execution status</span><strong>Not run</strong></div></div>
-{% if truncated %}<p>Inventory capped at 20,000 entries.</p>{% endif %}
-<section class="nx-panel"><header><h2>Coverage by runtime</h2><p>Go host tests, Gno package tests and VM filetests require different runners.</p></header>{% for kind_name,count in metrics.kinds.items %}<div class="nx-check"><strong>{{ kind_name }}</strong><span>{{ count }} discovered</span></div>{% empty %}<p>No source tests found. Install the official Gno source and configure GNOROOT on the server.</p>{% endfor %}</section>
-<section class="nx-panel"><header><h2>Test inventory</h2><p>{{ filtered_count }} matching entries · discovery is not proof of passing tests.</p></header>
-<form method="get" class="nx-form"><label for="catalog-q">Search test or package</label><input id="catalog-q" name="q" value="{{ query }}" maxlength="150"><label for="catalog-kind">Runtime</label><select id="catalog-kind" name="kind"><option value="">All runtimes</option><option value="gno" {% if kind == 'gno' %}selected{% endif %}>Gno package</option><option value="go" {% if kind == 'go' %}selected{% endif %}>Go host</option><option value="filetest" {% if kind == 'filetest' %}selected{% endif %}>VM filetest</option></select><label for="catalog-scope">Source area</label><select id="catalog-scope" name="scope"><option value="">All areas</option>{% for item in scopes %}<option {% if item == scope %}selected{% endif %}>{{ item }}</option>{% endfor %}</select><button class="button primary">Filter catalog</button></form>
-{% for row in page %}<div class="nx-check"><div style="min-width:0;overflow-wrap:anywhere"><strong>{{ row.name }}</strong><p>{{ row.file }}</p></div><span class="nx-muted">{{ row.kind }} · Not run</span></div>{% empty %}<p>No matching tests.</p>{% endfor %}
-<div class="nx-check">{% if page.has_previous %}<a href="?{{ params }}&amp;page={{ page.previous_page_number }}">Previous</a>{% endif %}<span>Page {{ page.number }} / {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="?{{ params }}&amp;page={{ page.next_page_number }}">Next</a>{% endif %}</div></section>
-<p>Upstream source: <a href="https://github.com/gnolang/gno">gnolang/gno</a>. Inventory is heuristic, not compiler-verified coverage. No upstream code is redistributed.</p></div>{% endblock %}
+{% block context_label %}TEST STUDIO / NATIVE COVERAGE{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'studio/tender-workspace.css' %}">{% endblock %}
+{% block content %}
+<div class="tw">
+<div class="tw-page-title"><div><div class="tw-crumb">TEST STUDIO <span>/</span> UPSTREAM SUITES</div><h1>Native Test Catalog</h1><p>Searchable inventory of installed Gno test suites, grouped by runtime and source area.</p></div><a class="tw-outline" href="{% url 'studio:ledger_lab' member.organization.slug %}">Open validation lab →</a></div>
+<div class="tw-rail"><a class="tw-active" href="#tw-catalog-overview">Overview</a><a href="#tw-test-results">Tests &amp; functions</a><a href="#tw-catalog-source">Source provenance</a></div>
+<div class="tw-stats" id="tw-catalog-overview">
+<div class="tw-stat"><span class="tw-overline">DISCOVERED CHECKS</span><strong>{{ metrics.tests }}</strong><small>Not executed</small></div>
+<div class="tw-stat"><span class="tw-overline">PACKAGES</span><strong>{{ metrics.packages }}</strong><small>Source directories</small></div>
+<div class="tw-stat"><span class="tw-overline">SOURCE FILES</span><strong>{{ metrics.files }}</strong><small>Test definitions</small></div>
+<div class="tw-stat"><span class="tw-overline">VERIFIED RESULTS</span><strong class="tw-warning">None</strong><small>Inventory only</small></div>
+</div>
+<div class="tw-layout tw-layout-catalog">
+<aside class="tw-stack">
+<section class="tw-card"><div class="tw-card-heading"><div><span class="tw-overline">01 / FILTERS</span><h2>Refine test inventory</h2></div></div>
+<form class="tw-form" method="get" action="">
+<label for="tw-q">Name or source path</label><input id="tw-q" type="search" maxlength="150" name="q" value="{{ query }}" placeholder="Search test names, files...">
+<label for="tw-kind">Runtime</label><select id="tw-kind" name="kind"><option value="">All runtimes</option><option value="gno" {% if kind == 'gno' %}selected{% endif %}>Gno package test</option><option value="go" {% if kind == 'go' %}selected{% endif %}>Go host test</option><option value="filetest" {% if kind == 'filetest' %}selected{% endif %}>GnoVM filetest</option></select>
+<label for="tw-scope">Source area</label><select id="tw-scope" name="scope"><option value="">All source areas</option>{% for entry in scopes %}<option value="{{ entry }}" {% if entry == scope %}selected{% endif %}>{{ entry }}</option>{% endfor %}</select>
+<button type="submit" class="tw-primary">Apply filters <span>→</span></button></form></section>
+<section class="tw-card"><div class="tw-card-heading"><div><span class="tw-overline">02 / RUNTIMES</span><h2>Discovery breakdown</h2></div></div>
+{% for runtime, count in metrics.kinds.items %}<div class="tw-mini-line"><span>{{ runtime }}</span><strong>{{ count }}</strong></div>{% empty %}<p class="tw-help">No installed Gno source detected. Set GNOROOT on the application server.</p>{% endfor %}
+<div class="tw-notice">Runtime categories have different execution requirements. Discovery does not authorize executing upstream code inside the Django web process.</div></section>
+</aside>
+<div class="tw-stack">
+<section class="tw-card tw-table-card" id="tw-test-results"><div class="tw-card-heading"><div><span class="tw-overline">03 / DISCOVERED TESTS</span><h2>Reference test inventory <span class="tw-count">{{ filtered_count }}</span></h2><p>40 results per page · definitions only</p></div><span class="tw-tag">Not executed</span></div>
+{% if truncated %}<div class="tw-notice">Results capped at 20,000 discovered entries.</div>{% endif %}
+<div class="tw-table-scroll"><table class="tw-table"><thead><tr><th>Test / function</th><th>Source package</th><th>Runtime</th><th>Status</th></tr></thead><tbody>
+{% for item in page %}<tr><td><strong>{{ item.name }}</strong><small>{{ item.file }}</small></td><td><span class="tw-truncate">{{ item.package }}</span></td><td><span class="tw-code-tag">{{ item.kind }}</span></td><td><span class="tw-unexecuted">● Not run</span></td></tr>{% empty %}<tr><td colspan="4" class="tw-table-empty">No matching tests. Broaden the filters or install the official Gno source on the server.</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="tw-pagination">{% if page.has_previous %}<a href="?{{ params }}&amp;page={{ page.previous_page_number }}">← Previous</a>{% else %}<span></span>{% endif %}<span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="?{{ params }}&amp;page={{ page.next_page_number }}">Next →</a>{% endif %}</div></section>
+<section class="tw-card" id="tw-catalog-source"><div class="tw-card-heading"><div><span class="tw-overline">04 / PROVENANCE</span><h2>Source and trust</h2></div></div><div class="tw-mini-line"><span>Upstream</span><strong><a href="https://github.com/gnolang/gno" rel="noopener noreferrer">gnolang/gno ↗</a></strong></div><div class="tw-mini-line"><span>Source location</span><strong>Administrator-managed GNOROOT</strong></div><div class="tw-mini-line"><span>Test success claims</span><strong class="tw-warning">None</strong></div><p class="tw-help">The scanner uses heuristics, not compiler-proven coverage. Upstream files are not redistributed or executed by this catalog.</p></section>
+</div></div></div>
+{% endblock %}

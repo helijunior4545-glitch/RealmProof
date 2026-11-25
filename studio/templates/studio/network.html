@@ -1,39 +1,47 @@
 {% extends "studio/base.html" %}
 {% load static i18n %}
-{% block title %}{% translate "Network explorer" %}{% endblock %}
-{% block context_label %}NETWORK / INSPECTOR{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'studio/network.css' %}">{% endblock %}
+{% block title %}Network explorer{% endblock %}
+{% block context_label %}EXPLORER / TRANSACTIONS{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'studio/tender-workspace.css' %}">{% endblock %}
 {% block content %}
-<div class="nx">
-<header class="nx-heading"><div><span class="eyebrow">BLOCKCHAIN / EXPLORER</span><h1>{% translate "Network explorer" %}</h1><p>{% translate "Inspect transactions and execution receipts on Gno.land." %}</p></div><span class="nx-tag">{% translate "Read-only RPC" %}</span></header>
-<nav class="nx-nav" aria-label="{% translate 'Explorer sections' %}"><a href="#network-overview">{% translate "Overview" %}</a><a href="#transaction-inspector">{% translate "Transaction inspector" %}</a><a href="#execution-engine">{% translate "Execution engine" %}</a></nav>
-<section id="network-overview" class="nx-metrics" aria-label="{% translate 'Network status' %}">
-<div><span>{% translate "Chain ID" %}</span><strong>{{ chain_status.chain_id|default:"—" }}</strong></div>
-<div><span>{% translate "Latest block" %}</span><strong>{{ chain_status.height|default:"—" }}</strong></div>
-<div><span>{% translate "Node sync" %}</span><strong>{% if chain_status %}{% if chain_status.catching_up %}{% translate "Catching up" %}{% else %}<span class="nx-good">{% translate "Synced" %}</span>{% endif %}{% else %}—{% endif %}</strong></div>
-<div><span>{% translate "Local CLI" %}</span><strong>{% if cli_available %}{% translate "Detected" %}{% else %}{% translate "Unavailable" %}{% endif %}</strong></div>
-</section>
-<div class="nx-workbench" id="transaction-inspector">
-<section class="nx-panel"><header><h2>{% translate "Transaction lookup" %}</h2><p>{% translate "Choose a network and identify a transaction." %}</p></header>
-<form method="get" class="nx-form">
-<label for="nx-network">{% translate "Network" %}</label><select id="nx-network" name="network"><option value="testnet" {% if network == 'testnet' %}selected{% endif %}>Onyx · testnet</option><option value="mainnet" {% if network == 'mainnet' %}selected{% endif %}>Gno.land · mainnet</option></select>
-<label for="nx-hash">{% translate "Transaction hash" %}</label><input id="nx-hash" name="hash" maxlength="66" value="{{ digest }}" placeholder="Hexadecimal / Base64" spellcheck="false">
-<label for="nx-height">{% translate "Block height" %}</label><input id="nx-height" name="height" inputmode="numeric" maxlength="18" value="{{ height }}" placeholder="e.g. 1408743"><small>{% translate "Required when transaction indexing is disabled." %}</small>
-<button class="button primary" type="submit">{% translate "Inspect transaction" %} →</button>
+<div class="tw">
+<div class="tw-page-title"><div><div class="tw-crumb">NETWORK ANALYTICS <span>/</span> TRANSACTION INSPECTOR</div><h1>Transaction Inspector</h1><p>Investigate Gno block inclusion, transaction receipts and execution context.</p></div><span class="tw-live"><span class="tw-dot"></span> Public RPC · read-only</span></div>
+<div class="tw-rail" aria-label="Inspector navigation"><a href="#tw-overview" class="tw-active">Overview</a><a href="#tw-receipt">Receipt &amp; gas</a><a href="#tw-raw">Raw response</a><a href="#tw-environment">Environment</a></div>
+<div class="tw-stats" id="tw-overview">
+<div class="tw-stat"><span class="tw-overline">NETWORK</span><strong>{{ chain_status.chain_id|default:"Unavailable" }}</strong><small>{% if network == "mainnet" %}Mainnet{% else %}Onyx testnet{% endif %}</small></div>
+<div class="tw-stat"><span class="tw-overline">LATEST BLOCK</span><strong>{{ chain_status.height|default:"—" }}</strong><small>Reported height</small></div>
+<div class="tw-stat"><span class="tw-overline">NODE STATUS</span><strong>{% if chain_status %}{% if chain_status.catching_up %}<span class="tw-warning">Synchronizing</span>{% else %}<span class="tw-positive">Synced</span>{% endif %}{% else %}Unknown{% endif %}</strong><small>Reported by RPC</small></div>
+<div class="tw-stat"><span class="tw-overline">GNO TOOLCHAIN</span><strong>{% if cli_available %}Detected{% else %}<span class="tw-warning">Not detected</span>{% endif %}</strong><small>Local server</small></div>
+</div>
+<div class="tw-layout">
+<aside class="tw-stack">
+<section class="tw-card"><div class="tw-card-heading"><div><span class="tw-overline">01 / QUERY</span><h2>Transaction parameters</h2></div><span class="tw-mark">⌕</span></div>
+<form method="get" class="tw-form">
+<label for="tw-network">Network <span>Required</span></label><select name="network" id="tw-network"><option value="testnet" {% if network == "testnet" %}selected{% endif %}>Onyx · testnet</option><option value="mainnet" {% if network == "mainnet" %}selected{% endif %}>Gno.land · mainnet</option></select>
+<label for="tw-hash">Transaction hash <span>Hex / Base64</span></label><input id="tw-hash" name="hash" maxlength="66" spellcheck="false" value="{{ digest }}" placeholder="Paste transaction hash">
+<label for="tw-height">Block height <span>Optional when indexed</span></label><input id="tw-height" name="height" maxlength="18" inputmode="numeric" value="{{ height }}" placeholder="e.g. 1408743">
+<p class="tw-help">Supply the height to match raw transaction bytes when transaction indexing is disabled.</p>
+<button class="tw-primary" type="submit">Inspect transaction <span>→</span></button>
 </form></section>
-<section class="nx-panel nx-result"><header><h2>{% translate "Execution overview" %}</h2><p>{% translate "Inclusion, execution and availability are separate checks." %}</p></header>
-{% if error %}<div class="nx-error" role="alert">{{ error }}</div>{% endif %}
+<section class="tw-card tw-help-card" id="tw-environment"><div class="tw-card-heading"><div><span class="tw-overline">ENVIRONMENT</span><h2>Verification boundaries</h2></div></div>
+<div class="tw-mini-line"><span>Execution mode</span><strong>Read only</strong></div><div class="tw-mini-line"><span>Signing required</span><strong>No</strong></div><div class="tw-mini-line"><span>Consensus verification</span><strong class="tw-warning">Not performed</strong></div><div class="tw-mini-line"><span>Latest block time</span><strong>{{ chain_status.block_time|default:"—" }}</strong></div><p class="tw-help">Public RPC reports are not independent proofs of consensus, deployment approval or package activation.</p></section>
+</aside>
+<div class="tw-stack">
+<section class="tw-card tw-main-card"><div class="tw-card-heading"><div><span class="tw-overline">02 / ANALYZE</span><h2>Transaction overview</h2></div><span class="tw-tag">RPC evidence</span></div>
+{% if error %}<div class="tw-error" role="alert"><strong>Query failed</strong><p>{{ error }}</p></div>{% endif %}
 {% if transaction_json %}
-{% if transaction.inclusion %}
-<div class="nx-check"><span>{% translate "Transaction inclusion" %}</span><strong class="nx-good">{% translate "Hash matched" %}</strong></div>
-<div class="nx-check"><span>{% translate "Execution receipt" %}</span><strong class="{% if transaction.execution == 'passed' %}nx-good{% elif transaction.execution == 'failed' %}nx-bad{% else %}nx-muted{% endif %}">{{ transaction.execution|capfirst }}</strong></div>
-<div class="nx-check"><span>{% translate "Package availability" %}</span><strong class="nx-muted">{% translate "Unverified" %}</strong></div>
-<dl class="nx-data"><div><dt>{% translate "Block" %}</dt><dd>{{ transaction.height }}</dd></div><div><dt>{% translate "Index" %}</dt><dd>{{ transaction.index }}</dd></div><div><dt>{% translate "Gas used" %}</dt><dd>{{ transaction.receipt.GasUsed|default:"—" }}</dd></div><div><dt>{% translate "Gas wanted" %}</dt><dd>{{ transaction.receipt.GasWanted|default:"—" }}</dd></div></dl>
-<p class="nx-hash">{{ transaction.hash_hex }}</p>
-{% else %}<p>{% translate "Indexed RPC response received. Block matching has not been performed." %}</p>{% endif %}
-<details class="nx-details"><summary>{% translate "Raw RPC response" %}</summary><pre>{{ transaction_json }}</pre></details>
-{% elif not error %}<div class="nx-empty"><span aria-hidden="true">◎</span><h3>{% translate "No transaction selected" %}</h3><p>{% translate "Enter a hash to inspect its execution. Include the block height for hash matching." %}</p></div>{% endif %}
-</section></div>
-<section class="nx-panel nx-secondary" id="execution-engine"><header><h2>{% translate "Execution environment" %}</h2></header><div class="nx-check"><span>{% translate "Gno CLI" %}</span><strong>{% if cli_available %}{% translate "Executable detected" %}{% else %}{% translate "Not detected" %}{% endif %}</strong></div><div class="nx-check"><span>{% translate "Latest block timestamp" %}</span><strong>{{ chain_status.block_time|default:"—" }}</strong></div><p>{% translate "RPC responses are not independent consensus proofs. CLI detection does not establish runtime compatibility." %} <a href="https://docs.gno.land/builders/installation/">{% translate "Installation guide" %}</a></p></section>
+<div class="tw-result-header"><div><span class="tw-overline">EXECUTION</span><h3>{% if transaction.execution == "passed" %}<span class="tw-positive">Reported success</span>{% elif transaction.execution == "failed" %}<span class="tw-negative">Reported failure</span>{% else %}Status undetermined{% endif %}</h3></div><span class="tw-tag">On-chain RPC report</span></div>
+<div class="tw-verification"><div><span class="tw-icon tw-{% if transaction.inclusion %}good{% else %}neutral{% endif %}">{% if transaction.inclusion %}✓{% else %}?{% endif %}</span><span>Transaction inclusion<small>{% if transaction.inclusion %}Hash matched against block bytes{% else %}Not independently matched{% endif %}</small></span><strong class="{% if transaction.inclusion %}tw-positive{% else %}tw-warning{% endif %}">{% if transaction.inclusion %}Matched{% else %}Unverified{% endif %}</strong></div>
+<div><span class="tw-icon tw-{% if transaction.execution == 'failed' %}bad{% elif transaction.execution == 'passed' %}good{% else %}neutral{% endif %}">{% if transaction.execution == "passed" %}✓{% elif transaction.execution == "failed" %}×{% else %}?{% endif %}</span><span>Receipt execution<small>Node-reported execution outcome</small></span><strong class="{% if transaction.execution == 'passed' %}tw-positive{% elif transaction.execution == 'failed' %}tw-negative{% else %}tw-warning{% endif %}">{{ transaction.execution|default:"Unknown"|capfirst }}</strong></div>
+<div><span class="tw-icon tw-neutral">?</span><span>Package activation<small>Requires separate realm availability query</small></span><strong class="tw-warning">Not verified</strong></div></div>
+<div class="tw-subheading"><h3>Transaction identifiers</h3></div>
+<div class="tw-kv"><div><span>Chain ID</span><strong>{{ transaction.chain_id|default:chain_status.chain_id|default:"—" }}</strong></div><div><span>Block</span><strong>{{ transaction.height|default:"—" }}</strong></div><div><span>Transaction index</span><strong>{{ transaction.index|default_if_none:"—" }}</strong></div><div><span>Size</span><strong>{{ transaction.size_bytes|default:"—" }} bytes</strong></div><div class="tw-kv-full"><span>Hash</span><code>{{ transaction.hash_hex|default:digest }}</code></div></div>
+{% elif not error %}<div class="tw-placeholder"><div class="tw-placeholder-icon">⌘</div><h3>Ready to inspect</h3><p>Choose a network and submit a transaction hash. Receipt, gas and trust boundaries appear here, without obscuring the raw evidence.</p></div>{% endif %}
+</section>
+<section class="tw-card" id="tw-receipt"><div class="tw-card-heading"><div><span class="tw-overline">03 / RECEIPT</span><h2>Gas &amp; execution details</h2></div></div>
+<div class="tw-gas"><div><span>Gas wanted</span><strong>{{ transaction.receipt.GasWanted|default:"—" }}</strong></div><div><span>Gas used</span><strong>{{ transaction.receipt.GasUsed|default:"—" }}</strong></div></div>
+<p class="tw-help">No gas breakdown by function or trace is available from this inspector. These metrics must not be mistaken for a full GnoVM profiler.</p></section>
+{% if transaction_json %}<section class="tw-card" id="tw-raw"><div class="tw-card-heading"><div><span class="tw-overline">04 / EVIDENCE</span><h2>Raw RPC response</h2></div><span class="tw-tag">Unmodified data view</span></div><details class="tw-disclosure"><summary>View transaction JSON <span>⌄</span></summary><pre>{{ transaction_json }}</pre></details></section>{% endif %}
+</div></div>
 </div>
 {% endblock %}

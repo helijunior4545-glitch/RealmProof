@@ -25,11 +25,11 @@
       
       {% if user.is_authenticated %}<a class="nav-link" href="{% url 'studio:dashboard' %}"><span class="rp-object rp-cube" aria-hidden="true"><i></i><b></b><em></em></span> My workspaces</a>{% endif %}
       {% if member %}
-      <div class="nav-group-label nav-group-gap">ACTIVE ORGANIZATION</div>
+      <div class="nav-group-label nav-group-gap">WORKSPACE / {{ member.organization.name|truncatechars:16 }}</div>
       <a class="nav-link" href="{% url 'studio:organization' member.organization.slug %}"><span class="rp-object rp-vault" aria-hidden="true"><i></i><b></b><em></em></span> {{ member.organization.name|truncatechars:19 }}</a>
-      <a class="nav-link" href="{% url 'studio:network' member.organization.slug %}"><span class="rp-object rp-orbit" aria-hidden="true"><i></i><b></b><em></em></span> Network explorer</a>
-      <a class="nav-link" href="{% url 'studio:ledger_lab' member.organization.slug %}">Ledger validation lab</a>
-      <a class="nav-link" href="{% url 'studio:native_catalog' member.organization.slug %}">Native test catalog</a>
+      <a class="nav-link" href="{% url 'studio:network' member.organization.slug %}"><span class="t-nav-glyph">⌕</span> Network explorer</a>
+      <a class="nav-link" href="{% url 'studio:ledger_lab' member.organization.slug %}"><span class="t-nav-glyph">◇</span> Ledger validation lab</a>
+      <a class="nav-link" href="{% url 'studio:native_catalog' member.organization.slug %}"><span class="t-nav-glyph">▤</span> Native test catalog</a>
       {% endif %}
       <div class="sidebar-bottom">
         <div class="sidebar-meta"><span class="status-dot"></span> REALMPROOF STUDIO <span class="muted-tag">v0.2</span></div>
@@ -47,6 +47,7 @@
           <span class="connection"><span class="status-dot"></span> Verification console</span>
           <span class="topbar-divider"></span>
           <span class="topbar-security">Independent tooling</span>
+          {% block topbar_action %}{% endblock %}
         </div>
       </header>
       <main class="content" id="main-content">
