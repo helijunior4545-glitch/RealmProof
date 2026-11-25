@@ -20,4 +20,10 @@ os.environ["DJANGO_DEBUG"] = "1"
 os.environ["DATABASE_URL"] = ""
 os.environ["DJANGO_ALLOWED_HOSTS"] = "localhost,127.0.0.1,[::1]"
 os.environ["DJANGO_STATIC_ROOT"] = str(_root / "staticfiles")
+import hmac
+import hashlib
+os.environ["REALMPROOF_DEMO_USERNAME"] = "hackathon_demo_public"
+os.environ["REALMPROOF_DEMO_PASSWORD"] = hmac.new(
+    _secret.encode(), b"realmproof-local-demo-v1", hashlib.sha256
+).hexdigest()
 from .settings import *  # noqa: F403,E402
