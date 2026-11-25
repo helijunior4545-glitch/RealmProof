@@ -13,18 +13,19 @@
 <body>
   <div class="app-shell">
     <aside class="sidebar" aria-label="Main navigation">
-      <a class="brand" href="{% url 'studio:dashboard' %}" aria-label="RealmProof home">
+      <a class="brand" href="{% url 'studio:public_demo' %}" aria-label="RealmProof home">
         <span class="brand-icon" aria-hidden="true">◈</span>
         <span class="brand-name">realm<span>proof</span><small>CONSOLE</small></span>
       </a>
       <div class="nav-group-label">WORKSPACE</div>
-      <a class="nav-link" href="{% url 'studio:dashboard' %}"><span aria-hidden="true">▦</span> Overview</a>
+      <a class="nav-link" href="{% url 'studio:public_demo' %}"><span aria-hidden="true">▦</span> Overview</a>
+      {% if user.is_authenticated %}<a class="nav-link" href="{% url 'studio:dashboard' %}">Developer workspace</a>{% endif %}
       {% if member %}
       <div class="nav-group-label nav-group-gap">ACTIVE ORGANIZATION</div>
       <a class="nav-link" href="{% url 'studio:organization' member.organization.slug %}"><span aria-hidden="true">⬡</span> {{ member.organization.name|truncatechars:19 }}</a>
       {% endif %}
       <div class="sidebar-bottom">
-        <div class="sidebar-meta"><span class="status-dot"></span> LOCAL DEVELOPMENT <span class="muted-tag">v0.2</span></div>
+        <div class="sidebar-meta"><span class="status-dot"></span> REALMPROOF STUDIO <span class="muted-tag">v0.2</span></div>
         <div class="sidebar-note">Independent developer tooling for the Gno.land ecosystem.</div>
         {% if user.is_authenticated %}
           <div class="account-box"><span class="avatar">{{ user.username|slice:":1"|upper }}</span><span class="account-name">{{ user.username }}</span></div>
@@ -36,9 +37,9 @@
       <header class="topbar">
         <div class="topbar-location"><span class="topbar-prefix">REALMPROOF</span><span class="topbar-slash">/</span> {% block context_label %}CONSOLE{% endblock %}</div>
         <div class="topbar-right">
-          <span class="connection"><span class="status-dot"></span> Local workspace</span>
+          <span class="connection"><span class="status-dot"></span> Verification console</span>
           <span class="topbar-divider"></span>
-          <span class="topbar-security">No chain connected</span>
+          <span class="topbar-security">Independent tooling</span>
         </div>
       </header>
       <main class="content" id="main-content">

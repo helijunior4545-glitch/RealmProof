@@ -1,0 +1,22 @@
+{% extends "studio/base.html" %}
+{% block title %}Interactive demo{% endblock %}
+{% block context_label %}PUBLIC DEMO{% endblock %}
+{% block content %}
+<p class="eyebrow">OPEN VERIFICATION LAB · NO ACCOUNT REQUIRED</p>
+<h1>Test a transfer. Inspect the evidence.</h1>
+<p>Explore assertions and boundary conditions without accessing a private workspace.</p>
+<div class="notice">This public lab uses a Python reference model of the bundled Gno transfer fixture. Results are simulated, not Gno VM execution or on-chain evidence.</div>
+<div class="panel">
+<h2>Configure a scenario</h2>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary" type="submit">Run reference simulation</button></form>
+</div>
+{% if result %}
+<div class="panel" role="status"><h2>{% if result.passed %}PASS{% else %}FAIL{% endif %} · Reference simulation</h2>
+<table><thead><tr><th>Assertion</th><th>Expected</th><th>Observed</th></tr></thead><tbody>
+<tr><td>Status</td><td>{{ result.expected.status }}</td><td>{{ result.observed.status }}</td></tr>
+<tr><td>Balance</td><td>{{ result.expected.balance }}</td><td>{{ result.observed.balance }}</td></tr>
+</tbody></table><p>Verified on-chain: No</p></div>
+{% endif %}
+<div class="panel"><h2>Suggested scenarios</h2><table><thead><tr><th>Scenario</th><th>Balance</th><th>Amount</th><th>Authorized</th><th>Expected status</th><th>Expected balance</th></tr></thead><tbody>{% for name,family,balance,amount,authorized,status,final in cases %}<tr><td>{{ name }}</td><td>{{ balance }}</td><td>{{ amount }}</td><td>{{ authorized|yesno:"Yes,No" }}</td><td>{{ status }}</td><td>{{ final }}</td></tr>{% endfor %}</tbody></table></div>
+<p><a href="{% url 'studio:public_demo' %}">Reset demo</a> · <a href="{% url 'studio:dashboard' %}">Developer workspace (sign in)</a></p>
+{% endblock %}

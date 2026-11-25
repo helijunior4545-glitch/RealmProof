@@ -1,9 +1,10 @@
 from django.urls import path
-from . import views, review, suites, builder
+from . import views, review, suites, builder, public_demo
 
 app_name = "studio"
 urlpatterns = [
-    path("", views.dashboard, name="dashboard"),
+    path("", public_demo.home, name="public_demo"),
+    path("workspace/", views.dashboard, name="dashboard"),
     path("organizations/new/", views.create_organization, name="create_organization"),
     path("organizations/<slug:slug>/", views.organization, name="organization"),
     path("organizations/<slug:slug>/projects/new/", views.create_project, name="create_project"),
