@@ -22,6 +22,9 @@ def enqueue(member, key):
     if not Membership.objects.filter(pk=member.pk, organization=org, role__in=["owner", "admin", "editor"]).exists():
         raise PermissionError("Write membership required")
     jobs = UniversalJob.objects.filter(organization=org)
+    existing = jobs.filter(suite=key, status__in=["queued", "running"]).order_by("created_at").first()
+    if existing:
+        return existing
     if jobs.filter(status__in=["queued", "running"]).count() >= MAX_ACTIVE:
         raise QuotaExceeded("Active queue limit reached.")
     if jobs.filter(created_at__gte=timezone.now()-timedelta(days=1)).count() >= MAX_DAILY:
@@ -80,10 +83,26 @@ def process_one():
         result = error_result("Permission denied: membership revoked.")
     else:
         try:
-            result = execute(job.suite)
+            result = execute(job.suite, progress=lambda count: UniversalJob.objects.filter(pk=job.pk, token=job.token, status="running").update(result={"observed_checks": count}))
         except Exception:
             import logging
             logging.getLogger(__name__).exception("Universal job failed: %s", job.pk)
             result = error_result("Unexpected worker exception; inspect server logs.")
     finish(job.pk, job.token, result)
+    return True
+
+
+@transaction.atomic
+def cancel(member, job_id):
+    org = Organization.objects.select_for_update().get(pk=member.organization_id)
+    if not Membership.objects.filter(pk=member.pk, organization=org, role__in=["owner", "admin", "editor"]).exists():
+        raise PermissionError("Write membership required")
+    job = UniversalJob.objects.select_for_update().filter(pk=job_id, organization=org, status="queued").first()
+    if not job:
+        return False
+    job.status = "cancelled"
+    job.finished_at = timezone.now()
+    job.result = {"execution": "not_executed", "verdict": "inconclusive", "rows": [], "verified_on_chain": False}
+    job.save(update_fields=["status", "finished_at", "result"])
+    AuditEvent.objects.create(organization=org, actor=member.user, action="universal.cancelled", target=str(job.pk), details={"suite": job.suite})
     return True

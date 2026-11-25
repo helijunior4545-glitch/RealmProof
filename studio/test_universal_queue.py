@@ -15,9 +15,25 @@ class QueueTests(TestCase):
 
     def test_active_quota(self):
         for _ in range(4):
-            enqueue(self.member, "ledger-v1")
+            UniversalJob.objects.create(organization=self.org, actor=self.user, suite="ledger-v1")
         with self.assertRaises(QuotaExceeded):
             enqueue(self.member, "ledger-v1")
+
+    def test_duplicate_active_request(self):
+        first = enqueue(self.member, "ledger-v1")
+        self.assertEqual(enqueue(self.member, "ledger-v1").pk, first.pk)
+        self.assertEqual(UniversalJob.objects.count(), 1)
+
+    def test_cancel_queued_only(self):
+        from .universal_queue import cancel
+        job = enqueue(self.member, "ledger-v1")
+        self.assertTrue(cancel(self.member, job.pk))
+        job.refresh_from_db()
+        self.assertEqual(job.status, "cancelled")
+        self.assertIsNone(claim())
+        job = enqueue(self.member, "ledger-v1")
+        claim()
+        self.assertFalse(cancel(self.member, job.pk))
 
     def test_one_running_per_org(self):
         enqueue(self.member, "ledger-v1")

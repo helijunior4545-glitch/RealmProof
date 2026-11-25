@@ -20,16 +20,18 @@ class Suite:
     checks: int
     adapter: object
 
-def transfer():
+def transfer(progress=None):
     rows = []
     for name, family, balance, amount, authorized, status, final in engine.CASES:
         expected = {"status": status, "balance": final, "state_changed": final != balance}
         observed, evidence = engine.execute({"balance": balance, "amount": amount, "authorized": authorized})
         rows.append({"name": name, "expected": expected, "observed": observed,
                      "verdict": evaluate(expected, observed).status, "evidence": evidence})
+        if progress:
+            progress(len(rows))
     return rows
 
-def ledger():
+def ledger(progress=None):
     observed, source, harness, output = ledger_lab.run()
     return [{"name": title, "expected": {"value": expected}, "observed": {"value": observed[key]},
              "verdict": evaluate({"value": expected}, {"value": observed[key]}).status,
@@ -43,10 +45,12 @@ SUITES = {
     "ledger-v1": Suite("ledger-v1", "Ledger lifecycle", ("functional", "state", "boundary", "negative", "permission", "invariant", "regression"), len(ledger_lab.CASES), ledger),
 }
 
-def execute(key):
+def execute(key, progress=None):
     suite = SUITES[key]
     try:
-        rows = suite.adapter()
+        rows = suite.adapter(progress)
+        if progress and len(rows) == suite.checks:
+            progress(len(rows))
         if len(rows) != suite.checks:
             raise RuntimeError("Incomplete suite evidence.")
     except (RuntimeError, ValueError, OSError, subprocess.TimeoutExpired) as exc:

@@ -130,5 +130,5 @@ class UniversalJob(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["status", "created_at"], name="rp_job_queue_idx")]
-        constraints = [models.CheckConstraint(condition=Q(status__in=["queued", "running", "completed", "error"]), name="rp_job_valid_status"),
+        constraints = [models.CheckConstraint(condition=Q(status__in=["queued", "running", "completed", "error", "cancelled"]), name="rp_job_valid_status"),
                        models.UniqueConstraint(fields=["organization"], condition=Q(status="running"), name="rp_job_one_running")]
