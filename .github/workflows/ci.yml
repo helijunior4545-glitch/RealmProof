@@ -3,10 +3,22 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 jobs:
   django:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
+      REALMPROOF_CONCURRENCY_DSN: postgresql://ci:ci@localhost:5432/ci
       DJANGO_DEBUG: "1"
       DJANGO_SECRET_KEY: "ci-only-not-for-production"
     steps:
@@ -15,9 +27,22 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.3"
+          cache: false
+      - name: Install pinned Gno runtime
+        run: |
+          git clone --depth 1 --branch v1.8.0 https://github.com/gnolang/gno.git "$RUNNER_TEMP/gno"
+          cd "$RUNNER_TEMP/gno"
+          go build -o "$RUNNER_TEMP/gno-bin/gno" ./gnovm/cmd/gno
+          echo "$RUNNER_TEMP/gno-bin" >> "$GITHUB_PATH"
+          echo "GNOROOT=$RUNNER_TEMP/gno" >> "$GITHUB_ENV"
       - run: python manage.py check
       - run: python manage.py makemigrations --check --dry-run
       - run: python manage.py migrate --noinput
       - run: python manage.py test -v 2
+      - name: Verify PostgreSQL concurrency
+        run: python manage.py audit_engines concurrency-v1
       - name: Verify production static manifest
         run: DJANGO_DEBUG=0 DJANGO_SECRET_KEY=ci-static-build DATABASE_URL=postgresql://ci:ci@localhost:5432/ci python manage.py collectstatic --noinput
