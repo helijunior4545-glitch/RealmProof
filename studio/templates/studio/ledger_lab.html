@@ -1,0 +1,12 @@
+{% extends "studio/base.html" %}
+{% load static %}
+{% block title %}Ledger validation lab{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'studio/network.css' %}">{% endblock %}
+{% block content %}<div class="nx">
+<header class="nx-heading"><div><span class="eyebrow">TEST STUDIO / STATEFUL EXECUTION</span><h1>Ledger validation lab</h1><p>One sequential Gno lifecycle. Funding, reservations, settlement and invariants.</p></div>{% if member.role != "viewer" %}<form method="post">{% csrf_token %}<button class="button primary">Run complete lifecycle →</button></form>{% endif %}</header>
+<div class="nx-metrics"><div><span>Assertions</span><strong>{{ total }}</strong></div><div><span>Passed</span><strong class="nx-good">{{ passed }}</strong></div><div><span>Failed</span><strong class="nx-bad">{{ failed }}</strong></div><div><span>Environment</span><strong>Local Gno</strong></div></div>
+{% if error %}<div class="nx-error" role="alert">{{ error }}</div>{% endif %}
+<section class="nx-panel"><header><h2>Lifecycle coverage</h2><p>Grouped by intent; execution follows the fixed harness order. Authorization is modeled, not wallet authentication.</p></header>
+{% for group, rows in groups.items %}<details class="nx-details" {% if forloop.first or failed %}open{% endif %}><summary>{{ group }} · {{ rows|length }} checks</summary>{% for row in rows %}<div class="nx-check"><div><strong>{{ row.title }}</strong><p><code>{{ row.expression }}</code></p></div><div><small>Expected: {{ row.expected }} · Observed: {{ row.actual|default_if_none:"—" }}</small><br><strong class="{% if row.status == 'passed' %}nx-good{% elif row.status == 'failed' %}nx-bad{% else %}nx-muted{% endif %}">{{ row.status|capfirst }}</strong></div></div>{% endfor %}</details>{% endfor %}</section>
+{% if output %}<section class="nx-panel"><h2>Execution evidence</h2><p class="nx-hash">Source SHA-256: {{ source_hash }}</p><p class="nx-hash">Harness SHA-256: {{ harness_hash }}</p><details class="nx-details"><summary>Raw Gno output</summary><pre>{{ output }}</pre></details></section>{% endif %}
+<p>Results are transient, local-only and not verified on-chain. No real funds or signatures are involved.</p></div>{% endblock %}

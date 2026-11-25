@@ -28,6 +28,7 @@
       <div class="nav-group-label nav-group-gap">ACTIVE ORGANIZATION</div>
       <a class="nav-link" href="{% url 'studio:organization' member.organization.slug %}"><span class="rp-object rp-vault" aria-hidden="true"><i></i><b></b><em></em></span> {{ member.organization.name|truncatechars:19 }}</a>
       <a class="nav-link" href="{% url 'studio:network' member.organization.slug %}"><span class="rp-object rp-orbit" aria-hidden="true"><i></i><b></b><em></em></span> Network explorer</a>
+      <a class="nav-link" href="{% url 'studio:ledger_lab' member.organization.slug %}">Ledger validation lab</a>
       {% endif %}
       <div class="sidebar-bottom">
         <div class="sidebar-meta"><span class="status-dot"></span> REALMPROOF STUDIO <span class="muted-tag">v0.2</span></div>
