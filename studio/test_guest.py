@@ -1,17 +1,11 @@
-from django.test import TestCase, Client
+from django.test import TestCase
 from django.urls import reverse
-from .models import Membership, Scenario
+from django.contrib.auth import get_user_model
 
 class GuestTests(TestCase):
-    def test_guest_isolation(self):
+    def test_public_entry_does_not_create_accounts(self):
         self.assertEqual(self.client.get(reverse("studio:public_demo")).status_code, 200)
         self.assertEqual(self.client.get(reverse("studio:guest_start")).status_code, 405)
-        response = self.client.post(reverse("studio:guest_start"), {"mode":"developer"})
-        self.assertRedirects(response, reverse("studio:dashboard"))
-        first = Membership.objects.get(user_id=self.client.session["_auth_user_id"])
-        self.assertEqual(Scenario.objects.filter(organization=first.organization).count(), 6)
-        other = Client()
-        other.post(reverse("studio:guest_start"), {"mode":"review"})
-        self.assertEqual(other.get(reverse("studio:organization", args=[first.organization.slug])).status_code, 404)
-        self.assertFalse(first.user.has_usable_password())
-        self.assertFalse(first.user.is_staff)
+        self.assertRedirects(self.client.post(reverse("studio:guest_start")), reverse("login"))
+        self.assertEqual(get_user_model().objects.count(), 0)
+        self.assertEqual(self.client.get(reverse("studio:dashboard")).status_code, 302)

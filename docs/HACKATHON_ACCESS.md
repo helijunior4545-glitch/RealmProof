@@ -1,0 +1,2 @@
+# Hackathon access
+Public visitors can open Demo (reference simulation) without an account. Private workspaces require authentication. Provision an independent reviewer using `python manage.py create_reviewer judge01` and enter a unique password interactively. Each reviewer receives a separate organization and six scenarios, with editor permissions and no global administration. Share credentials privately. Existing guest records are not deleted by this release. The local Gno CLI and testnet deployment remain separate prerequisites.

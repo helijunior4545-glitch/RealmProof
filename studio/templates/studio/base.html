@@ -17,8 +17,10 @@
         <span class="brand-icon" aria-hidden="true">◈</span>
         <span class="brand-name">realm<span>proof</span><small>CONSOLE</small></span>
       </a>
-      <div class="nav-group-label">WORKSPACE</div>
+      <div class="nav-group-label">PLATFORM</div>
       <a class="nav-link" href="{% url 'studio:public_demo' %}"><span aria-hidden="true">▦</span> Overview</a>
+      <a class="nav-link" href="{% url 'studio:reference_demo' %}"><span aria-hidden="true">◇</span> Demo</a>
+      {% if not user.is_authenticated %}<a class="nav-link" href="{% url 'login' %}">Sign in</a>{% endif %}
       {% if user.is_authenticated %}<a class="nav-link" href="{% url 'studio:dashboard' %}">My workspaces</a>{% endif %}
       {% if member %}
       <div class="nav-group-label nav-group-gap">ACTIVE ORGANIZATION</div>

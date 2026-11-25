@@ -3,6 +3,6 @@
 {% block context_label %}AUTHENTICATION{% endblock %}
 {% block content %}
 <div class="signin-wrap"><div class="eyebrow"><span class="eyebrow-line"></span> SECURE CONSOLE ACCESS</div><h1>Welcome back.</h1><p class="lede">Sign in to manage your contract verification workspaces.</p>
-<div class="panel signin-panel"><div class="panel-head"><div><span class="eyebrow">REALMPROOF ACCOUNT</span><h2>Sign in</h2></div><span class="muted-tag">LOCAL</span></div><form method="post">{% csrf_token %}{{ form.as_p }}<button class="button primary block-button" type="submit">Sign in →</button></form></div>
+<div class="panel signin-panel"><div class="panel-head"><div><span class="eyebrow">REALMPROOF ACCOUNT</span><h2>Sign in</h2></div><span class="muted-tag">PRIVATE</span></div><form method="post">{% csrf_token %}{{ form.as_p }}<button class="button primary block-button" type="submit">Sign in →</button></form><p class="helper">Hackathon reviewers can use their individually issued credentials. <a href="{% url 'studio:reference_demo' %}">Explore the public Demo</a> without signing in.</p></div>
 </div>
 {% endblock %}
