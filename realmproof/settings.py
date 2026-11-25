@@ -69,7 +69,7 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = Path(os.getenv("DJANGO_STATIC_ROOT", str(BASE_DIR / "staticfiles")))
 STORAGES = {"staticfiles": {"BACKEND": (
     "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG
     else "whitenoise.storage.CompressedManifestStaticFilesStorage"
