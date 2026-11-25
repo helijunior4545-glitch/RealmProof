@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 from .forms import ProjectForm, ScenarioForm
 from .models import AuditEvent, Membership, Organization, Project, Scenario, TestRun
-from .services import parse_json_object, record_evaluation
+from .services import parse_json_object, record_evaluation, equal_json
 from . import engine
 from django.utils import timezone
 import subprocess
@@ -145,7 +145,7 @@ def run_detail(request, slug, run_id):
     for key, expected in run.expected_snapshot.items():
         present = key in run.observed
         actual = run.observed.get(key)
-        comparison.append({"field": key, "expected": expected, "actual": actual, "present": present, "matches": present and actual == expected})
+        comparison.append({"field": key, "expected": expected, "actual": actual, "present": present, "matches": present and equal_json(actual, expected)})
     return render(request, "studio/run.html", {
         "member": member, "run": run, "comparison": comparison,
         "expected_pretty": json.dumps(run.expected_snapshot, indent=2),
@@ -211,6 +211,12 @@ def execute_scenario(request, slug, scenario_id):
     run = TestRun.objects.create(organization=member.organization, scenario=scenario, initiated_by=request.user,
         input_snapshot=scenario.input_data, expected_snapshot=scenario.expected, status="pending",
         execution_status="local_running")
+    complete_local_run(run)
+    audit(member.organization, request.user, "run.local_execution", run.pk)
+    return redirect("studio:run_detail", slug=slug, run_id=run.pk)
+
+
+def complete_local_run(run):
     try:
         observed, evidence = engine.execute(run.input_snapshot)
     except (RuntimeError, ValueError, OSError, subprocess.TimeoutExpired) as exc:
@@ -221,5 +227,5 @@ def execute_scenario(request, slug, scenario_id):
         run.save()
     else:
         record_evaluation(run, observed, execution_status="local_gno", evidence=evidence)
-    audit(member.organization, request.user, "run.local_execution", run.pk)
-    return redirect("studio:run_detail", slug=slug, run_id=run.pk)
+    return run
+

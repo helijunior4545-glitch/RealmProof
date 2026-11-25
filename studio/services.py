@@ -1,5 +1,16 @@
 """Deterministic, non-signing assertions. No mocked chain transactions."""
 import json
+
+
+def equal_json(a, b):
+    if type(a) is not type(b):
+        return False
+    if isinstance(a, dict):
+        return a.keys() == b.keys() and all(equal_json(a[k], b[k]) for k in a)
+    if isinstance(a, list):
+        return len(a) == len(b) and all(equal_json(x, y) for x, y in zip(a, b))
+    return a == b
+
 from dataclasses import dataclass
 from django.utils import timezone
 
@@ -18,7 +29,7 @@ def evaluate(expected, observed):
     if not expected:
         return AssertionResult("inconclusive", "No assertions have been defined.", {})
     mismatches = {key: {"expected": value, "actual": observed.get(key), "present": key in observed}
-                  for key, value in expected.items() if key not in observed or observed[key] != value}
+                  for key, value in expected.items() if key not in observed or not equal_json(observed[key], value)}
     return AssertionResult(
         "failed" if mismatches else "passed",
         "Observed values differ from the expected assertions." if mismatches else "All expected fields match the supplied evidence.",
