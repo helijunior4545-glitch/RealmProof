@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views, review, suites, builder, public_demo, guest
 
+from . import network
+
 app_name = "studio"
 urlpatterns = [
     path("", guest.entry, name="public_demo"),
@@ -24,5 +26,6 @@ urlpatterns = [
     path("organizations/<slug:slug>/projects/<uuid:project_id>/suite/", suites.queue_suite, name="queue_suite"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/export/", suites.export_project, name="export_project"),
     path("organizations/<slug:slug>/builder/", builder.create, name="demo_builder"),
+    path("organizations/<slug:slug>/network/", network.overview, name="network"),
     path("health/", views.health, name="health"),
 ]
