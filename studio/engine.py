@@ -45,6 +45,7 @@ func TestScenario(t *testing.T) {
         (root / "transfer.gno").write_text(source)
         (root / "transfer_test.gno").write_text(harness)
         (root / "gno.mod").write_text("module gno.land/p/realmproof/transfer\n")
+        (root / "gnomod.toml").write_text('module = "gno.land/p/realmproof/transfer"\n')
         result = subprocess.run([binary, "test", "-v", "."], cwd=root, env=env, stdin=subprocess.DEVNULL,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=20,
                                 text=True, errors="replace")
