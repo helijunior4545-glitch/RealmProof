@@ -4,10 +4,10 @@ from pathlib import Path
 from urllib.parse import urlparse, unquote
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "development-only-change-me")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "")
 DEBUG = os.getenv("DJANGO_DEBUG", "0") == "1"
-if not DEBUG and SECRET_KEY == "development-only-change-me":
-    raise RuntimeError("DJANGO_SECRET_KEY is required outside development")
+if not SECRET_KEY or SECRET_KEY in {"development-only-change-me", "replace-with-a-long-random-secret"}:
+    raise RuntimeError("DJANGO_SECRET_KEY is required; use realmproof.settings_local for local development")
 ALLOWED_HOSTS = [host.strip() for host in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host.strip()]
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()]
 INSTALLED_APPS = [
