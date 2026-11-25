@@ -1,10 +1,39 @@
 {% extends "studio/base.html" %}
-{% block title %}Network explorer{% endblock %}
+{% load static i18n %}
+{% block title %}{% translate "Network explorer" %}{% endblock %}
+{% block context_label %}NETWORK / INSPECTOR{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'studio/network.css' %}">{% endblock %}
 {% block content %}
-<div class="page-heading rp-heading"><span class="rp-object rp-orbit" aria-hidden="true"><i></i><b></b><em></em></span><div><span class="eyebrow">BLOCKCHAIN / LIVE RPC</span><h1>Network explorer</h1><p class="lede">Inspect public chain data without signing or submitting transactions.</p></div></div>
-<section class="panel"><form method="get"><label>Network<select name="network"><option value="testnet" {% if network == 'testnet' %}selected{% endif %}>Onyx · testnet</option><option value="mainnet" {% if network == 'mainnet' %}selected{% endif %}>Gno.land · mainnet</option></select></label><label>Transaction hash (optional)<input name="hash" maxlength="66" value="{{ digest }}" placeholder="Hexadecimal or Base64"></label><label>Block height (optional)<input name="height" inputmode="numeric" maxlength="18" value="{{ height }}" placeholder="Required when transaction indexing is disabled"></label><button class="button primary">Query network →</button></form></section>
-{% if error %}<div class="notice" role="alert">{{ error }}</div>{% endif %}
-{% if chain_status %}<div class="metric-grid"><div class="metric"><span class="metric-label">CHAIN ID</span><strong>{{ chain_status.chain_id }}</strong></div><div class="metric"><span class="metric-label">BLOCK HEIGHT</span><strong>{{ chain_status.height }}</strong></div><div class="metric"><span class="metric-label">NODE SYNC</span><strong>{% if chain_status.catching_up %}Catching up{% else %}Not catching up{% endif %}</strong></div></div><section class="panel"><h2>Latest block timestamp</h2><p>{{ chain_status.block_time }}</p><p class="helper">Reported by the configured public RPC. Not independent cryptographic verification.</p></section>{% endif %}
-<section class="panel"><h2>Local execution engine</h2><p>{% if cli_available %}Gno executable found. Run a prepared scenario to validate compatibility.{% else %}Gno CLI not installed or not on PATH.{% endif %}</p><p><a href="https://docs.gno.land/builders/installation/">Official installation guide</a></p></section>
-{% if transaction_json %}<section class="panel"><h2>Transaction response</h2><p class="helper">Block matching checks transaction bytes against the supplied hash. Execution success does not establish package activation or public availability.</p><pre>{{ transaction_json }}</pre></section>{% endif %}
+<div class="nx">
+<header class="nx-heading"><div><span class="eyebrow">BLOCKCHAIN / EXPLORER</span><h1>{% translate "Network explorer" %}</h1><p>{% translate "Inspect transactions and execution receipts on Gno.land." %}</p></div><span class="nx-tag">{% translate "Read-only RPC" %}</span></header>
+<nav class="nx-nav" aria-label="{% translate 'Explorer sections' %}"><a href="#network-overview">{% translate "Overview" %}</a><a href="#transaction-inspector">{% translate "Transaction inspector" %}</a><a href="#execution-engine">{% translate "Execution engine" %}</a></nav>
+<section id="network-overview" class="nx-metrics" aria-label="{% translate 'Network status' %}">
+<div><span>{% translate "Chain ID" %}</span><strong>{{ chain_status.chain_id|default:"—" }}</strong></div>
+<div><span>{% translate "Latest block" %}</span><strong>{{ chain_status.height|default:"—" }}</strong></div>
+<div><span>{% translate "Node sync" %}</span><strong>{% if chain_status %}{% if chain_status.catching_up %}{% translate "Catching up" %}{% else %}<span class="nx-good">{% translate "Synced" %}</span>{% endif %}{% else %}—{% endif %}</strong></div>
+<div><span>{% translate "Local CLI" %}</span><strong>{% if cli_available %}{% translate "Detected" %}{% else %}{% translate "Unavailable" %}{% endif %}</strong></div>
+</section>
+<div class="nx-workbench" id="transaction-inspector">
+<section class="nx-panel"><header><h2>{% translate "Transaction lookup" %}</h2><p>{% translate "Choose a network and identify a transaction." %}</p></header>
+<form method="get" class="nx-form">
+<label for="nx-network">{% translate "Network" %}</label><select id="nx-network" name="network"><option value="testnet" {% if network == 'testnet' %}selected{% endif %}>Onyx · testnet</option><option value="mainnet" {% if network == 'mainnet' %}selected{% endif %}>Gno.land · mainnet</option></select>
+<label for="nx-hash">{% translate "Transaction hash" %}</label><input id="nx-hash" name="hash" maxlength="66" value="{{ digest }}" placeholder="Hexadecimal / Base64" spellcheck="false">
+<label for="nx-height">{% translate "Block height" %}</label><input id="nx-height" name="height" inputmode="numeric" maxlength="18" value="{{ height }}" placeholder="e.g. 1408743"><small>{% translate "Required when transaction indexing is disabled." %}</small>
+<button class="button primary" type="submit">{% translate "Inspect transaction" %} →</button>
+</form></section>
+<section class="nx-panel nx-result"><header><h2>{% translate "Execution overview" %}</h2><p>{% translate "Inclusion, execution and availability are separate checks." %}</p></header>
+{% if error %}<div class="nx-error" role="alert">{{ error }}</div>{% endif %}
+{% if transaction_json %}
+{% if transaction.inclusion %}
+<div class="nx-check"><span>{% translate "Transaction inclusion" %}</span><strong class="nx-good">{% translate "Hash matched" %}</strong></div>
+<div class="nx-check"><span>{% translate "Execution receipt" %}</span><strong class="{% if transaction.execution == 'passed' %}nx-good{% elif transaction.execution == 'failed' %}nx-bad{% else %}nx-muted{% endif %}">{{ transaction.execution|capfirst }}</strong></div>
+<div class="nx-check"><span>{% translate "Package availability" %}</span><strong class="nx-muted">{% translate "Unverified" %}</strong></div>
+<dl class="nx-data"><div><dt>{% translate "Block" %}</dt><dd>{{ transaction.height }}</dd></div><div><dt>{% translate "Index" %}</dt><dd>{{ transaction.index }}</dd></div><div><dt>{% translate "Gas used" %}</dt><dd>{{ transaction.receipt.GasUsed|default:"—" }}</dd></div><div><dt>{% translate "Gas wanted" %}</dt><dd>{{ transaction.receipt.GasWanted|default:"—" }}</dd></div></dl>
+<p class="nx-hash">{{ transaction.hash_hex }}</p>
+{% else %}<p>{% translate "Indexed RPC response received. Block matching has not been performed." %}</p>{% endif %}
+<details class="nx-details"><summary>{% translate "Raw RPC response" %}</summary><pre>{{ transaction_json }}</pre></details>
+{% elif not error %}<div class="nx-empty"><span aria-hidden="true">◎</span><h3>{% translate "No transaction selected" %}</h3><p>{% translate "Enter a hash to inspect its execution. Include the block height for hash matching." %}</p></div>{% endif %}
+</section></div>
+<section class="nx-panel nx-secondary" id="execution-engine"><header><h2>{% translate "Execution environment" %}</h2></header><div class="nx-check"><span>{% translate "Gno CLI" %}</span><strong>{% if cli_available %}{% translate "Executable detected" %}{% else %}{% translate "Not detected" %}{% endif %}</strong></div><div class="nx-check"><span>{% translate "Latest block timestamp" %}</span><strong>{{ chain_status.block_time|default:"—" }}</strong></div><p>{% translate "RPC responses are not independent consensus proofs. CLI detection does not establish runtime compatibility." %} <a href="https://docs.gno.land/builders/installation/">{% translate "Installation guide" %}</a></p></section>
+</div>
 {% endblock %}

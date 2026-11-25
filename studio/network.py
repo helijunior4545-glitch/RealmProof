@@ -18,7 +18,9 @@ def overview(request, slug):
     try:
         context["chain_status"] = chain.status(network)
         if digest:
-            context["transaction_json"] = json.dumps(chain.transaction(network,digest,height or None), indent=2)
+            result = chain.transaction(network,digest,height or None)
+            context["transaction"] = result
+            context["transaction_json"] = json.dumps(result, indent=2)
     except chain.ChainError as exc:
         context["error"] = str(exc)
     return render(request,"studio/network.html",context)

@@ -10,6 +10,7 @@
   <link href="{% static 'studio/app.css' %}" rel="stylesheet">
   <script src="{% static 'studio/console.js' %}" defer></script>
   <link href="{% static 'studio/objects.css' %}" rel="stylesheet">
+  {% block extra_head %}{% endblock %}
 </head>
 <body>
   <div class="app-shell">
