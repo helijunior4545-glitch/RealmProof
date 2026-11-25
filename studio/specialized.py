@@ -88,12 +88,15 @@ def parse_output(output, cases):
         raise RuntimeError("Incomplete campaign evidence: " + diagnostic_excerpt(output))
     return [value == "true" for _, value in matches]
 
-def run(kind, progress=None):
+def run(kind, progress=None, cases=None, seed=None):
     binary = shutil.which(os.environ.get("REALMPROOF_GNO_BINARY", "gno"))
     if not binary:
         raise RuntimeError("Gno CLI unavailable.")
     source = (Path(__file__).resolve().parent.parent / "realms/ledger/ledger.gno").read_text()
-    cases = campaign(kind)
+    if cases is None:
+        cases = campaign(kind)
+    if seed is None:
+        seed = SPECS[kind][1]
     env = os.environ.copy()
     root = Path.home() / ".gno/source"
     if not env.get("GNOROOT") and (root / "gnovm/stdlibs").is_dir():
@@ -118,7 +121,7 @@ def run(kind, progress=None):
             observed = {"predicate": value}
             rows.append({"name": f"{kind} / {case['id']}", "expected": expected, "observed": observed,
                          "verdict": evaluate(expected, observed).status,
-                         "evidence": {"type": "local_gno", "verified_on_chain": False, "seed": SPECS[kind][1],
+                         "evidence": {"type": "local_gno", "verified_on_chain": False, "seed": seed,
                                       "case_id": case["id"], "input": case["input"], "predicate": case["expression"],
                                       "source_sha256": hashlib.sha256(source.encode()).hexdigest(),
                                       "harness_sha256": hashlib.sha256(harness.encode()).hexdigest()}})
