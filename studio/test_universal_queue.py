@@ -17,7 +17,12 @@ class QueueTests(TestCase):
         for _ in range(4):
             UniversalJob.objects.create(organization=self.org, actor=self.user, suite="ledger-v1")
         with self.assertRaises(QuotaExceeded):
-            enqueue(self.member, "ledger-v1")
+            enqueue(self.member, "transfer-v1")
+        self.assertEqual(UniversalJob.objects.count(), 4)
+        # Reusing an existing request consumes no additional queue capacity.
+        existing = enqueue(self.member, "ledger-v1")
+        self.assertEqual(existing.suite, "ledger-v1")
+        self.assertEqual(UniversalJob.objects.count(), 4)
 
     def test_duplicate_active_request(self):
         first = enqueue(self.member, "ledger-v1")
