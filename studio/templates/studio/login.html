@@ -1,8 +1,6 @@
 {% extends "studio/base.html" %}
-{% block title %}Sign in{% endblock %}
-{% block context_label %}AUTHENTICATION{% endblock %}
+{% block title %}Developer sign in{% endblock %}
+{% block context_label %}PRIVATE WORKSPACE{% endblock %}
 {% block content %}
-<div class="signin-wrap"><div class="eyebrow"><span class="eyebrow-line"></span> SECURE CONSOLE ACCESS</div><h1>Welcome back.</h1><p class="lede">Sign in to manage your contract verification workspaces.</p>
-<div class="panel signin-panel"><div class="panel-head"><div><span class="eyebrow">REALMPROOF ACCOUNT</span><h2>Sign in</h2></div><span class="muted-tag">PRIVATE</span></div><form method="post">{% csrf_token %}{{ form.as_p }}<button class="button primary block-button" type="submit">Sign in →</button></form><p class="helper">Hackathon reviewers can enter the shared demo without credentials. <a href="{% url 'studio:reference_demo' %}">Explore the public Demo</a> without signing in.</p></div>
-<form method="post" action="{% url 'studio:guest_start' %}">{% csrf_token %}<button class="button primary" type="submit">▶ Launch Hackathon Demo <span aria-hidden="true">↗</span></button></form><p class="helper">One-click access · Shared demo workspace · No registration</p></div>
+<div class="signin-wrap"><div class="eyebrow">PRIVATE WORKSPACE</div><h1>Developer sign in</h1><p class="lede">Access your private projects and evidence.</p><div class="panel signin-panel"><form method="post">{% csrf_token %}{{ form.as_p }}<button class="button primary block-button" type="submit">Sign in →</button></form></div><p class="helper">Evaluating RealmProof? <a href="{% url 'studio:public_demo' %}">Return to Hackathon Demo</a></p></div>
 {% endblock %}

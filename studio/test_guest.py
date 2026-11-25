@@ -7,7 +7,7 @@ from studio.models import Organization, Membership
 class GuestTests(TestCase):
     def test_unconfigured(self):
         with patch.dict("os.environ", {"REALMPROOF_DEMO_USERNAME":"","REALMPROOF_DEMO_PASSWORD":""}):
-            self.assertRedirects(self.client.post(reverse("studio:guest_start")), reverse("studio:reference_demo"))
+            self.assertRedirects(self.client.post(reverse("studio:guest_start")), reverse("studio:public_demo"))
         self.assertEqual(get_user_model().objects.count(), 0)
 
     def test_shared_demo(self):
@@ -19,4 +19,4 @@ class GuestTests(TestCase):
             self.client.logout()
             user.is_staff = True
             user.save()
-            self.assertRedirects(self.client.post(reverse("studio:guest_start")), reverse("studio:reference_demo"))
+            self.assertRedirects(self.client.post(reverse("studio:guest_start")), reverse("studio:public_demo"))
