@@ -12,10 +12,11 @@
   <div class="stage {% if run.status != 'pending' %}done{% else %}current{% endif %}"><span>02</span><strong>Evaluate</strong></div>
   <div class="stage {% if run.status != 'pending' %}current{% endif %}"><span>03</span><strong>Investigate</strong></div>
 </div>
-<div class="result-overview">
-  <div class="verdict-box"><span class="eyebrow">ASSERTION VERDICT</span><strong class="verdict status-{{ run.status }}">{{ run.get_status_display|upper }}</strong><p>{{ run.reason }}</p></div>
-  <div class="run-facts"><div><span>EXECUTION STATUS</span><strong>{% if run.execution_status == "not_executed" %}Not executed{% elif run.execution_status == "external_evidence" %}External evidence{% else %}{{ run.execution_status }}{% endif %}</strong></div><div><span>PROVENANCE</span><strong>{% if run.execution_status == "external_evidence" %}User supplied · unverified{% elif run.execution_status == "local_gno" %}Local Gno execution · not on-chain{% else %}No evidence available{% endif %}</strong></div><div><span>CREATED</span><strong>{{ run.started_at|date:"M j, Y · H:i" }} UTC</strong></div></div>
-</div>
+<section class="pi-strip pi-run" aria-label="Run verdict and provenance">
+<div class="pi-state pi-verdict"><span class="pi-wave" aria-hidden="true"><svg viewBox="0 0 48 32"><path d="M1 16H10L15 6 22 26 29 10 34 16H47" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span><div><span class="pi-label">Assertion verdict</span><strong class="status-{{ run.status }}">{{ run.get_status_display }}</strong><small>{{ run.reason }}</small></div></div>
+<div class="pi-matrix"><span class="pi-label">Execution status</span><strong class="pi-run-value">{% if run.execution_status == "not_executed" %}Not executed{% elif run.execution_status == "external_evidence" %}External evidence{% else %}{{ run.execution_status }}{% endif %}</strong><small>{% if run.execution_status == "external_evidence" %}User supplied · unverified{% elif run.execution_status == "local_gno" %}Local Gno execution · not on-chain{% else %}No evidence available{% endif %}</small></div>
+<div class="pi-measure"><span class="pi-label">Created · UTC</span><strong class="pi-run-value">{{ run.started_at|date:"M j, Y · H:i" }}</strong><span class="pi-ruler" aria-hidden="true"></span></div>
+</section>
 <div class="inline-note important-note"><strong>Verification boundary:</strong> This console does not currently submit transactions to Gno.land or verify chain authenticity. A passing assertion means observed values matched expectations, not that a blockchain transaction was proven.</div>
 <div class="run-layout">
   <section class="panel" aria-labelledby="assertions-heading">

@@ -28,3 +28,14 @@
 @media(max-width:850px){.pi-strip,.pi-network{grid-template-columns:repeat(2,minmax(0,1fr))}.pi-strip>div:nth-child(odd){border-left:0}.pi-strip>div:nth-child(n+3){border-top:1px solid #292929}.pi-strip:not(.pi-network)>div:last-child{grid-column:1/-1}}
 @media(max-width:440px){.pi-strip,.pi-network{grid-template-columns:1fr}.pi-strip>div+div{border-left:0;border-top:1px solid #292929}}
 @media(prefers-reduced-motion:reduce){.pi-strip *,.pi-ring:before{transition:none!important;animation:none!important;transform:none!important}}
+
+/* Shared project and run summaries outside the analytical workspace. */
+.pi-project,.pi-run{margin-bottom:24px;color:var(--text);font-size:13px}
+.pi-project .pi-await{color:#ffc15b;border-color:#ffc15b55;background:#ffc15b0b}
+.pi-run{grid-template-columns:minmax(0,1.35fr) minmax(0,1.2fr) minmax(0,1fr)}
+.pi-run .pi-run-value{font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.pi-run .pi-verdict>div,.pi-state>div,.pi-dial>div:last-child{min-width:0;overflow-wrap:anywhere}
+.pi-run .pi-verdict small{overflow-wrap:anywhere}
+.pi-strip .pi-ring strong{font-variant-numeric:tabular-nums}
+@media(max-width:850px){.pi-run{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:440px){.pi-run{grid-template-columns:1fr}}
