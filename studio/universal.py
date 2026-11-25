@@ -1,7 +1,7 @@
 """Versioned trusted-suite registry. Categories describe intent, not coverage."""
 from dataclasses import dataclass
 import subprocess
-from . import engine, ledger_lab, specialized, mutation, security_campaign, regression
+from . import engine, ledger_lab, specialized, mutation, security_campaign, regression, performance
 from functools import partial
 from .services import evaluate
 
@@ -54,6 +54,8 @@ SUITES["mutation-v1"] = Suite("mutation-v1", "Mutation detection", ("mutation",)
 SUITES["security-v1"] = Suite("security-v1", "Adversarial security campaign", ("security",), security_campaign.COUNT, security_campaign.run)
 
 SUITES["regression-v1"] = Suite("regression-v1", "Historical behavior comparison", ("regression",), regression.COUNT, regression.run)
+
+SUITES["performance-v1"] = Suite("performance-v1", "Local runtime performance", ("performance",), performance.COUNT, performance.run)
 
 def execute(key, progress=None):
     suite = SUITES[key]
