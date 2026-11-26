@@ -1,42 +1,18 @@
-"""Public landing UI assertions against Django templates and static assets."""
-from django.test import SimpleTestCase
-from django.template.loader import get_template
+"""The public entry delivers the real lab rather than an illustrative page."""
 from django.contrib.staticfiles import finders
+from django.template.loader import get_template
+from django.test import SimpleTestCase
+
 
 class PublicExperienceTests(SimpleTestCase):
-    def test_landing_explains_verification_without_claiming_chain_proof(self):
-        text = get_template("studio/guest_entry.html").template.source
-        self.assertIn("Verify smart contracts", text)
-        self.assertIn("hero-project-studio.svg", text)
-        self.assertIn("Static schematic, not live evidence", text)
-        self.assertIn("BROWSER ILLUSTRATION", text)
-        self.assertIn("ON-CHAIN VERIFIED: NO", text)
-        self.assertIn('id="rp-preview"', text)
-        self.assertIn('id="rp-trace-expected"', text)
-        self.assertIn('id="rp-trace-observed"', text)
-        self.assertIn("source intelligence", text.lower())
-        self.assertIn("test studio", text.lower())
-        self.assertIn("execution center", text.lower())
-        self.assertIn("evidence & reports", text.lower())
-        self.assertIn("not affiliated", text.lower())
-        self.assertIn("rp-panel-policy", text)
-        self.assertIn("rp-panel-diff", text)
-        self.assertIn("rp-panel-fingerprint", text)
-        self.assertNotIn("onyx.testnets", text)
-        self.assertNotIn("lucide", text)
+    def test_entry_has_native_start_without_marketing_or_signup(self):
+        template = get_template("studio/guest_entry.html")
+        page = template.render({"auto_start": True, "csrf_token": "token"})
+        self.assertIn('method="post"', page)
+        self.assertIn("Open transfer lab", page)
+        self.assertNotIn("Create workspace", page)
+        self.assertNotIn("Verify smart contracts", page)
 
-    def test_capability_workflow_previews(self):
-        source = get_template("studio/guest_entry.html").template.source
-        self.assertEqual(source.count('class="rp-cap-preview"'), 5)
-        self.assertEqual(source.count('class="rp-cap-step"'), 15)
-        self.assertEqual(source.count("WORKFLOW PREVIEW · SAMPLE"), 5)
-        for accent in ("#70c9ff", "#c2a2ff", "#67e3b1", "#f5bb71", "#62ded5"):
-            self.assertIn(accent, source)
-
-    def test_assets_are_packaged(self):
-        self.assertIsNotNone(finders.find("studio/capabilities.css"))
-        self.assertIsNotNone(finders.find("studio/public-capabilities.js"))
-        self.assertIsNotNone(finders.find("studio/public.css"))
-        self.assertIsNotNone(finders.find("studio/public-experience.js"))
-        self.assertIsNotNone(finders.find("studio/public-labs.js"))
-        self.assertIsNotNone(finders.find("studio/hero-project-studio.svg"))
+    def test_entry_assets_are_packaged(self):
+        for asset in ("guest-entry.js", "entry.css", "project-workbench.css"):
+            self.assertIsNotNone(finders.find(f"studio/{asset}"))

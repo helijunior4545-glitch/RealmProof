@@ -9,7 +9,7 @@ PREFIX = "rp_guest_"
 CAP = 100
 
 @transaction.atomic
-def provision(template, name="Guest verification workspace", description="Prepared trusted transfer scenarios.", starter="transfer"):
+def provision(template):
     User = get_user_model()
     anchor = User.objects.select_for_update().get(pk=template.pk)
     memberships = list(Membership.objects.filter(user=anchor).select_related("organization")[:2])
@@ -21,10 +21,11 @@ def provision(template, name="Guest verification workspace", description="Prepar
         return None
     key = uuid.uuid4().hex
     user = User.objects.create_user(username=PREFIX + key, password=None)
-    org = Organization.objects.create(name=name, slug="guest-" + key)
+    org = Organization.objects.create(name="Guest workspace", slug="guest-" + key)
     Membership.objects.create(user=user, organization=org, role="editor")
-    project = Project.objects.create(organization=org, name="Transfer verification lab" if starter == "transfer" else "New verification project", description=description)
-    for name, family, balance, amount, authorized, status, final in (CASES if starter == "transfer" else []):
+    project = Project.objects.create(organization=org, name="Transfer verification lab",
+        description="Run Gno transfer scenarios and inspect their assertions and execution evidence.")
+    for name, family, balance, amount, authorized, status, final in CASES:
         Scenario.objects.create(organization=org, project=project, name=name, family=family,
             objective="Verify transfer behavior and final balance.",
             input_data={"engine":"transfer","balance":balance,"amount":amount,"authorized":authorized},

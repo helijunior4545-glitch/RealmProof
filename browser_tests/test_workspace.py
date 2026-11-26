@@ -1,10 +1,12 @@
 """Chromium acceptance against a disposable local Django server."""
 import unittest
 from pathlib import Path
-from playwright.sync_api import sync_playwright, expect
+
+from playwright.sync_api import expect, sync_playwright
 
 BASE = "http://127.0.0.1:8765"
 ART = Path("browser-artifacts")
+
 
 class BrowserTests(unittest.TestCase):
     @classmethod
@@ -18,145 +20,48 @@ class BrowserTests(unittest.TestCase):
         cls.browser.close()
         cls.pw.stop()
 
-    def context(self, **kwargs):
+    def page(self, **kwargs):
         context = self.browser.new_context(**kwargs)
         self.addCleanup(context.close)
-        return context
+        return context.new_page()
 
-    def test_guest_launch_feedback_and_isolation(self):
-        a, b = self.context(), self.context()
-        page = a.new_page()
-        page.goto(BASE + "/studio/")
-        # Delay only the real POST response, allowing the native pending state to render.
-        requests = []
-        def delay(route):
-            requests.append(route.request.method)
-            # Hold navigation without blocking the browser event loop.
-            self.pending = route
-        page.route("**/studio/guest/start/", delay)
-        # The UI intentionally paints for two animation frames before native navigation.
-        # Await the actual request instead of asserting against the event loop prematurely.
-        page.locator(".rp-guest-disclosure summary").click()
-        with page.expect_request("**/studio/guest/start/") as submitted:
-            page.get_by_role("button", name="Create Workspace").click(no_wait_after=True)
-            expect(page.locator(".jury-launch")).to_have_attribute("aria-busy", "true")
-            expect(page.get_by_text("Preparing workspace…", exact=True)).to_be_visible()
-            page.locator(".jury-launch").evaluate("(form) => form.requestSubmit(form.querySelector('button'))")
-        self.assertEqual(submitted.value.method, "POST")
-        # A request event can precede its route callback: pump the browser event loop
-        # until the route interception has actually registered, without sleeping blindly.
-        for _ in range(40):
-            if requests:
-                break
-            page.wait_for_timeout(50)
-        self.assertEqual(requests, ["POST"])
-        # Playwright screenshots wait for navigations; keep the pending-state assertions
-        # above and capture the settled workspace after releasing the held request.
-        self.pending.continue_()
+    def expect_lab(self, page):
         expect(page.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
-        first = page.url
-        other = b.new_page()
-        other.goto(BASE + "/studio/")
-        other.locator(".rp-guest-disclosure summary").click()
-        other.get_by_role("button", name="Create Workspace").click()
-        expect(other.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
-        self.assertNotEqual(first, other.url)
-        self.assertEqual(other.goto(first).status, 404)
-        page.screenshot(path=str(ART / "workspace.png"), full_page=True)
+        expect(page.get_by_role("button", name="Execute Gno")).to_have_count(6)
 
-    def test_landing_responsive_and_keyboard(self):
-        for width in (320, 768, 1280, 1366, 1920):
+    def test_auto_entry_and_guest_isolation(self):
+        first, second = self.page(), self.page()
+        with first.expect_request("**/studio/guest/start/") as submitted:
+            first.goto(BASE + "/")
+        self.assertEqual(submitted.value.method, "POST")
+        self.expect_lab(first)
+        original = first.url
+
+        first.goto(BASE + "/studio/")
+        self.expect_lab(first)
+        self.assertEqual(first.url, original)
+
+        second.goto(BASE + "/studio/test/")
+        self.expect_lab(second)
+        self.assertNotEqual(first.url, second.url)
+        self.assertEqual(second.goto(first.url).status, 404)
+
+    def test_project_responsive_and_keyboard(self):
+        for width in (320, 768, 1366):
             with self.subTest(width=width):
-                context = self.context(viewport={"width":width,"height":900}, reduced_motion="reduce")
-                page = context.new_page()
+                page = self.page(viewport={"width": width, "height": 900}, reduced_motion="reduce")
                 page.goto(BASE + "/studio/")
-                expect(page.locator(".rp-guest-disclosure summary")).to_be_visible()
+                self.expect_lab(page)
                 self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
                 page.keyboard.press("Tab")
                 expect(page.get_by_role("link", name="Skip to main content")).to_be_focused()
                 page.keyboard.press("Enter")
                 expect(page.locator("#main-content")).to_be_focused()
-                expect(page.locator(".rp-product-visual img")).to_be_visible()
-                self.assertTrue(page.evaluate("document.querySelector(\'.rp-hero\').getBoundingClientRect().width <= innerWidth"))
-                page.screenshot(path=str(ART / f"landing-{width}.png"), full_page=True)
+                expect(page.locator(".scenario-row").first.get_by_role("heading")).to_have_text("Valid transfer")
+                page.screenshot(path=str(ART / f"workspace-{width}.png"), full_page=True)
 
-    def test_verification_model_interactive_and_honest(self):
-        page = self.context().new_page()
+    def test_native_entry_without_javascript(self):
+        page = self.page(java_script_enabled=False)
         page.goto(BASE + "/studio/")
-        page.locator('[data-case="funds"]').click()
-        expect(page.locator("#rp-trace-expected")).to_contain_text("status=insufficient_funds")
-        expect(page.locator("#rp-trace-observed")).to_contain_text("Select")
-        page.locator("#rp-preview").click()
-        expect(page.locator("#rp-trace-observed")).to_contain_text("status=insufficient_funds")
-        expect(page.locator("#rp-preview-status")).to_contain_text("MODEL PREVIEW MATCHES EXPECTED")
-        expect(page.get_by_text("ON-CHAIN VERIFIED: NO")).to_be_visible()
-        page.locator('[data-case="permission"]').click()
-        expect(page.locator("#rp-trace-expected")).to_contain_text("status=permission_denied")
-        expect(page.locator("#rp-trace-observed")).to_contain_text("Select")
-        page.locator(".rp-toggle").click()
-        # Expectations remain independently chosen when the input changes.
-        expect(page.locator("#rp-trace-expected")).to_contain_text("status=permission_denied")
-        page.locator("#rp-preview").click()
-        expect(page.locator("#rp-trace-observed")).to_contain_text("status=ok")
-        expect(page.locator("#rp-preview-status")).to_contain_text("DIFFERS FROM EXPECTED")
-        page.locator("#rp-expect-status").select_option("ok")
-        expect(page.locator("#rp-trace-expected")).to_contain_text("status=ok")
-        page.locator("#rp-amount").fill("-1")
-        expect(page.locator("#rp-preview")).to_be_disabled()
-        page.screenshot(path=str(ART / "verification-inspector.png"), full_page=True)
-
-
-    def test_interactive_engineering_desk_and_mismatch(self):
-        import re
-        page = self.context(reduced_motion="reduce").new_page()
-        page.goto(BASE + "/studio/")
-        page.locator("#rp-expect-status").select_option("permission_denied")
-        page.locator("#rp-preview").click()
-        expect(page.locator("#rp-preview-status")).to_contain_text("DIFFERS FROM EXPECTED")
-        page.get_by_role("tab", name="Permission policy").click()
-        page.locator("#rp-policy-role").select_option("viewer")
-        page.locator("#rp-policy-action").select_option("publish")
-        page.locator("#rp-policy-run").click()
-        expect(page.locator("#rp-policy-verdict")).to_contain_text("DENY")
-        page.get_by_role("tab", name="Source comparison").click()
-        page.locator("#rp-diff-run").click()
-        expect(page.locator("#rp-diff-count")).to_contain_text("1 ADDED")
-        expect(page.locator(".rp-diff-remove")).to_contain_text("authorized &&")
-        page.get_by_role("tab", name="Evidence fingerprint").click()
-        page.locator("#rp-fingerprint-run").click()
-        expect(page.locator("#rp-fingerprint-status")).to_contain_text("DIGESTS DIFFER")
-        self.assertRegex(page.locator("#rp-fingerprint-hash-a").inner_text(), r"^[a-f0-9]{64}$")
-        page.locator("#rp-fingerprint-b").fill(page.locator("#rp-fingerprint-a").input_value())
-        page.locator("#rp-fingerprint-run").click()
-        expect(page.locator("#rp-fingerprint-status")).to_contain_text("DIGESTS MATCH")
-        page.screenshot(path=str(ART / "engineering-desk.png"), full_page=True)
-
-    def test_compact_hero_laptop_and_existing_workspace(self):
-        # A typical laptop must expose the real Project Studio entry without scrolling.
-        page = self.context(viewport={"width":1366,"height":768}, reduced_motion="reduce").new_page()
-        page.goto(BASE + "/studio/")
-        hero = page.locator(".rp-hero")
-        self.assertLessEqual(hero.bounding_box()["height"], 520)
-        expect(page.locator(".rp-guest-disclosure summary")).to_be_in_viewport()
-        expect(page.locator(".rp-product-visual figcaption")).to_contain_text("not live evidence")
-        self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
-
-    def test_capability_hover_and_static_hero(self):
-        page = self.context(viewport={"width":1366,"height":768}).new_page()
-        page.goto(BASE + "/studio/")
-        image = page.locator(".rp-product-visual img")
-        expect(image).to_be_visible()
-        self.assertTrue(image.evaluate("(img) => img.complete && img.naturalWidth > 0"))
-        target = page.locator('[data-capability="security"] summary')
-        target.hover()
-        expect(page.get_by_role("heading", name="Explore authorization and safety")).to_be_visible()
-        expect(page.locator('[data-capability="source"]')).not_to_have_attribute("open", "")
-        page.locator('[data-capability="evidence"] summary').focus()
-        expect(page.get_by_role("heading", name="Keep results traceable")).to_be_visible()
-
-    def test_native_launch_without_javascript(self):
-        page = self.context(java_script_enabled=False).new_page()
-        page.goto(BASE + "/studio/")
-        page.locator(".rp-guest-disclosure summary").click()
-        page.get_by_role("button", name="Create Workspace").click()
-        expect(page.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
+        page.get_by_role("button", name="Open transfer lab").click()
+        self.expect_lab(page)

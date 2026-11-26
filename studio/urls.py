@@ -1,14 +1,15 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views, review, suites, builder, public_demo, guest
 
 from . import network, ledger_views, catalog_views, universal_views
 
-from . import source_views, transfer_bench
+from . import source_views
 
 app_name = "studio"
 urlpatterns = [
     path("", guest.entry, name="public_demo"),
-    path("test/", transfer_bench.bench, name="test_bench"),
+    path("test/", RedirectView.as_view(pattern_name="studio:public_demo", permanent=False)),
     path("guest/start/", guest.start, name="guest_start"),
     path("reference/", public_demo.home, name="reference_demo"),
     path("workspace/", views.dashboard, name="dashboard"),

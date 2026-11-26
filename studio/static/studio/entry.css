@@ -1,0 +1,29 @@
+.studio-entry {
+  margin: 0;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 var(--ui);
+}
+
+.studio-entry main { width: min(100%, 420px); }
+.studio-entry h1 { font-size: clamp(26px, 6vw, 38px); line-height: 1.15; letter-spacing: -.045em; }
+.studio-entry p { color: var(--muted); }
+.studio-entry-brand { font-weight: 700; }
+.studio-entry-brand span, .studio-entry a { color: var(--accent); }
+.studio-entry a { display: inline-block; margin-inline-end: 16px; }
+.studio-entry button {
+  padding: 9px 14px;
+  border: 1px solid var(--edge);
+  border-radius: var(--rp-radius-control);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.studio-entry button:disabled { color: var(--muted); cursor: wait; }
+.studio-entry :focus-visible { outline: 2px solid var(--rp-focus); outline-offset: 3px; }
