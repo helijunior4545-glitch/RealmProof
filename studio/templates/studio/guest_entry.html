@@ -8,7 +8,11 @@
 <p class="jury-lead">Explore a prepared verification workspace. Configure scenarios, compare assertions and inspect execution evidence.</p>
 <form method="post" action="{% url 'studio:guest_start' %}" class="jury-launch">{% csrf_token %}<button type="submit" class="jury-cta"><span aria-hidden="true">▶</span> Launch Hackathon Demo <span aria-hidden="true">→</span></button></form>
 <p class="jury-note">No registration or manual password entry. One click.</p>
-<div class="jury-features"><span>01 · Configure</span><span>02 · Test</span><span>03 · Inspect</span></div>
+<div class="rp-jury-journey" aria-label="Review journey">
+<article><span>01 / INTENT</span><h2>Define behavior</h2><p>Open a prepared transfer scenario and inspect its expected outcome.</p></article>
+<article><span>02 / EXECUTION</span><h2>Run a trusted test</h2><p>Execute the bundled Gno fixture when the runtime is available.</p></article>
+<article><span>03 / EVIDENCE</span><h2>Inspect the result</h2><p>Compare assertions, execution status and evidence provenance.</p></article>
+</div><p class="jury-note">Shared demonstration workspace. Do not upload private source or secrets.</p>
 <p class="jury-secondary">Already have a private workspace? <a href="{% url 'login' %}">Developer sign in</a></p>
 <details class="jury-details"><summary>Execution environment</summary><p>Local Gno execution requires the CLI. Testnet integration is pending. The <a href="{% url 'studio:reference_demo' %}">reference simulation</a> is a separate Python model, not on-chain evidence.</p></details>
 </section>

@@ -54,3 +54,30 @@ jobs:
         run: python manage.py audit_engines regression-v1 performance-v1
       - name: Verify production static manifest
         run: DJANGO_DEBUG=0 DJANGO_SECRET_KEY=ci-static-build DATABASE_URL=postgresql://ci:ci@localhost:5432/ci python manage.py collectstatic --noinput
+
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production image
+        run: docker build -f docker/Dockerfile -t realmproof:ci .
+      - name: Verify packaged runtime and parser
+        run: |
+          docker run --rm realmproof:ci sh -ec 'test "$(id -u)" = 10001; test -d "$GNOROOT"; gno version; printf "package ledger\nfunc Balance() int { return 0 }\n" | realmproof-source-parser | python -c "import json,sys; x=json.load(sys.stdin); assert x.get(\"package\")==\"ledger\""'
+      - name: Smoke test packaged application
+        run: |
+          docker network create rp-ci
+          trap 'docker rm -f rp-web rp-db >/dev/null 2>&1 || true; docker network rm rp-ci >/dev/null 2>&1 || true' EXIT
+          docker run -d --name rp-db --network rp-ci -e POSTGRES_USER=ci -e POSTGRES_PASSWORD=ci -e POSTGRES_DB=ci postgres:16
+          for i in $(seq 1 30); do docker exec rp-db pg_isready -U ci -d ci && break; sleep 2; done
+          args=(--network rp-ci -e DJANGO_SECRET_KEY=ci-image-only-not-production -e DATABASE_URL=postgresql://ci:ci@rp-db:5432/ci -e DJANGO_ALLOWED_HOSTS=localhost)
+          docker run --rm "${args[@]}" realmproof:ci python manage.py migrate --noinput
+          docker run --rm "${args[@]}" realmproof:ci python manage.py audit_engines transfer-v1
+          docker run -d --name rp-web "${args[@]}" -p 127.0.0.1:18000:8000 realmproof:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:18000/studio/health/; then exit 0; fi
+            sleep 2
+          done
+          docker logs rp-web
+          exit 1

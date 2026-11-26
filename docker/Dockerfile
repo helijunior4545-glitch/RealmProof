@@ -2,7 +2,7 @@
 FROM golang:1.27.3 AS gno-build
 RUN git clone --depth 1 --branch v1.8.0 https://github.com/gnolang/gno.git /opt/gno \
  && cd /opt/gno && test "$(git rev-parse HEAD)" = fc79041f4cd1a7b3ed4b316dc5ac14162eb78730 \
- && go build -o /usr/local/bin/gno ./gnovm/cmd/gno
+ && CGO_ENABLED=0 go build -o /usr/local/bin/gno ./gnovm/cmd/gno
 COPY tools/sourceparser/main.go /tmp/sourceparser.go
 RUN CGO_ENABLED=0 go build -o /usr/local/bin/realmproof-source-parser /tmp/sourceparser.go
 

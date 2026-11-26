@@ -52,3 +52,11 @@ button:disabled,input:disabled,select:disabled,textarea:disabled { cursor:not-al
 @media(max-width:1200px) { .rp-source-workspace { grid-template-columns:minmax(0,1fr) minmax(0,2fr); } .rp-source-inspector { grid-column:1/-1; } }
 @media(max-width:700px) { .rp-source-workspace { grid-template-columns:minmax(0,1fr); } }
 @media(prefers-reduced-motion:reduce) { .rp-action-pending::before { animation:none; } }
+
+/* PM5: restrained, informative onboarding. */
+.rp-jury-journey { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--rp-space-3); margin:var(--rp-space-8) 0; text-align:left; }
+.rp-jury-journey article { border-top:1px solid var(--edge); padding:var(--rp-space-4) 0; min-width:0; }
+.rp-jury-journey article span { color:var(--subtle); font:600 11px var(--mono); }
+.rp-jury-journey h2 { font-size:17px; margin:8px 0; color:var(--text); }
+.rp-jury-journey p { font-size:13px; color:var(--muted); margin:0; }
+@media(max-width:700px) { .rp-jury-journey { grid-template-columns:1fr; } }
