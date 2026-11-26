@@ -66,16 +66,29 @@
   outline-offset: 3px;
 }
 .rp-cap-symbol {
-  color: var(--cap-accent);
   display: grid;
   place-items: center;
-  flex: none;
+  flex: 0 0 26px;
   width: 26px;
   height: 26px;
+}
+.rp-cap-symbol .rp-library-icon {
+  display: block;
+  flex: none;
+  width: 25px;
+  height: 25px;
+  background: var(--cap-accent);
+  mask: var(--cap-icon) center / contain no-repeat;
   filter: none;
 }
-.rp-cap-item > summary:hover .rp-cap-symbol { color: inherit; }
-.rp-cap-symbol .rp-library-icon { width: 25px; height: 25px; }
+.rp-cap-item[data-capability="source"] { --cap-icon: url("phosphor/file-code.svg"); }
+.rp-cap-item[data-capability="test"] { --cap-icon: url("phosphor/sliders-horizontal.svg"); }
+.rp-cap-item[data-capability="execution"] { --cap-icon: url("phosphor/terminal-window.svg"); }
+.rp-cap-item[data-capability="security"] { --cap-icon: url("phosphor/shield-warning.svg"); }
+.rp-cap-item[data-capability="evidence"] { --cap-icon: url("phosphor/shield-check.svg"); }
+.rp-cap-item > summary:hover .rp-library-icon {
+  background: #10151c;
+}
 .rp-cap-name { min-width: 0; }
 .rp-cap-name strong {
   display: block;
