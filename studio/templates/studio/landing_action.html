@@ -1,0 +1,12 @@
+{% if studio_url %}
+  <a class="lp-action" href="{{ studio_url }}">Open Project Studio <i class="lp-icon lp-arrow" aria-hidden="true"></i></a>
+{% elif user.is_authenticated %}
+  <a class="lp-action" href="{{ dashboard_url }}">Open Workspace <i class="lp-icon lp-arrow" aria-hidden="true"></i></a>
+{% elif isolated_guest %}
+  <form class="jury-launch" method="post" action="{% url 'studio:guest_start' %}" data-pending-label="Opening Project Studio…">
+    {% csrf_token %}
+    <button class="lp-action" type="submit">Open Project Studio <i class="lp-icon lp-arrow" aria-hidden="true"></i></button>
+  </form>
+{% else %}
+  <a class="lp-action" href="{% url 'login' %}">Sign in to Studio <i class="lp-icon lp-arrow" aria-hidden="true"></i></a>
+{% endif %}

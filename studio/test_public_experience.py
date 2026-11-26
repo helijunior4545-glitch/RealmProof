@@ -1,42 +1,42 @@
-"""Public landing UI assertions against Django templates and static assets."""
-from django.test import SimpleTestCase
-from django.template.loader import get_template
+from unittest.mock import patch
+
 from django.contrib.staticfiles import finders
+from django.test import Client, SimpleTestCase
+from django.urls import reverse
+
 
 class PublicExperienceTests(SimpleTestCase):
-    def test_landing_explains_verification_without_claiming_chain_proof(self):
-        text = get_template("studio/guest_entry.html").template.source
-        self.assertIn("Verify smart contracts", text)
-        self.assertIn("hero-project-studio.svg", text)
-        self.assertIn("Static schematic, not live evidence", text)
-        self.assertIn("BROWSER ILLUSTRATION", text)
-        self.assertIn("ON-CHAIN VERIFIED: NO", text)
-        self.assertIn('id="rp-preview"', text)
-        self.assertIn('id="rp-trace-expected"', text)
-        self.assertIn('id="rp-trace-observed"', text)
-        self.assertIn("source intelligence", text.lower())
-        self.assertIn("test studio", text.lower())
-        self.assertIn("execution center", text.lower())
-        self.assertIn("evidence & reports", text.lower())
-        self.assertIn("not affiliated", text.lower())
-        self.assertIn("rp-panel-policy", text)
-        self.assertIn("rp-panel-diff", text)
-        self.assertIn("rp-panel-fingerprint", text)
-        self.assertNotIn("onyx.testnets", text)
-        self.assertNotIn("lucide", text)
+    def test_landing_explains_the_workflow_and_offers_direct_guest_access(self):
+        with patch.dict("os.environ", {"REALMPROOF_ISOLATED_GUESTS": "1"}):
+            response = self.client.get(reverse("studio:public_demo"))
+        self.assertContains(response, "Open Project Studio")
+        self.assertContains(response, "From scenario to evidence")
+        self.assertContains(response, "Local Gno")
+        self.assertContains(response, reverse("studio:guest_preview"))
+        self.assertContains(response, 'id="lp-scenarios"')
+        self.assertNotContains(response, "Create workspace")
+        self.assertIsNotNone(finders.find("studio/guest-landing.css"))
 
-    def test_capability_workflow_previews(self):
-        source = get_template("studio/guest_entry.html").template.source
-        self.assertEqual(source.count('class="rp-cap-preview"'), 5)
-        self.assertEqual(source.count('class="rp-cap-step"'), 15)
-        self.assertEqual(source.count("WORKFLOW PREVIEW · SAMPLE"), 5)
-        for accent in ("#70c9ff", "#c2a2ff", "#67e3b1", "#f5bb71", "#62ded5"):
-            self.assertIn(accent, source)
+    @patch.dict("os.environ", {"REALMPROOF_ISOLATED_GUESTS": "1"})
+    def test_preview_runs_only_the_selected_fixture_and_evaluates_observed_values(self):
+        url = reverse("studio:guest_preview")
+        with patch("studio.guest.engine.execute") as execute:
+            self.assertEqual(self.client.post(url, {"scenario": "unknown"}).status_code, 400)
+            execute.assert_not_called()
+            execute.return_value = (
+                {"status": "rejected", "balance": 100, "state_changed": False},
+                {"duration_ms": 21, "source_sha256": "a" * 64, "harness_sha256": "b" * 64},
+            )
+            result = self.client.post(url, {"scenario": "insufficient", "amount": 1}).json()
+            execute.assert_called_once_with({"balance": 100, "amount": 150, "authorized": True})
+        self.assertEqual(result["verdict"], "passed")
+        self.assertEqual(result["observed"]["status"], "rejected")
+        self.assertFalse(result["mismatches"])
 
-    def test_assets_are_packaged(self):
-        self.assertIsNotNone(finders.find("studio/capabilities.css"))
-        self.assertIsNotNone(finders.find("studio/public-capabilities.js"))
-        self.assertIsNotNone(finders.find("studio/public.css"))
-        self.assertIsNotNone(finders.find("studio/public-experience.js"))
-        self.assertIsNotNone(finders.find("studio/public-labs.js"))
-        self.assertIsNotNone(finders.find("studio/hero-project-studio.svg"))
+    def test_preview_requires_post_csrf_and_isolated_guest_mode(self):
+        url = reverse("studio:guest_preview")
+        client = Client(enforce_csrf_checks=True)
+        self.assertEqual(client.get(url).status_code, 405)
+        self.assertEqual(client.post(url, {"scenario": "valid"}).status_code, 403)
+        with patch.dict("os.environ", {"REALMPROOF_ISOLATED_GUESTS": "0"}):
+            self.assertEqual(self.client.post(url, {"scenario": "valid"}).status_code, 503)

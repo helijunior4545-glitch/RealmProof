@@ -1,18 +1,31 @@
 """Public demo entry with server-side credentials and fail-closed authorization."""
-import os
 import logging
-from django.contrib.auth import authenticate, login
+import os
+from subprocess import TimeoutExpired
+from threading import BoundedSemaphore
+
 from django.contrib import messages
+from django.contrib.auth import authenticate, login
+from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.http import Http404
-from .views import membership_for
-from .models import Project
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
-from .models import Membership
+
+from . import engine
+from .models import Membership, Project
+from .services import evaluate
+from .views import membership_for
 
 logger = logging.getLogger(__name__)
+preview_slots = BoundedSemaphore(2)
+preview_cases = [
+    {"id": slug, "name": name, "inputs": {"balance": balance, "amount": amount, "authorized": authorized},
+     "expected": {"status": status, "balance": final, "state_changed": final != balance}}
+    for slug, (name, _, balance, amount, authorized, status, final) in zip(
+        ("valid", "insufficient", "permission", "exact"), engine.CASES
+    )
+]
 
 def studio_destination(request):
     if not request.user.is_authenticated:
@@ -30,7 +43,12 @@ def studio_destination(request):
 @never_cache
 @require_GET
 def entry(request):
-    return render(request, "studio/guest_entry.html", {"studio_url": studio_destination(request), "dashboard_url": reverse("studio:dashboard"), "isolated_guest": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1"})
+    return render(request, "studio/guest_entry.html", {
+        "studio_url": studio_destination(request),
+        "dashboard_url": reverse("studio:dashboard"),
+        "isolated_guest": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1",
+        "preview_cases": preview_cases,
+    })
 
 @never_cache
 @require_POST
@@ -64,3 +82,33 @@ def start(request):
     logger.warning("Demo launch rejected: configured=%s authenticated=%s", bool(username and password), bool(user))
     messages.error(request, "Demo access is temporarily unavailable. Please try again later.")
     return redirect("studio:public_demo")
+
+
+@never_cache
+@require_POST
+def preview(request):
+    if os.getenv("REALMPROOF_ISOLATED_GUESTS") != "1":
+        return JsonResponse({"error": "The public runner is unavailable on this deployment."}, status=503)
+    case = next((item for item in preview_cases if item["id"] == request.POST.get("scenario")), None)
+    if case is None:
+        return JsonResponse({"error": "Choose a bundled transfer scenario."}, status=400)
+    if not preview_slots.acquire(blocking=False):
+        return JsonResponse({"error": "The runner is busy. Try again in a moment."}, status=429)
+    try:
+        observed, evidence = engine.execute(case["inputs"])
+    except TimeoutExpired:
+        return JsonResponse({"error": "The Gno execution timed out. Please retry."}, status=504)
+    except (OSError, RuntimeError, ValueError):
+        logger.exception("Landing preview Gno execution failed")
+        return JsonResponse({"error": "The local Gno runner could not complete this scenario."}, status=503)
+    finally:
+        preview_slots.release()
+    result = evaluate(case["expected"], observed)
+    return JsonResponse({
+        "observed": observed,
+        "verdict": result.status,
+        "mismatches": list(result.evidence["mismatches"]),
+        "duration_ms": evidence["duration_ms"],
+        "source_sha256": evidence["source_sha256"],
+        "harness_sha256": evidence["harness_sha256"],
+    })
