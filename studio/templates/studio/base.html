@@ -14,6 +14,7 @@
   <link href="{% static 'studio/chromatic.css' %}" rel="stylesheet">
   <link href="{% static 'studio/factory.css' %}" rel="stylesheet">
   <link href="{% static 'studio/precision.css' %}" rel="stylesheet">
+  <link href="{% static 'studio/design-system.css' %}" rel="stylesheet">
 </head>
 <body>
   <a class="rp-skip-link" href="#main-content">Skip to main content</a>
@@ -38,7 +39,7 @@
       <a class="nav-link chroma-violet" {% if request.resolver_match.url_name == 'universal' %}aria-current="page"{% endif %} href="{% url 'studio:universal' member.organization.slug %}"><span class="factory-icon factory-engine" aria-hidden="true"></span> Universal test engine</a>
       {% endif %}
       <div class="sidebar-bottom">
-        <div class="sidebar-meta"><span class="status-dot"></span> REALMPROOF STUDIO </div>
+        <div class="sidebar-meta"><span class="status-dot rp-neutral-dot" aria-hidden="true"></span> REALMPROOF STUDIO </div>
         <div class="sidebar-note">Independent developer tooling for the Gno.land ecosystem.</div>
         {% if user.is_authenticated %}
           <div class="account-box"><span class="avatar">{{ user.username|slice:":1"|upper }}</span><span class="account-name">{% if request.session.realmproof_guest %}Guest session{% else %}{{ user.username }}{% endif %}</span></div>
@@ -50,7 +51,7 @@
       <header class="topbar">
         <div class="topbar-location"><span class="topbar-prefix">REALMPROOF</span><span class="topbar-slash">/</span> {% block context_label %}CONSOLE{% endblock %}</div>
         <div class="topbar-right">
-          <span class="connection"><span class="status-dot"></span> Verification console</span>
+          <span class="connection"><span class="status-dot rp-neutral-dot" aria-hidden="true"></span> Verification console</span>
           <span class="topbar-divider"></span>
           <span class="topbar-security">Independent tooling</span>
           {% block topbar_action %}{% endblock %}
