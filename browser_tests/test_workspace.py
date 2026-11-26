@@ -34,10 +34,14 @@ class BrowserTests(unittest.TestCase):
             # Hold navigation without blocking the browser event loop.
             self.pending = route
         page.route("**/studio/guest/start/", delay)
-        page.get_by_role("button", name="Create Workspace").click(no_wait_after=True)
-        expect(page.locator(".jury-launch")).to_have_attribute("aria-busy", "true")
-        expect(page.get_by_text("Preparing workspace…", exact=True)).to_be_visible()
-        page.locator(".jury-launch").evaluate("(form) => form.requestSubmit(form.querySelector('button'))")
+        # The UI intentionally paints for two animation frames before native navigation.
+        # Await the actual request instead of asserting against the event loop prematurely.
+        with page.expect_request("**/studio/guest/start/") as submitted:
+            page.get_by_role("button", name="Create Workspace").click(no_wait_after=True)
+            expect(page.locator(".jury-launch")).to_have_attribute("aria-busy", "true")
+            expect(page.get_by_text("Preparing workspace…", exact=True)).to_be_visible()
+            page.locator(".jury-launch").evaluate("(form) => form.requestSubmit(form.querySelector('button'))")
+        self.assertEqual(submitted.value.method, "POST")
         self.assertEqual(requests, ["POST"])
         # Playwright screenshots wait for navigations; keep the pending-state assertions
         # above and capture the settled workspace after releasing the held request.
