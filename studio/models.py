@@ -143,3 +143,18 @@ class SourceSnapshot(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["project", "digest"], name="rp_source_unique_digest")]
+
+
+class SourceTestDraft(models.Model):
+    id = models.UUIDField(primary_key=True, default=uid, editable=False)
+    snapshot = models.ForeignKey(SourceSnapshot, on_delete=models.PROTECT, related_name="test_drafts")
+    path = models.CharField(max_length=240)
+    source_digest = models.CharField(max_length=64)
+    proposal_key = models.CharField(max_length=64)
+    proposal = models.JSONField()
+    expected = models.JSONField()
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["snapshot", "path", "proposal_key"], name="rp_unique_source_draft")]

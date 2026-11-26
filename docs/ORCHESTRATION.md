@@ -1,0 +1,3 @@
+# V6.0 source-bound intent foundation
+
+SourceTestDraft is intentionally separate from executable Scenario records. The service rechecks write membership, scopes project and snapshot, verifies file SHA-256, recomputes the proposal server-side and requires explicit nonempty JSON intent. Identical confirmations are idempotent; conflicting confirmations are rejected. Project quota: 500 drafts. Audit records are atomic with creation. No runtime adapter, browser endpoint, execution, evidence or coverage claim is introduced. Snapshot protection prevents deletion while drafts reference it; database-level immutability and full manifest verification are not provided.
