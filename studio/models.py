@@ -132,3 +132,14 @@ class UniversalJob(models.Model):
         indexes = [models.Index(fields=["status", "created_at"], name="rp_job_queue_idx")]
         constraints = [models.CheckConstraint(condition=Q(status__in=["queued", "running", "completed", "error", "cancelled"]), name="rp_job_valid_status"),
                        models.UniqueConstraint(fields=["organization"], condition=Q(status="running"), name="rp_job_one_running")]
+
+
+class SourceSnapshot(models.Model):
+    id = models.UUIDField(primary_key=True, default=uid, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="source_snapshots")
+    digest = models.CharField(max_length=64)
+    files = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["project", "digest"], name="rp_source_unique_digest")]
