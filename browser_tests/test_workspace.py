@@ -139,6 +139,19 @@ class BrowserTests(unittest.TestCase):
         expect(page.locator(".rp-product-visual figcaption")).to_contain_text("not live evidence")
         self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
 
+    def test_capability_hover_and_static_hero(self):
+        page = self.context(viewport={"width":1366,"height":768}).new_page()
+        page.goto(BASE + "/studio/")
+        image = page.locator(".rp-product-visual img")
+        expect(image).to_be_visible()
+        self.assertTrue(image.evaluate("(img) => img.complete && img.naturalWidth > 0"))
+        target = page.locator('[data-capability="security"] summary')
+        target.hover()
+        expect(page.get_by_role("heading", name="Explore authorization and safety")).to_be_visible()
+        expect(page.locator('[data-capability="source"]')).not_to_have_attribute("open", "")
+        page.locator('[data-capability="evidence"] summary').focus()
+        expect(page.get_by_role("heading", name="Keep results traceable")).to_be_visible()
+
     def test_native_launch_without_javascript(self):
         page = self.context(java_script_enabled=False).new_page()
         page.goto(BASE + "/studio/")
