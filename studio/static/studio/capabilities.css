@@ -41,9 +41,9 @@
   min-height: 56px;
   padding: 10px 11px;
   min-width: 0;
-  border: 1px solid color-mix(in srgb, var(--cap-accent) 64%, #27303b);
+  border: 1px solid transparent;
   border-radius: 11px;
-  background: color-mix(in srgb, var(--cap-accent) 13%, #0d1118);
+  background: transparent;
   color: #eef3fb;
   cursor: pointer;
   list-style: none;
@@ -54,17 +54,15 @@
 .rp-cap-item > summary::-webkit-details-marker { display: none; }
 .rp-cap-item > summary::marker { content: ""; }
 .rp-cap-item > summary::after { content: none; }
-.rp-cap-item > summary:hover,
-.rp-cap-item > summary:focus-visible,
-.rp-cap-item[open] > summary {
+.rp-cap-item > summary:hover {
   border-color: var(--cap-accent);
-  background: color-mix(in srgb, var(--cap-accent) 39%, #12131b);
+  background: var(--cap-accent);
   box-shadow: 0 0 21px color-mix(in srgb, var(--cap-accent) 27%, transparent),
               inset 0 1px 0 #ffffff18;
-  color: #fff;
+  color: #10151c;
 }
 .rp-cap-item > summary:focus-visible {
-  outline: 2px solid var(--cap-accent);
+  outline: 2px solid #b9c4d2;
   outline-offset: 3px;
 }
 .rp-cap-symbol {
@@ -74,8 +72,9 @@
   flex: none;
   width: 26px;
   height: 26px;
-  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--cap-accent) 45%, transparent));
+  filter: none;
 }
+.rp-cap-item > summary:hover .rp-cap-symbol { color: inherit; }
 .rp-cap-symbol .rp-library-icon { width: 25px; height: 25px; }
 .rp-cap-name { min-width: 0; }
 .rp-cap-name strong {
