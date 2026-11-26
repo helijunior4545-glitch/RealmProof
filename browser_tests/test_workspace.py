@@ -34,7 +34,7 @@ class BrowserTests(unittest.TestCase):
             # Hold navigation without blocking the browser event loop.
             self.pending = route
         page.route("**/studio/guest/start/", delay)
-        page.get_by_role("button", name="Launch Hackathon Demo").click(no_wait_after=True)
+        page.get_by_role("button", name="Create Workspace").click(no_wait_after=True)
         expect(page.locator(".jury-launch")).to_have_attribute("aria-busy", "true")
         expect(page.get_by_text("Preparing workspace…", exact=True)).to_be_visible()
         page.locator(".jury-launch").evaluate("(form) => form.requestSubmit(form.querySelector('button'))")
@@ -45,7 +45,7 @@ class BrowserTests(unittest.TestCase):
         first = page.url
         other = b.new_page()
         other.goto(BASE + "/studio/")
-        other.get_by_role("button", name="Launch Hackathon Demo").click()
+        other.get_by_role("button", name="Create Workspace").click()
         expect(other.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
         self.assertNotEqual(first, other.url)
         self.assertEqual(other.goto(first).status, 404)
@@ -57,7 +57,7 @@ class BrowserTests(unittest.TestCase):
                 context = self.context(viewport={"width":width,"height":900}, reduced_motion="reduce")
                 page = context.new_page()
                 page.goto(BASE + "/studio/")
-                expect(page.get_by_role("button", name="Launch Hackathon Demo")).to_be_visible()
+                expect(page.get_by_role("button", name="Create Workspace")).to_be_visible()
                 self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
                 page.keyboard.press("Tab")
                 expect(page.get_by_role("link", name="Skip to main content")).to_be_focused()
@@ -68,5 +68,5 @@ class BrowserTests(unittest.TestCase):
     def test_native_launch_without_javascript(self):
         page = self.context(java_script_enabled=False).new_page()
         page.goto(BASE + "/studio/")
-        page.get_by_role("button", name="Launch Hackathon Demo").click()
+        page.get_by_role("button", name="Create Workspace").click()
         expect(page.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()

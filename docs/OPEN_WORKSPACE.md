@@ -1,0 +1,3 @@
+# Open workspace direction
+
+The public landing page is independent of the engineering console. Suggested names, descriptions and starter choices are editable. Isolated launch remains opt-in and requires the existing server-side template configuration; the public page does not expose shared launch. Existing legacy POST behavior is retained for compatibility. Production enablement still requires resource budgets, cleanup, expiry enforcement across all routes, and concurrent PostgreSQL and browser acceptance. No production configuration was changed. Public navigation is not a claim that arbitrary imported contracts can be executed or that on-chain evidence is operational.
