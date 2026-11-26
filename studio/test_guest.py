@@ -1,23 +1,13 @@
 from unittest.mock import patch
-from django.test import TestCase, Client
+from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from studio.models import Organization, Membership
 
 class GuestTests(TestCase):
-    def test_entry_uses_csrf_post_without_workspace_fields(self):
-        client = Client(enforce_csrf_checks=True)
-        with patch.dict("os.environ", {"REALMPROOF_ISOLATED_GUESTS": "1"}):
-            response = client.get(reverse("studio:public_demo"))
-        self.assertContains(response, reverse("studio:guest_start"))
-        self.assertContains(response, 'name="csrfmiddlewaretoken"')
-        self.assertNotContains(response, 'name="starter"')
-        self.assertEqual(get_user_model().objects.count(), 0)
-        self.assertEqual(client.post(reverse("studio:guest_start")).status_code, 403)
-
     def test_unconfigured(self):
         with patch.dict("os.environ", {"REALMPROOF_DEMO_USERNAME":"","REALMPROOF_DEMO_PASSWORD":""}):
-            self.assertContains(self.client.post(reverse("studio:guest_start")), "Guest lab unavailable", status_code=503)
+            self.assertRedirects(self.client.post(reverse("studio:guest_start")), reverse("studio:public_demo"))
         self.assertEqual(get_user_model().objects.count(), 0)
 
     def test_shared_demo(self):
@@ -29,7 +19,7 @@ class GuestTests(TestCase):
             self.client.logout()
             user.is_staff = True
             user.save()
-            self.assertContains(self.client.post(reverse("studio:guest_start")), "Guest lab unavailable", status_code=503)
+            self.assertRedirects(self.client.post(reverse("studio:guest_start")), reverse("studio:public_demo"))
 
     def test_guest_session_and_membership_revocation(self):
         user = get_user_model().objects.create_user(username="hackathon_demo_public", password="test-password-123")

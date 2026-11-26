@@ -24,17 +24,20 @@
 <main id="main-content" tabindex="-1" class="rp-wrap">
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
 <section class="rp-hero rp-hero-v2 rp-editorial" id="workspace">
-<div class="rp-hero-top"><div class="rp-intro"><h1>Test Gno contracts.<br><span>See what changed.</span></h1><p>Run a transfer scenario, compare the result with your expectations, and inspect the execution evidence.</p></div>
+<div class="rp-hero-top"><div class="rp-intro"><span class="rp-kicker">SMART CONTRACT / VERIFICATION STUDIO</span><h1>Verify smart contracts<br>with engineering <span>confidence.</span></h1><p>Analyze source, define expectations and inspect observed behavior — from code to traceable evidence.</p></div>
  <div class="rp-workspace-form rp-hero-entry">
- {% if guest_error %}<p role="alert">{{ guest_error }}</p>{% endif %}
- {% if guest_enabled %}
- <form method="post" action="{% url 'studio:guest_start' %}" class="jury-launch" data-pending-label="Opening Studio…">
-  {% csrf_token %}
-  <button class="rp-button rp-primary" type="submit">Open Studio as guest <span aria-hidden="true">→</span></button>
- </form>
- <p class="rp-form-footnote">No account needed. Guest access lasts one hour.</p>
+ {% if studio_url %}
+ <div class="rp-entry-copy"><span class="rp-kicker">SESSION ACTIVE</span><h3>Continue in Project Studio.</h3><p>Your existing workspace is available. Open the engineering environment directly.</p></div>
+ <a class="rp-button rp-primary" href="{{ studio_url }}">Open Project Studio <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a>
+ {% elif user.is_authenticated %}
+ <div class="rp-entry-copy"><span class="rp-kicker">WORKSPACE STATUS</span><h3>Your workspace is ready to manage.</h3><p>Access your organization and project overview.</p></div>
+ <a class="rp-button rp-primary" href="{{ dashboard_url }}">Open Workspace Overview <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a>
+ {% elif isolated_guest %}
+ <details class="rp-guest-disclosure" {% if form.errors %}open{% endif %}><summary aria-label="Prepare workspace">Open Project Studio <span aria-hidden="true">→</span></summary><div class="rp-entry-copy"><span class="rp-kicker">ISOLATED GUEST WORKSPACE</span><h3>Prepare a private workspace.</h3><p>Generated suggestions are editable. Each visitor receives a separate environment.</p></div>
+ <form method="post" action="{% url 'studio:guest_start' %}" class="jury-launch rp-creation-form" data-pending-label="Preparing workspace…">{% csrf_token %}{{ form.as_p }}<div class="rp-form-actions"><button class="rp-button rp-primary" type="submit" aria-label="Create Workspace">Create workspace <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></button><a class="rp-regenerate" href="{% url 'studio:public_demo' %}#workspace">Generate another example ↗</a></div></form><p class="rp-form-footnote">Temporary independent environment. Session access expires after one hour. Do not upload secrets or private source.</p></details>
  {% else %}
- <a class="rp-button rp-primary" href="{% url 'login' %}">Sign in to Studio <span aria-hidden="true">→</span></a>
+ <div class="rp-entry-copy"><span class="rp-kicker">PUBLIC EXPLORATION</span><h3>Discover the platform.</h3><p>New isolated workspaces are disabled in this deployment. Explore the interactive models below or review the source repository.</p></div>
+ <a class="rp-button rp-primary" href="https://github.com/helijunior4545-glitch/RealmProof">View source repository <span class="rp-icon rp-library-icon rp-icon-external" aria-hidden="true"></span></a>
  {% endif %}
  </div>
 
