@@ -39,7 +39,8 @@ class BrowserTests(unittest.TestCase):
         expect(page.get_by_text("Preparing workspace…", exact=True)).to_be_visible()
         page.locator(".jury-launch").evaluate("(form) => form.requestSubmit(form.querySelector('button'))")
         self.assertEqual(requests, ["POST"])
-        page.screenshot(path=str(ART / "guest-pending.png"))
+        # Playwright screenshots wait for navigations; keep the pending-state assertions
+        # above and capture the settled workspace after releasing the held request.
         self.pending.continue_()
         expect(page.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
         first = page.url
