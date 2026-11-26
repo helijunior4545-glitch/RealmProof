@@ -39,10 +39,11 @@
         </div>
         <section class="lp-console" aria-labelledby="lp-console-title">
           <div class="lp-console-head"><span class="lp-window-lights" aria-hidden="true"><i></i><i></i><i></i></span><h2 id="lp-console-title">Transfer lab</h2><span><b aria-hidden="true"></b> Local Gno</span></div>
-          <div id="lp-runner" data-endpoint="{% url 'studio:guest_preview' %}" data-enabled="{{ isolated_guest|yesno:'true,false' }}">
-            {% csrf_token %}
-            <p class="lp-runner-fallback">{% if not react_ready %}Open Project Studio to run the transfer scenarios.{% else %}Enable JavaScript to run a scenario here.{% endif %}</p>
+          <div id="lp-demo-runner" data-endpoint="{% url 'studio:guest_preview' %}" data-enabled="{{ isolated_guest|yesno:'true,false' }}" data-selected="{{ selected_case.id }}">
+            {% include "studio/guest_demo_cards.html" %}
           </div>
+          {{ preview_result|json_script:"lp-initial-result" }}
+          {{ preview_error|json_script:"lp-initial-error" }}
           {{ preview_cases|json_script:"lp-scenarios" }}
         </section>
       </div>

@@ -81,5 +81,9 @@ class BrowserTests(unittest.TestCase):
     def test_native_launch_without_javascript(self):
         page = self.context(java_script_enabled=False).new_page()
         page.goto(BASE + "/studio/")
+        expect(page.get_by_role("region", name="Scenarios")).to_be_visible()
+        expect(page.get_by_role("region", name="Report", exact=True)).to_be_visible()
+        expect(page.get_by_role("region", name="Trace Execution summary", exact=True)).to_be_visible()
+        expect(page.get_by_role("radio", name="Insufficient balance")).to_be_checked()
         page.get_by_role("button", name="Open Project Studio").first.click()
         expect(page.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()

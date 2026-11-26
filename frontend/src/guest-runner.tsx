@@ -17,14 +17,15 @@ const workflowHost = document.getElementById("lp-workflow-live");
 const reportHost = document.getElementById("lp-report-live");
 const describe = (status: Outcome["status"]) => status === "success" ? "Accepted" : "Rejected";
 
-function GuestRunner({scenarios, endpoint, csrf, enabled}: {
-  scenarios: Scenario[]; endpoint: string; csrf: string; enabled: boolean;
+function GuestRunner({scenarios, endpoint, csrf, enabled, selected, initialResult, initialError}: {
+  scenarios: Scenario[]; endpoint: string; csrf: string; enabled: boolean; selected?: string;
+  initialResult: Result | null; initialError: string | null;
 }) {
-  const [scenario, select] = useState(scenarios.find(item => item.id === "insufficient") ?? scenarios[0]);
-  const [result, setResult] = useState<Result>();
+  const [scenario, select] = useState(scenarios.find(item => item.id === selected) ?? scenarios[0]);
+  const [result, setResult] = useState<Result | undefined>(initialResult ?? undefined);
   const [reportView, setReportView] = useState("Trace");
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError ?? "");
   const inFlight = useRef(false);
 
   function choose(next: Scenario) {
@@ -182,7 +183,7 @@ function GuestRunner({scenarios, endpoint, csrf, enabled}: {
   </>;
 }
 
-const host = document.getElementById("lp-runner");
+const host = document.getElementById("lp-demo-runner");
 const csrf = host?.querySelector<HTMLInputElement>("[name=csrfmiddlewaretoken]")?.value;
 const data = document.getElementById("lp-scenarios")?.textContent;
 if (host?.dataset.endpoint && csrf && data) {
@@ -191,6 +192,8 @@ if (host?.dataset.endpoint && csrf && data) {
     workflowHost?.replaceChildren();
     reportHost?.replaceChildren();
     createRoot(host).render(<GuestRunner scenarios={scenarios} endpoint={host.dataset.endpoint} csrf={csrf}
-      enabled={host.dataset.enabled === "true"} />);
+      enabled={host.dataset.enabled === "true"} selected={host.dataset.selected}
+      initialResult={JSON.parse(document.getElementById("lp-initial-result")?.textContent ?? "null")}
+      initialError={JSON.parse(document.getElementById("lp-initial-error")?.textContent ?? "null")} />);
   }
 }

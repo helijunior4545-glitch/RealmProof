@@ -1,0 +1,51 @@
+<form class="lp-runner lp-demo-stack" method="post" action="{% url 'studio:guest_preview' %}">
+  {% csrf_token %}
+  <input type="hidden" name="presentation" value="page">
+  <section class="lp-scenarios lp-demo-card" aria-label="Scenarios">
+    <h3><i class="lp-icon lp-file" aria-hidden="true"></i> Scenarios ({{ preview_cases|length }})</h3>
+    {% for case in preview_cases %}
+      <label class="lp-native-scenario">
+        <input type="radio" name="scenario" value="{{ case.id }}"{% if case.id == selected_case.id %} checked{% endif %}>
+        <i class="lp-icon {% if case.expected.status == 'rejected' %}lp-warning{% else %}lp-shield{% endif %}" aria-hidden="true"></i>
+        {{ case.name }}
+      </label>
+    {% endfor %}
+  </section>
+  <section class="lp-run-panel lp-demo-card" aria-labelledby="lp-native-report">
+    <h3 id="lp-native-report"><i class="lp-icon lp-file" aria-hidden="true"></i> Report</h3>
+    <p class="lp-demo-mode">{% if preview_result %}Observed run{% else %}Example · expected values{% endif %}</p>
+    <div class="lp-demo-summary">
+      <div class="lp-result" role="status" aria-label="Execution result">
+        {% if preview_result %}
+          <span class="{% if preview_result.observed.status == 'rejected' %}lp-rejected{% else %}lp-passed{% endif %}">
+            Transfer {% if preview_result.observed.status == "rejected" %}rejected{% else %}accepted{% endif %}
+          </span>
+          <span class="{% if preview_result.verdict == 'passed' %}lp-passed{% else %}lp-failed{% endif %}">Test {{ preview_result.verdict }}</span>
+        {% else %}
+          <span class="{% if selected_case.expected.status == 'rejected' %}lp-rejected{% else %}lp-passed{% endif %}">Expected {% if selected_case.expected.status == "rejected" %}rejected{% else %}accepted{% endif %}</span>
+          <span><i class="lp-icon lp-shield" aria-hidden="true"></i> Awaiting run</span>
+        {% endif %}
+      </div>
+      <dl class="lp-demo-balance" aria-label="Remaining balance">
+        <div><dt>Expected</dt><dd>{{ selected_case.expected.balance }}</dd></div>
+        <div><dt>Observed</dt><dd>{% if preview_result %}{{ preview_result.observed.balance }}{% else %}—{% endif %}</dd></div>
+      </dl>
+    </div>
+    <button class="lp-run-button" type="submit"{% if not isolated_guest %} disabled{% endif %}><i class="lp-icon lp-terminal" aria-hidden="true"></i> Run scenario</button>
+    {% if preview_error %}<p class="lp-error" role="alert">{{ preview_error }}</p>{% endif %}
+    {% if not isolated_guest %}<p class="lp-message">Public execution is unavailable on this deployment.</p>{% endif %}
+  </section>
+  <section class="lp-demo-card lp-demo-trace" aria-labelledby="lp-native-trace">
+    <h3 id="lp-native-trace"><i class="lp-icon lp-terminal" aria-hidden="true"></i> Trace <small>Execution summary</small></h3>
+    <ol class="lp-execution-lines">
+      <li><b>call</b><code>Transfer({{ selected_case.inputs.balance }}, {{ selected_case.inputs.amount }}, {{ selected_case.inputs.authorized|yesno:"true,false" }})</code></li>
+      <li><b>expect</b><code>{{ selected_case.expected.status }} · balance {{ selected_case.expected.balance }}</code></li>
+      {% if preview_result %}
+        <li><b>return</b><code>{{ preview_result.observed.status }} · balance {{ preview_result.observed.balance }}</code></li>
+        <li><b>verify</b><code>Test {{ preview_result.verdict }}</code></li>
+      {% else %}
+        <li><b>verify</b><code>Run to verify expectations</code></li>
+      {% endif %}
+    </ol>
+  </section>
+</form>

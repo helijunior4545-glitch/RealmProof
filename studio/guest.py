@@ -40,15 +40,22 @@ def studio_destination(request):
             return reverse("studio:project", kwargs={"slug": slug, "project_id": project.pk})
     return None
 
-@never_cache
-@require_GET
-def entry(request):
+def render_landing(request, case=None, result=None, error=None, status=200):
     return render(request, "studio/guest_entry.html", {
         "studio_url": studio_destination(request),
         "dashboard_url": reverse("studio:dashboard"),
         "isolated_guest": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1",
         "preview_cases": preview_cases,
-    })
+        "selected_case": case or preview_cases[1],
+        "preview_result": result,
+        "preview_error": error,
+    }, status=status)
+
+
+@never_cache
+@require_GET
+def entry(request):
+    return render_landing(request)
 
 @never_cache
 @require_POST
@@ -87,24 +94,33 @@ def start(request):
 @never_cache
 @require_POST
 def preview(request):
-    if os.getenv("REALMPROOF_ISOLATED_GUESTS") != "1":
-        return JsonResponse({"error": "The public runner is unavailable on this deployment."}, status=503)
     case = next((item for item in preview_cases if item["id"] == request.POST.get("scenario")), None)
+
+    def respond(data, status=200):
+        if request.POST.get("presentation") == "page":
+            return render_landing(
+                request, case=case, result=data if status == 200 else None,
+                error=data.get("error"), status=status,
+            )
+        return JsonResponse(data, status=status)
+
+    if os.getenv("REALMPROOF_ISOLATED_GUESTS") != "1":
+        return respond({"error": "The public runner is unavailable on this deployment."}, status=503)
     if case is None:
-        return JsonResponse({"error": "Choose a bundled transfer scenario."}, status=400)
+        return respond({"error": "Choose a bundled transfer scenario."}, status=400)
     if not preview_slots.acquire(blocking=False):
-        return JsonResponse({"error": "The runner is busy. Try again in a moment."}, status=429)
+        return respond({"error": "The runner is busy. Try again in a moment."}, status=429)
     try:
         observed, evidence = engine.execute(case["inputs"])
     except TimeoutExpired:
-        return JsonResponse({"error": "The Gno execution timed out. Please retry."}, status=504)
+        return respond({"error": "The Gno execution timed out. Please retry."}, status=504)
     except (OSError, RuntimeError, ValueError):
         logger.exception("Landing preview Gno execution failed")
-        return JsonResponse({"error": "The local Gno runner could not complete this scenario."}, status=503)
+        return respond({"error": "The local Gno runner could not complete this scenario."}, status=503)
     finally:
         preview_slots.release()
     result = evaluate(case["expected"], observed)
-    return JsonResponse({
+    return respond({
         "observed": observed,
         "verdict": result.status,
         "mismatches": list(result.evidence["mismatches"]),

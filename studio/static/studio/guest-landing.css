@@ -282,3 +282,17 @@
 }
 .lp-report-highlight strong { display: flex; align-items: center; gap: 7px; font-size: 14px; }
 .lp-report-highlight > div > small { display: block; margin-top: 4px; }
+
+.lp-native-scenario {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.lp-native-scenario:has(input:checked) { background: #6ae1ef17; border-color: #82dce447; }
+.lp-native-scenario input { margin: 0; accent-color: var(--cyan); }
+.lp-native-scenario .lp-icon { color: var(--iris); }
