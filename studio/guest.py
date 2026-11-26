@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 def entry(request):
     if request.user.is_authenticated:
         return redirect("studio:dashboard")
-    return render(request, "studio/guest_entry.html")
+    return render(request, "studio/guest_entry.html", {"isolated_guest": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1"})
 
 @never_cache
 @require_POST
@@ -28,6 +28,17 @@ def start(request):
     if user and user.is_active and not user.is_staff and not user.is_superuser:
         memberships = list(Membership.objects.filter(user=user).select_related("organization")[:2])
         if len(memberships) == 1 and memberships[0].organization.slug.startswith("review-") and memberships[0].role == "editor":
+            if os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1":
+                from .guest_provisioning import provision
+                result = provision(user)
+                if result is None:
+                    messages.error(request, "Guest capacity reached. Please try again later.")
+                    return redirect("studio:public_demo")
+                visitor, org, project = result
+                login(request, visitor, backend="django.contrib.auth.backends.ModelBackend")
+                request.session.set_expiry(3600)
+                request.session["realmproof_guest"] = True
+                return redirect("studio:project", slug=org.slug, project_id=project.pk)
             login(request, user)
             request.session.set_expiry(3600)
             request.session['realmproof_guest'] = True

@@ -18,7 +18,7 @@
       const indicator = document.createElement("span");
       indicator.className = "rp-request-feedback";
       indicator.setAttribute("role", "status");
-      indicator.textContent = "Submitting request…";
+      indicator.textContent = form.dataset.pendingLabel || "Submitting request…";
       form.append(indicator);
       state.indicator = indicator;
     }, 180);

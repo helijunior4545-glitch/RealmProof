@@ -29,6 +29,13 @@ def membership_for(request, slug, write=False):
                 or request.user.is_staff or request.user.is_superuser
                 or Membership.objects.filter(user=request.user).count() != 1):
             raise Http404
+    if request.user.username.startswith("rp_guest_"):
+        from datetime import timedelta
+        if (member.organization.slug != "guest-" + request.user.username.removeprefix("rp_guest_")
+                or member.role != "editor" or request.user.is_staff or request.user.is_superuser
+                or timezone.now() >= request.user.date_joined + timedelta(hours=1)
+                or Membership.objects.filter(user=request.user).count() != 1):
+            raise Http404
     if write and member.role not in WRITE_ROLES:
         from django.core.exceptions import PermissionDenied
         raise PermissionDenied("You do not have permission to modify this workspace.")
@@ -48,7 +55,7 @@ def dashboard(request):
 @login_required
 @require_POST
 def create_organization(request):
-    if request.user.username == "hackathon_demo_public":
+    if request.user.username == "hackathon_demo_public" or request.user.username.startswith("rp_guest_"):
         from django.core.exceptions import PermissionDenied
         raise PermissionDenied("The shared demo cannot create organizations.")
     name, slug = request.POST.get("name", "").strip(), request.POST.get("slug", "").strip().lower()
