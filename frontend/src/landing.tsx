@@ -1,3 +1,4 @@
+import "./shell";
 import {useState} from "react";
 import {createRoot} from "react-dom/client";
 type Capability={key:string;accent:string;label:string;heading:string;features:string[];href:string;link:string};

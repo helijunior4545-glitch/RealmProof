@@ -1,4 +1,4 @@
-{% load static i18n %}
+{% load static i18n react_frontend %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -16,6 +16,8 @@
   <link href="{% static 'studio/factory.css' %}" rel="stylesheet">
   <link href="{% static 'studio/precision.css' %}" rel="stylesheet">
   <link href="{% static 'studio/design-system.css' %}" rel="stylesheet">
+  {% react_frontend_available as react_ready %}{% if react_ready %}<script type="module" src="{% static 'studio/react/landing.js' %}"></script>{% endif %}
+  <link rel="stylesheet" href="{% static 'studio/react-shell.css' %}">
 </head>
 <body>
   <a class="rp-skip-link" href="#main-content">Skip to main content</a>
@@ -51,7 +53,7 @@
     <div class="main-shell">
       <header class="topbar">
         <div class="topbar-location"><span class="topbar-prefix">REALMPROOF</span><span class="topbar-slash">/</span> {% block context_label %}CONSOLE{% endblock %}</div>
-        <div class="topbar-right">
+        <div class="topbar-right"><span id="rp-react-shell"></span>
           <span class="connection"><span class="status-dot rp-neutral-dot" aria-hidden="true"></span> Verification console</span>
           <span class="topbar-divider"></span>
           <span class="topbar-security">Independent tooling</span>
