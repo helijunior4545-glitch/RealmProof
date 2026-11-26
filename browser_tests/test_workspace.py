@@ -89,6 +89,32 @@ class BrowserTests(unittest.TestCase):
         expect(page.locator("#rp-preview")).to_be_disabled()
         page.screenshot(path=str(ART / "verification-inspector.png"), full_page=True)
 
+
+    def test_interactive_engineering_desk_and_mismatch(self):
+        import re
+        page = self.context(reduced_motion="reduce").new_page()
+        page.goto(BASE + "/studio/")
+        page.locator("#rp-expect-status").select_option("permission_denied")
+        page.locator("#rp-preview").click()
+        expect(page.locator("#rp-preview-status")).to_contain_text("DIFFERS FROM EXPECTED")
+        page.get_by_role("tab", name="Permission policy").click()
+        page.locator("#rp-policy-role").select_option("viewer")
+        page.locator("#rp-policy-action").select_option("publish")
+        page.locator("#rp-policy-run").click()
+        expect(page.locator("#rp-policy-verdict")).to_contain_text("DENY")
+        page.get_by_role("tab", name="Source comparison").click()
+        page.locator("#rp-diff-run").click()
+        expect(page.locator("#rp-diff-count")).to_contain_text("1 ADDED")
+        expect(page.locator(".rp-diff-remove")).to_contain_text("authorized &&")
+        page.get_by_role("tab", name="Evidence fingerprint").click()
+        page.locator("#rp-fingerprint-run").click()
+        expect(page.locator("#rp-fingerprint-status")).to_contain_text("DIGESTS DIFFER")
+        self.assertRegex(page.locator("#rp-fingerprint-hash-a").inner_text(), r"^[a-f0-9]{64}$")
+        page.locator("#rp-fingerprint-b").fill(page.locator("#rp-fingerprint-a").input_value())
+        page.locator("#rp-fingerprint-run").click()
+        expect(page.locator("#rp-fingerprint-status")).to_contain_text("DIGESTS MATCH")
+        page.screenshot(path=str(ART / "engineering-desk.png"), full_page=True)
+
     def test_native_launch_without_javascript(self):
         page = self.context(java_script_enabled=False).new_page()
         page.goto(BASE + "/studio/")

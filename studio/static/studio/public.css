@@ -135,3 +135,5 @@
   .rp-expect-control label small{display:block;margin-left:0}
 }
 @media(prefers-reduced-motion:reduce){.rp-lab-panel{animation:none}.rp-lab-tab,.rp-lab-action,.rp-explore-link:after{transition:none!important}}
+
+#rp-preview-status.is-mismatch{color:#ffadaf;font-weight:750}#rp-preview-status:not(.is-mismatch){color:#b2e4db}.rp-expect-control select{min-height:40px}.rp-cap-list summary:focus-visible{outline:2px solid #8be6e7;outline-offset:-3px}
