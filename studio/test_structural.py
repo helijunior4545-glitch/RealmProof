@@ -26,3 +26,15 @@ class StructuralTests(SimpleTestCase):
         result = analyze("package ledger\nfunc A() {" + "B();" * 2001 + "}")
         self.assertEqual(len(result["calls"]), 2000)
         self.assertTrue(result["calls_truncated"])
+
+    def test_risk_indicators(self):
+        result = analyze('package ledger\nfunc A(x int, a []int) { x += 1; x = x / 2; x = a[x]; x = x * 2; panic("x") }')
+        self.assertEqual([i["rule"] for i in result["indicators"]], ["compound_update", "divisor_boundary", "index_boundary", "arithmetic_boundary", "panic_candidate"])
+        self.assertTrue(all(i["function"] == "A" and i["line"] == 2 for i in result["indicators"]))
+
+    def test_risk_comments_and_limit(self):
+        result = analyze('package ledger\nfunc A() { // panic("x")\n _ = "x / 0" }')
+        self.assertEqual(result["indicators"], [])
+        result = analyze("package ledger\nfunc A() {" + "x+=1;" * 501 + "}")
+        self.assertEqual(len(result["indicators"]), 500)
+        self.assertTrue(result["indicators_truncated"])
