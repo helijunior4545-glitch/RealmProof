@@ -8,13 +8,29 @@
       <dt>Expected outcome</dt><dd data-demo-value="expectedOutcome">Rejected</dd>
     </dl>
   </div>
-  <div class="lp-workflow-output">
+  <div class="lp-workflow-output" data-workflow-stages>
     <ol class="lp-stage">
-      <li><i class="lp-icon lp-terminal" aria-hidden="true"></i><div><strong>Execute</strong><small>Browser simulation</small></div></li>
-      <li><i class="lp-icon lp-file" aria-hidden="true"></i><div><strong>Observe</strong><small>Read the result</small></div></li>
-      <li><i class="lp-icon lp-shield" aria-hidden="true"></i><div><strong>Compare</strong><small>Check expectations</small></div></li>
+      <li><button type="button" data-workflow-stage="execute" aria-controls="lp-example-execute" aria-pressed="false"><i class="lp-icon lp-terminal" aria-hidden="true"></i><span><strong>Execute</strong><small>Browser simulation</small></span></button></li>
+      <li><button type="button" data-workflow-stage="observe" aria-controls="lp-example-observe" aria-pressed="false"><i class="lp-icon lp-file" aria-hidden="true"></i><span><strong>Observe</strong><small>Read the result</small></span></button></li>
+      <li><button type="button" data-workflow-stage="compare" aria-controls="lp-example-compare" aria-pressed="true"><i class="lp-icon lp-shield" aria-hidden="true"></i><span><strong>Compare</strong><small>Check expectations</small></span></button></li>
     </ol>
-    <div class="lp-deck">
+    <div class="lp-deck lp-stage-panel" id="lp-example-execute" data-workflow-panel="execute" hidden>
+      <h3>Execution inputs <small data-demo-value="mode">Example</small></h3>
+      <dl class="lp-scenario-code">
+        <dt>Scenario</dt><dd data-demo-value="scenarioName">Insufficient balance</dd>
+        <dt>Call</dt><dd data-demo-value="call">Transfer(100, 150, true)</dd>
+        <dt>Expected outcome</dt><dd data-demo-value="expectedOutcome">Rejected</dd>
+      </dl>
+    </div>
+    <div class="lp-deck lp-stage-panel" id="lp-example-observe" data-workflow-panel="observe" hidden>
+      <h3>Operation result <small data-demo-value="mode">Example</small></h3>
+      <dl class="lp-scenario-code">
+        <dt>Outcome</dt><dd data-demo-value="actualOutcome">Rejected</dd>
+        <dt>Remaining balance</dt><dd data-demo-value="actualBalance">100</dd>
+        <dt>State changed</dt><dd data-demo-value="actualChanged">No</dd>
+      </dl>
+    </div>
+    <div class="lp-deck lp-stage-panel" id="lp-example-compare" data-workflow-panel="compare">
       <h3>State comparison <small data-demo-value="mode">Example</small></h3>
       <table class="lp-compare">
         <thead><tr><th scope="col">Assertion</th><th scope="col">Expected</th><th scope="col" data-demo-value="outputLabel">Sample</th><th scope="col">Result</th></tr></thead>

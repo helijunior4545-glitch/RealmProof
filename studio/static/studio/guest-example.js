@@ -102,3 +102,19 @@ if (browserDemo && simulationStatus) {
     simulationStatus.hidden = true;
   });
 }
+
+// Delegation keeps the same controls working when the live report replaces the example.
+function activateWorkflowStage(event) {
+  if (event.type === "pointerover" && event.pointerType !== "mouse") return;
+  const button = event.target.closest("button[data-workflow-stage]");
+  if (!button || button.getAttribute("aria-pressed") === "true") return;
+  const workflow = button.closest("[data-workflow-stages]");
+  for (const control of workflow.querySelectorAll("button[data-workflow-stage]")) {
+    const active = control === button;
+    control.setAttribute("aria-pressed", String(active));
+    document.getElementById(control.getAttribute("aria-controls")).hidden = !active;
+  }
+}
+for (const eventName of ["pointerover", "focusin", "click"]) {
+  document.addEventListener(eventName, activateWorkflowStage);
+}

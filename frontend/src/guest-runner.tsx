@@ -135,13 +135,27 @@ function GuestRunner({scenarios, endpoint, csrf, enabled, selected, initialResul
         <dt>Expect</dt><dd>{describe(scenario.expected.status)}</dd>
       </dl>
     </div>
-    <div className="lp-workflow-output">
+    <div className="lp-workflow-output" data-workflow-stages>
       <ol className="lp-stage">
-        <li><i className="lp-icon lp-terminal" aria-hidden="true" /><div><strong>Execute</strong><small>{pending ? "Running locally" : "Local Gno"}</small></div></li>
-        <li><i className="lp-icon lp-file" aria-hidden="true" /><div><strong>Observe</strong><small>{result ? "Result available" : "Capture output"}</small></div></li>
-        <li><i className="lp-icon lp-shield" aria-hidden="true" /><div><strong>Compare</strong><small>{result ? `Test ${result.verdict}` : "Check expectations"}</small></div></li>
+        <li><button type="button" data-workflow-stage="execute" aria-controls="lp-live-execute" aria-pressed={false}><i className="lp-icon lp-terminal" aria-hidden="true" /><span><strong>Execute</strong><small>{pending ? "Running locally" : "Local Gno"}</small></span></button></li>
+        <li><button type="button" data-workflow-stage="observe" aria-controls="lp-live-observe" aria-pressed={false}><i className="lp-icon lp-file" aria-hidden="true" /><span><strong>Observe</strong><small>{result ? "Result available" : "Capture output"}</small></span></button></li>
+        <li><button type="button" data-workflow-stage="compare" aria-controls="lp-live-compare" aria-pressed={true}><i className="lp-icon lp-shield" aria-hidden="true" /><span><strong>Compare</strong><small>{result ? `Test ${result.verdict}` : "Check expectations"}</small></span></button></li>
       </ol>
-      <div className="lp-deck">
+      <div className="lp-deck lp-stage-panel" id="lp-live-execute" data-workflow-panel="execute" hidden>
+        <h3>Execution inputs <small>Local Gno</small></h3>
+        <dl className="lp-scenario-code">
+          <dt>Scenario</dt><dd>{scenario.name}</dd>
+          <dt>Call</dt><dd>Transfer({scenario.inputs.balance}, {scenario.inputs.amount}, {String(scenario.inputs.authorized)})</dd>
+          <dt>Expected outcome</dt><dd>{describe(scenario.expected.status)}</dd>
+        </dl>
+      </div>
+      <div className="lp-deck lp-stage-panel" id="lp-live-observe" data-workflow-panel="observe" hidden>
+        <h3>Operation result <small>Local Gno</small></h3>
+        <dl className="lp-scenario-code">
+          {rows.map(row => <div className="lp-diff-row" key={row.key}><dt>{row.label}</dt><dd>{row.observed ?? "Awaiting run"}</dd></div>)}
+        </dl>
+      </div>
+      <div className="lp-deck lp-stage-panel" id="lp-live-compare" data-workflow-panel="compare">
         <h3>State comparison</h3>
         <table className="lp-compare">
           <thead><tr><th scope="col">Assertion</th><th scope="col">Expected</th><th scope="col">Observed</th><th scope="col">Result</th></tr></thead>

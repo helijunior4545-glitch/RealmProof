@@ -100,24 +100,59 @@
   </main>
   <footer class="lp-site-footer">
     <div class="lp-wrap">
-      <div class="lp-footer-grid">
+      <div class="lp-footer-intro">
         <div>
           <a href="#top" class="lp-brand"><i class="lp-icon lp-brand-icon" aria-hidden="true"></i> RealmProof</a>
-          <p>Scenario testing and execution evidence for Gno contracts.</p>
+          <p>Define contract behavior, run Gno scenarios, and inspect the evidence behind every verdict.</p>
         </div>
+        {% include "studio/landing_action.html" %}
+      </div>
+      <dl class="lp-footer-capabilities" aria-label="RealmProof capabilities">
+        <div>
+          <i class="lp-icon lp-terminal" aria-hidden="true"></i>
+          <dt>Execution</dt>
+          <dd>Run bundled transfer scenarios with local Gno, or try a browser simulation with editable inputs.</dd>
+        </div>
+        <div>
+          <i class="lp-icon lp-shield" aria-hidden="true"></i>
+          <dt>Verification</dt>
+          <dd>Compare the outcome, remaining balance, and state changes against explicit assertions.</dd>
+        </div>
+        <div>
+          <i class="lp-icon lp-file" aria-hidden="true"></i>
+          <dt>Evidence</dt>
+          <dd>Inspect execution duration and SHA-256 fingerprints for the source and test harness.</dd>
+        </div>
+      </dl>
+      <div class="lp-footer-grid">
         <nav aria-label="Footer product links">
-          <h2>Product</h2>
-          <a href="#workflow">Interactive demo</a>
-          <a href="#invite-title">Project Studio</a>
+          <h2>Explore the product</h2>
+          <a href="#lp-console-title">Local Gno console</a>
+          <a href="#workflow">Interactive simulation</a>
+          <a href="#evidence-title">Execution reports</a>
+        </nav>
+        <nav aria-label="Footer developer links">
+          <h2>Build with RealmProof</h2>
+          <a href="https://github.com/helijunior4545-glitch/RealmProof/blob/main/docs/GETTING_STARTED.md">Getting started <i class="lp-icon lp-out" aria-hidden="true"></i></a>
+          <a href="https://github.com/helijunior4545-glitch/RealmProof/blob/main/docs/LOCAL_EXECUTION.md">Local execution <i class="lp-icon lp-out" aria-hidden="true"></i></a>
+          <a href="https://github.com/helijunior4545-glitch/RealmProof/blob/main/docs/ARCHITECTURE.md">Architecture <i class="lp-icon lp-out" aria-hidden="true"></i></a>
+        </nav>
+        <nav aria-label="Footer methodology links">
+          <h2>Verification guides</h2>
+          <a href="https://github.com/helijunior4545-glitch/RealmProof/blob/main/docs/CONSOLE_WORKFLOW.md">Console workflow <i class="lp-icon lp-out" aria-hidden="true"></i></a>
+          <a href="https://github.com/helijunior4545-glitch/RealmProof/blob/main/docs/SOURCE_DISCOVERY.md">Source discovery <i class="lp-icon lp-out" aria-hidden="true"></i></a>
+          <a href="https://github.com/helijunior4545-glitch/RealmProof/blob/main/docs/GUEST_ISOLATION.md">Guest isolation <i class="lp-icon lp-out" aria-hidden="true"></i></a>
         </nav>
         <nav aria-label="Footer resource links">
-          <h2>Resources</h2>
+          <h2>Project and ecosystem</h2>
           <a href="https://github.com/helijunior4545-glitch/RealmProof">GitHub <i class="lp-icon lp-out" aria-hidden="true"></i></a>
+          <a href="https://github.com/helijunior4545-glitch/RealmProof/issues">Report an issue <i class="lp-icon lp-out" aria-hidden="true"></i></a>
           <a href="https://docs.gno.land/">Gno documentation <i class="lp-icon lp-out" aria-hidden="true"></i></a>
+          <a href="https://github.com/helijunior4545-glitch/RealmProof/blob/main/LICENSE">MIT license <i class="lp-icon lp-out" aria-hidden="true"></i></a>
         </nav>
       </div>
       <div class="lp-footer-bottom">
-        <p>Independent tooling for Gno.land.</p>
+        <p><strong>Independent tooling for Gno.land.</strong> The public transfer lab runs locally and submits no chain transactions.</p>
         <a href="#top">Back to top ↑</a>
       </div>
     </div>
