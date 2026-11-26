@@ -26,4 +26,5 @@ os.environ["REALMPROOF_DEMO_USERNAME"] = "hackathon_demo_public"
 os.environ["REALMPROOF_DEMO_PASSWORD"] = hmac.new(
     _secret.encode(), b"realmproof-local-demo-v1", hashlib.sha256
 ).hexdigest()
+os.environ.setdefault("REALMPROOF_ISOLATED_GUESTS", "1")
 from .settings import *  # noqa: F403,E402
