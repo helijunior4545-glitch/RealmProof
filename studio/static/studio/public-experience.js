@@ -3,6 +3,7 @@
  "use strict";
  const ready = () => {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reduced && "IntersectionObserver" in window) document.documentElement.classList.add("rp-enhanced");
   document.querySelectorAll("[data-reveal]").forEach(node => { if (!("IntersectionObserver" in window) || reduced) {node.classList.add("is-visible");} });
   if ("IntersectionObserver" in window && !reduced) {
    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
