@@ -36,6 +36,7 @@ class BrowserTests(unittest.TestCase):
         page.route("**/studio/guest/start/", delay)
         # The UI intentionally paints for two animation frames before native navigation.
         # Await the actual request instead of asserting against the event loop prematurely.
+        page.locator(".rp-guest-disclosure summary").click()
         with page.expect_request("**/studio/guest/start/") as submitted:
             page.get_by_role("button", name="Create Workspace").click(no_wait_after=True)
             expect(page.locator(".jury-launch")).to_have_attribute("aria-busy", "true")
@@ -56,6 +57,7 @@ class BrowserTests(unittest.TestCase):
         first = page.url
         other = b.new_page()
         other.goto(BASE + "/studio/")
+        other.locator(".rp-guest-disclosure summary").click()
         other.get_by_role("button", name="Create Workspace").click()
         expect(other.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
         self.assertNotEqual(first, other.url)
@@ -68,7 +70,7 @@ class BrowserTests(unittest.TestCase):
                 context = self.context(viewport={"width":width,"height":900}, reduced_motion="reduce")
                 page = context.new_page()
                 page.goto(BASE + "/studio/")
-                expect(page.get_by_role("button", name="Create Workspace")).to_be_visible()
+                expect(page.locator(".rp-guest-disclosure summary")).to_be_visible()
                 self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
                 page.keyboard.press("Tab")
                 expect(page.get_by_role("link", name="Skip to main content")).to_be_focused()
@@ -135,7 +137,7 @@ class BrowserTests(unittest.TestCase):
         page.goto(BASE + "/studio/")
         hero = page.locator(".rp-hero")
         self.assertLessEqual(hero.bounding_box()["height"], 520)
-        expect(page.get_by_role("button", name="Create Workspace")).to_be_in_viewport()
+        expect(page.locator(".rp-guest-disclosure summary")).to_be_in_viewport()
         expect(page.locator(".rp-product-visual figcaption")).to_contain_text("not live evidence")
         self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
 
@@ -155,5 +157,6 @@ class BrowserTests(unittest.TestCase):
     def test_native_launch_without_javascript(self):
         page = self.context(java_script_enabled=False).new_page()
         page.goto(BASE + "/studio/")
+        page.locator(".rp-guest-disclosure summary").click()
         page.get_by_role("button", name="Create Workspace").click()
         expect(page.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()

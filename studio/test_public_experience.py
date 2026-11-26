@@ -6,7 +6,7 @@ from django.contrib.staticfiles import finders
 class PublicExperienceTests(SimpleTestCase):
     def test_landing_explains_verification_without_claiming_chain_proof(self):
         text = get_template("studio/guest_entry.html").template.source
-        self.assertIn("Trust the", text)
+        self.assertIn("Verify smart contracts", text)
         self.assertIn("hero-project-studio.svg", text)
         self.assertIn("Static schematic, not live evidence", text)
         self.assertIn("BROWSER ILLUSTRATION", text)
@@ -14,10 +14,10 @@ class PublicExperienceTests(SimpleTestCase):
         self.assertIn('id="rp-preview"', text)
         self.assertIn('id="rp-trace-expected"', text)
         self.assertIn('id="rp-trace-observed"', text)
-        self.assertIn("SOURCE INTELLIGENCE", text)
-        self.assertIn("TEST STUDIO", text)
-        self.assertIn("EXECUTION CENTER", text)
-        self.assertIn("EVIDENCE & REPORTS", text)
+        self.assertIn("source intelligence", text.lower())
+        self.assertIn("test studio", text.lower())
+        self.assertIn("execution center", text.lower())
+        self.assertIn("evidence & reports", text.lower())
         self.assertIn("not affiliated", text.lower())
         self.assertIn("rp-panel-policy", text)
         self.assertIn("rp-panel-diff", text)
