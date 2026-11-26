@@ -3,6 +3,8 @@ from . import views, review, suites, builder, public_demo, guest
 
 from . import network, ledger_views, catalog_views, universal_views
 
+from . import source_views
+
 app_name = "studio"
 urlpatterns = [
     path("", guest.entry, name="public_demo"),
@@ -30,5 +32,6 @@ urlpatterns = [
     path("organizations/<slug:slug>/ledger-lab/", ledger_views.overview, name="ledger_lab"),
     path("organizations/<slug:slug>/native-tests/", catalog_views.overview, name="native_catalog"),
     path("organizations/<slug:slug>/universal/", universal_views.overview, name="universal"),
+    path("organizations/<slug:slug>/projects/<uuid:project_id>/source/", source_views.overview, name="source_discovery"),
     path("health/", views.health, name="health"),
 ]

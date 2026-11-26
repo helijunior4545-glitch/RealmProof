@@ -1,0 +1,15 @@
+{% extends "studio/base.html" %}
+{% block title %}Source discovery{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">SOURCE INTELLIGENCE / V5.0</span><h1>Source discovery</h1><p class="lede">{{ project.name }} · Read-only source inspection</p></div><a class="button secondary" href="{% url 'studio:project' member.organization.slug project.pk %}">Back to project</a></div>
+{% if member.role != "viewer" %}
+<details class="panel" {% if error %}open{% endif %}><summary>Import source snapshot</summary><p class="helper">Paste a JSON object mapping relative .gno paths to source text. Maximum 100 files and 1 MiB of source. Code is never executed.</p>
+{% if error %}<p role="alert">{{ error }}</p>{% endif %}
+<form method="post">{% csrf_token %}<label for="manifest">Source manifest</label><textarea id="manifest" name="manifest" rows="8" required placeholder='{"ledger.gno":"package ledger"}' style="width:100%"></textarea><button class="button primary">Capture snapshot</button></form></details>
+{% endif %}
+<section class="panel"><h2>Snapshots</h2>{% for snapshot in snapshots %}<p><a href="?snapshot={{ snapshot.pk }}">{{ snapshot.created_at|date:"Y-m-d H:i:s" }} · {{ snapshot.digest|truncatechars:18 }}</a></p>{% empty %}<p>No snapshots captured.</p>{% endfor %}</section>
+{% if selected %}<section class="panel"><h2>Inventory · {{ selected.files|length }} files</h2><p style="overflow-wrap:anywhere">{{ selected.digest }}</p>
+{% if changes %}<p>Compared with previous capture: {{ changes.added|length }} added · {{ changes.modified|length }} modified · {{ changes.removed|length }} removed</p><details><summary>Changed paths</summary>{% for path in changes.added %}<p>Added: {{ path }}</p>{% endfor %}{% for path in changes.modified %}<p>Modified: {{ path }}</p>{% endfor %}{% for path in changes.removed %}<p>Removed: {{ path }}</p>{% endfor %}</details>{% endif %}
+{% for path, file in selected.files.items %}<p><a href="?snapshot={{ selected.pk }}&amp;file={{ path|urlencode }}">{{ path }}</a> · {{ file.bytes }} bytes</p>{% endfor %}</section>
+{% if record %}<section class="panel"><h2>{{ path }}</h2><p style="overflow-wrap:anywhere">{{ record.sha256 }}</p><pre style="overflow:auto;max-height:65vh">{{ record.source }}</pre></section>{% endif %}{% endif %}
+{% endblock %}

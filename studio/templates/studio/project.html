@@ -11,6 +11,7 @@
 <div class="pi-matrix"><span class="pi-label">Evidence comparisons</span><div class="pi-outcomes"><div><strong class="status-passed">{{ metrics.passed }}</strong><small>Matched assertions</small></div><div><strong class="status-failed">{{ metrics.failed }}</strong><small>Mismatched</small></div></div><small>Investigate mismatches in run details.</small></div>
 <div class="pi-state"><span class="pi-wave pi-await" aria-hidden="true"><svg viewBox="0 0 48 32"><path d="M10 4H38M10 28H38M14 4V9L24 16 34 9V4M14 28V23L24 16 34 23V28" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span><div><span class="pi-label">Awaiting evidence</span><strong class="status-pending">{{ metrics.pending }}</strong><small>Not executed on-chain</small></div></div>
 </section>
+<section class="panel"><h2>Source discovery</h2><p class="helper">Inspect versioned source inventories without executing imported code.</p><a class="button secondary" href="{% url 'studio:source_discovery' member.organization.slug project.pk %}">Open source explorer →</a></section>
 <div class="workbench-grid">
   <section class="panel" aria-labelledby="scenarios-title">
     <div class="panel-head"><div><span class="eyebrow">01 / DEFINE INTENT</span><h2 id="scenarios-title">Test scenarios <span class="count-chip">{{ scenarios|length }}</span></h2></div></div>
