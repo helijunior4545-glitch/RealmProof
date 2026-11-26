@@ -25,7 +25,17 @@ class PublicExperienceTests(SimpleTestCase):
         self.assertNotIn("onyx.testnets", text)
         self.assertNotIn("lucide", text)
 
+    def test_capability_workflow_previews(self):
+        source = get_template("studio/guest_entry.html").template.source
+        self.assertEqual(source.count('class="rp-cap-preview"'), 5)
+        self.assertEqual(source.count('class="rp-cap-step"'), 15)
+        self.assertEqual(source.count("WORKFLOW PREVIEW · SAMPLE"), 5)
+        for accent in ("#70c9ff", "#c2a2ff", "#67e3b1", "#f5bb71", "#62ded5"):
+            self.assertIn(accent, source)
+
     def test_assets_are_packaged(self):
+        self.assertIsNotNone(finders.find("studio/capabilities.css"))
+        self.assertIsNotNone(finders.find("studio/public-capabilities.js"))
         self.assertIsNotNone(finders.find("studio/public.css"))
         self.assertIsNotNone(finders.find("studio/public-experience.js"))
         self.assertIsNotNone(finders.find("studio/public-labs.js"))
