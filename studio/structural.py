@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import subprocess
+from .test_intelligence import recommend
 
 def analyze(source):
     binary = shutil.which(os.environ.get("REALMPROOF_SOURCE_PARSER", "realmproof-source-parser"))
@@ -13,6 +14,8 @@ def analyze(source):
         if len(data) > 1048576:
             return {"status": "limit_exceeded"}
         result = subprocess.run([binary], input=data, capture_output=True, timeout=3, check=True)
-        return json.loads(result.stdout)
+        structure = json.loads(result.stdout)
+        structure['recommendations'] = recommend(structure)
+        return structure
     except (OSError, ValueError, subprocess.SubprocessError):
         return {"status": "unavailable"}

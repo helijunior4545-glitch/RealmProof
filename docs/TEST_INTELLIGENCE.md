@@ -1,0 +1,3 @@
+# Test intelligence V5.4 foundation
+
+Five deterministic rule mappings transform static risk indicators into review proposals with source function, line, family, input strategy and verification objective. Expected outcomes remain null until a developer defines business intent. Proposals are deduplicated by rule/function/line, capped at 100 per selected file, and explicitly marked partial for truncated or unsupported inputs. No test code is generated or executed, no scenario is persisted, and no coverage or correctness claim is made. Same-line expressions may be grouped; types, reachability and native Gno semantics remain unresolved.
