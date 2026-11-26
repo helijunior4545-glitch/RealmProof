@@ -1,0 +1,39 @@
+/* Shared visual tokens for public and workspace interfaces. */
+:root {
+  color-scheme: dark;
+  --bg: #101216;
+  --sidebar: #14171c;
+  --surface: #191d23;
+  --surface-high: #222831;
+  --field: #11151b;
+  --edge: #343b45;
+  --edge-soft: #272d36;
+  --text: #edf1f5;
+  --muted: #a4afbc;
+  --subtle: #929eac;
+  --accent: #a5e0e5;
+  --accent-hover: #c9edf0;
+  --accent-dim: #a5e0e519;
+  --blue: #35ddff;
+  --green: #42f5a1;
+  --red: #ff627e;
+  --amber: #ffc15b;
+  --radius: 12px;
+  --mono: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+  --ui: Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --rp-space-1: 4px;
+  --rp-space-2: 8px;
+  --rp-space-3: 12px;
+  --rp-space-4: 16px;
+  --rp-space-6: 24px;
+  --rp-space-8: 32px;
+  --rp-radius-control: 6px;
+  --rp-radius-panel: 9px;
+  --rp-control-edge: #666;
+  --rp-focus: var(--blue);
+  --rp-status-success: var(--green);
+  --rp-status-failure: var(--red);
+  --rp-status-pending: var(--amber);
+  --rp-status-neutral: var(--muted);
+  --line: #343b45;
+}

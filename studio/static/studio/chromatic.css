@@ -1,12 +1,12 @@
 /* Chromatic console: neutral black surfaces, semantic spectral accents. */
 /* Shared palette is defined in design-system.css. */
-body,.app-shell{background:#000;color:var(--text)}
-.sidebar,.topbar{background:#050505;border-color:#222}
+body,.app-shell{background:var(--bg);color:var(--text)}
+.sidebar,.topbar{background:var(--sidebar);border-color:var(--edge)}
 .sidebar{overflow-y:auto}
-.content{background:#000}
+.content{background:var(--bg)}
 .brand-name>span{color:#35ddff}
 .brand-icon{filter:drop-shadow(0 0 10px #bd85ff44)}
-.panel,.metric,.workspace-tile,.verdict-box,.run-facts,.overview-callout{background:#090909;border:1px solid #252525;border-radius:9px;box-shadow:none}
+.panel,.metric,.workspace-tile,.verdict-box,.run-facts,.overview-callout{background:var(--surface);border:1px solid var(--edge);border-radius:9px;box-shadow:none}
 .panel:hover,.metric:hover{border-color:#424242}
 .rp-object{--top:#e4baff;--left:#a44dff;--right:#5921a6;transition:transform .24s cubic-bezier(.2,.8,.2,1),filter .24s}
 .rp-vault{--top:#baffd9;--left:#1bd98b;--right:#08764d}
