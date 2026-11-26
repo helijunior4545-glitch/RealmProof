@@ -297,11 +297,78 @@
 .lp-native-scenario input { margin: 0; accent-color: var(--cyan); }
 .lp-native-scenario .lp-icon { color: var(--iris); }
 
-.lp-examples:has(> .lp-live-panel:not(:empty)) > .lp-panel-example { display: none; }
+.lp-examples:not(.lp-show-browser-demo):has(> .lp-live-panel:not(:empty)) > .lp-panel-example { display: none; }
 .lp-panel-example [hidden] { display: none; }
 .lp-panel-example h3 small { margin-left: auto; color: var(--quiet); font: 11px var(--mono); }
 .lp-invite-panel {
   width: min(100%, 550px);
   padding: clamp(18px, 3vw, 28px);
   background: linear-gradient(145deg, #1b2131e8, #111620d9);
+}
+
+/* Shared visual rhythm across the interactive demo and the resource footer. */
+.lp { --panel: #151924; --panel-edge: #343c51; }
+.lp h2 { font-size: clamp(29px, 3.6vw, 49px); }
+.lp-workflow { padding-block: clamp(42px, 6vw, 84px); }
+.lp-workflow-grid { gap: 15px; }
+.lp-deck { border-color: var(--panel-edge); background: linear-gradient(150deg, #1a1e2c, #121622 75%); }
+.lp-deck h3 { letter-spacing: -.012em; }
+.lp-compare th, .lp-compare td { padding: 8px 7px; }
+.lp-compare tbody tr:hover { background: #a3b8ff0b; }
+.lp-demo-controls {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.15fr) minmax(160px, 1fr) minmax(90px, .56fr) auto;
+  align-items: end;
+  gap: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #3f4d64;
+  border-radius: 13px;
+  background: linear-gradient(120deg, #1b2635, var(--panel) 68%);
+}
+.lp-demo-controls[hidden], .lp-simulation-status[hidden] { display: none; }
+.lp-demo-intro { align-self: center; display: flex; align-items: center; gap: 10px; }
+.lp-demo-intro > .lp-icon { color: var(--cyan); width: 22px; height: 22px; }
+.lp-demo-intro h3 { font-size: 14px; }
+.lp-demo-intro p { color: var(--quiet); font-size: 11px; }
+.lp-demo-controls label { display: grid; gap: 5px; color: var(--quiet); font-size: 12px; }
+.lp-demo-controls select, .lp-demo-controls input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  border: 1px solid #4a546a;
+  border-radius: 7px;
+  padding: 7px 9px;
+  background: #111724;
+  color: var(--paper);
+  font: 13px var(--ui);
+}
+.lp .lp-demo-controls .lp-action { min-height: 40px; padding: 7px 12px; font-size: 13px; }
+.lp .lp-simulation-status { margin: 0 0 14px; padding: 7px 10px; border-left: 2px solid var(--iris); color: var(--paper); font: 12px/1.5 var(--mono); }
+.lp-examples.lp-show-browser-demo > .lp-live-panel { display: none; }
+
+.lp-site-footer { border-top: 1px solid var(--stroke); background: #0c0f17; color: var(--quiet); }
+.lp-footer-grid { display: grid; grid-template-columns: 1.7fr 1fr 1fr; gap: 30px; padding-block: 35px; }
+.lp-footer-grid .lp-brand { color: var(--paper); font-size: 19px; }
+.lp-footer-grid p { max-width: 35ch; margin-top: 9px; font-size: 13px; }
+.lp .lp-footer-grid nav { display: grid; align-content: start; gap: 8px; }
+.lp .lp-footer-grid h2 { color: var(--paper); font-size: 13px; letter-spacing: 0; }
+.lp-footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-top: 1px solid var(--stroke);
+  padding-block: 17px;
+  font-size: 12px;
+}
+.lp-footer-bottom a:hover { color: var(--cyan); }
+@media (max-width: 850px) {
+  .lp-demo-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  .lp-demo-controls { grid-template-columns: minmax(0, 1fr); }
+  .lp-footer-grid { grid-template-columns: 1fr 1fr; gap: 21px 14px; }
+  .lp-footer-grid > div { grid-column: 1 / -1; }
 }

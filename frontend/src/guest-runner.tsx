@@ -1,4 +1,4 @@
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {createPortal} from "react-dom";
 import {createRoot} from "react-dom/client";
 
@@ -28,6 +28,12 @@ function GuestRunner({scenarios, endpoint, csrf, enabled, selected, initialResul
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(initialError ?? "");
   const inFlight = useRef(false);
+
+  useEffect(() => {
+    const showBrowserDemo = () => setShowLive(false);
+    document.addEventListener("realmproof:browser-demo", showBrowserDemo);
+    return () => document.removeEventListener("realmproof:browser-demo", showBrowserDemo);
+  }, []);
 
   function choose(next: Scenario) {
     if (inFlight.current || scenario.id === next.id) return;

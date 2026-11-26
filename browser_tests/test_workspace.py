@@ -89,6 +89,17 @@ class BrowserTests(unittest.TestCase):
         expect(report.get_by_text("Balance change")).to_be_visible()
         expect(report.get_by_text("Transfer(100, 150, true)")).to_be_hidden()
         expect(page.locator(".lp-invite-panel").get_by_role("button", name="Open Project Studio")).to_be_visible()
+        demo = page.locator("#lp-browser-demo")
+        demo.get_by_label("Scenario").select_option("valid")
+        demo.get_by_role("button", name="Run simulation").click()
+        expect(page.locator("#lp-simulation-status")).to_contain_text("Transfer accepted · Test passed · Remaining balance 75")
+        demo.get_by_label("Transfer amount").fill("150")
+        demo.get_by_role("button", name="Run simulation").click()
+        expect(page.locator("#lp-simulation-status")).to_contain_text("Transfer rejected · Test failed · Remaining balance 100")
+        expect(page.get_by_role("row", name="Remaining balance")).to_contain_text("Mismatch")
+        expect(report.get_by_text("Test failed")).to_be_visible()
+        expect(page.get_by_role("navigation", name="Footer resource links").get_by_role("link", name="GitHub")).to_be_visible()
+
 
     def test_native_launch_without_javascript(self):
         page = self.context(java_script_enabled=False).new_page()

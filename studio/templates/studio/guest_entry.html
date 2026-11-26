@@ -52,6 +52,25 @@
     <section id="workflow" class="lp-wrap lp-workflow" aria-labelledby="workflow-title">
       <h2 id="workflow-title">From scenario to evidence</h2>
       <p class="lp-section-copy">Choose a Gno scenario, execute it, and compare the contract’s response with the behavior you expect.</p>
+      <form class="lp-demo-controls" id="lp-browser-demo" hidden>
+        <div class="lp-demo-intro">
+          <i class="lp-icon lp-terminal" aria-hidden="true"></i>
+          <div><h3>Try a transfer</h3><p>Browser simulation · Editing the amount keeps the scenario’s original expectations.</p></div>
+        </div>
+        <label>Scenario
+          <select name="scenario">
+            <option value="insufficient">Insufficient balance</option>
+            <option value="valid">Valid transfer</option>
+            <option value="exact">Exact balance</option>
+            <option value="permission">Unauthorized transfer</option>
+          </select>
+        </label>
+        <label>Transfer amount
+          <input name="amount" type="number" min="0" max="1000000000000" step="1" value="150" required>
+        </label>
+        <button class="lp-action" type="submit">Run simulation <i class="lp-icon lp-arrow" aria-hidden="true"></i></button>
+      </form>
+      <p class="lp-simulation-status" id="lp-simulation-status" role="status" hidden></p>
       <div class="lp-examples">
         {% include "studio/guest_workflow_example.html" %}
         <div class="lp-live-panel" id="lp-workflow-live"></div>
@@ -79,11 +98,28 @@
       </div>
     </section>
   </main>
-  <footer class="lp-header">
-    <div class="lp-wrap lp-footer">
-      <a href="#top" class="lp-brand"><i class="lp-icon lp-brand-icon" aria-hidden="true"></i> RealmProof</a>
-      <p>Independent tooling for Gno.land.</p>
-      <nav aria-label="Footer navigation"><a href="#workflow">Workflow</a><a href="https://github.com/helijunior4545-glitch/RealmProof">GitHub <i class="lp-icon lp-out" aria-hidden="true"></i></a></nav>
+  <footer class="lp-site-footer">
+    <div class="lp-wrap">
+      <div class="lp-footer-grid">
+        <div>
+          <a href="#top" class="lp-brand"><i class="lp-icon lp-brand-icon" aria-hidden="true"></i> RealmProof</a>
+          <p>Scenario testing and execution evidence for Gno contracts.</p>
+        </div>
+        <nav aria-label="Footer product links">
+          <h2>Product</h2>
+          <a href="#workflow">Interactive demo</a>
+          <a href="#invite-title">Project Studio</a>
+        </nav>
+        <nav aria-label="Footer resource links">
+          <h2>Resources</h2>
+          <a href="https://github.com/helijunior4545-glitch/RealmProof">GitHub <i class="lp-icon lp-out" aria-hidden="true"></i></a>
+          <a href="https://docs.gno.land/">Gno documentation <i class="lp-icon lp-out" aria-hidden="true"></i></a>
+        </nav>
+      </div>
+      <div class="lp-footer-bottom">
+        <p>Independent tooling for Gno.land.</p>
+        <a href="#top">Back to top ↑</a>
+      </div>
     </div>
   </footer>
 </body>
