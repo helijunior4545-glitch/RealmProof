@@ -33,8 +33,10 @@
  <div class="rp-entry-copy"><span class="rp-kicker">WORKSPACE STATUS</span><h3>Your workspace is ready to manage.</h3><p>Access your organization and project overview.</p></div>
  <a class="rp-button rp-primary" href="{{ dashboard_url }}">Open Workspace Overview <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a>
  {% elif isolated_guest %}
- <details class="rp-guest-disclosure" {% if form.errors %}open{% endif %}><summary aria-label="Prepare workspace">Open Project Studio <span aria-hidden="true">→</span></summary><div class="rp-entry-copy"><span class="rp-kicker">ISOLATED GUEST WORKSPACE</span><h3>Prepare a private workspace.</h3><p>Generated suggestions are editable. Each visitor receives a separate environment.</p></div>
- <form method="post" action="{% url 'studio:guest_start' %}" class="jury-launch rp-creation-form" data-pending-label="Preparing workspace…">{% csrf_token %}{{ form.as_p }}<div class="rp-form-actions"><button class="rp-button rp-primary" type="submit" aria-label="Create Workspace">Create workspace <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></button><a class="rp-regenerate" href="{% url 'studio:public_demo' %}#workspace">Generate another example ↗</a></div></form><p class="rp-form-footnote">Temporary independent environment. Session access expires after one hour. Do not upload secrets or private source.</p></details>
+ <form method="post" action="{% url 'studio:guest_start' %}" class="jury-launch" data-pending-label="Opening Project Studio…">
+  {% csrf_token %}
+  <button class="rp-button rp-primary" type="submit">Open Project Studio <span aria-hidden="true">→</span></button>
+ </form>
  {% else %}
  <div class="rp-entry-copy"><span class="rp-kicker">PUBLIC EXPLORATION</span><h3>Discover the platform.</h3><p>New isolated workspaces are disabled in this deployment. Explore the interactive models below or review the source repository.</p></div>
  <a class="rp-button rp-primary" href="https://github.com/helijunior4545-glitch/RealmProof">View source repository <span class="rp-icon rp-library-icon rp-icon-external" aria-hidden="true"></span></a>

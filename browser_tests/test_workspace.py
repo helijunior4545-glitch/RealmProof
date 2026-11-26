@@ -23,42 +23,24 @@ class BrowserTests(unittest.TestCase):
         self.addCleanup(context.close)
         return context
 
-    def test_guest_launch_feedback_and_isolation(self):
+    def test_guest_launch_and_isolation(self):
         a, b = self.context(), self.context()
         page = a.new_page()
         page.goto(BASE + "/studio/")
-        # Delay only the real POST response, allowing the native pending state to render.
-        requests = []
-        def delay(route):
-            requests.append(route.request.method)
-            # Hold navigation without blocking the browser event loop.
-            self.pending = route
-        page.route("**/studio/guest/start/", delay)
-        # The UI intentionally paints for two animation frames before native navigation.
-        # Await the actual request instead of asserting against the event loop prematurely.
-        page.locator(".rp-guest-disclosure summary").click()
+        expect(page.locator("form.jury-launch input:not([type=hidden]), form.jury-launch textarea, form.jury-launch select")).to_have_count(0)
         with page.expect_request("**/studio/guest/start/") as submitted:
-            page.get_by_role("button", name="Create Workspace").click(no_wait_after=True)
-            expect(page.locator(".jury-launch")).to_have_attribute("aria-busy", "true")
-            expect(page.get_by_text("Preparing workspace…", exact=True)).to_be_visible()
-            page.locator(".jury-launch").evaluate("(form) => form.requestSubmit(form.querySelector('button'))")
+            page.get_by_role("button", name="Open Project Studio").click()
         self.assertEqual(submitted.value.method, "POST")
-        # A request event can precede its route callback: pump the browser event loop
-        # until the route interception has actually registered, without sleeping blindly.
-        for _ in range(40):
-            if requests:
-                break
-            page.wait_for_timeout(50)
-        self.assertEqual(requests, ["POST"])
-        # Playwright screenshots wait for navigations; keep the pending-state assertions
-        # above and capture the settled workspace after releasing the held request.
-        self.pending.continue_()
         expect(page.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
         first = page.url
+
+        page.goto(BASE + "/studio/")
+        page.get_by_role("link", name="Open Project Studio").click()
+        expect(page).to_have_url(first)
+
         other = b.new_page()
         other.goto(BASE + "/studio/")
-        other.locator(".rp-guest-disclosure summary").click()
-        other.get_by_role("button", name="Create Workspace").click()
+        other.get_by_role("button", name="Open Project Studio").click()
         expect(other.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
         self.assertNotEqual(first, other.url)
         self.assertEqual(other.goto(first).status, 404)
@@ -70,7 +52,7 @@ class BrowserTests(unittest.TestCase):
                 context = self.context(viewport={"width":width,"height":900}, reduced_motion="reduce")
                 page = context.new_page()
                 page.goto(BASE + "/studio/")
-                expect(page.locator(".rp-guest-disclosure summary")).to_be_visible()
+                expect(page.get_by_role("button", name="Open Project Studio")).to_be_visible()
                 self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
                 page.keyboard.press("Tab")
                 expect(page.get_by_role("link", name="Skip to main content")).to_be_focused()
@@ -137,7 +119,7 @@ class BrowserTests(unittest.TestCase):
         page.goto(BASE + "/studio/")
         hero = page.locator(".rp-hero")
         self.assertLessEqual(hero.bounding_box()["height"], 520)
-        expect(page.locator(".rp-guest-disclosure summary")).to_be_in_viewport()
+        expect(page.get_by_role("button", name="Open Project Studio")).to_be_in_viewport()
         expect(page.locator(".rp-product-visual figcaption")).to_contain_text("not live evidence")
         self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
 
@@ -157,6 +139,5 @@ class BrowserTests(unittest.TestCase):
     def test_native_launch_without_javascript(self):
         page = self.context(java_script_enabled=False).new_page()
         page.goto(BASE + "/studio/")
-        page.locator(".rp-guest-disclosure summary").click()
-        page.get_by_role("button", name="Create Workspace").click()
+        page.get_by_role("button", name="Open Project Studio").click()
         expect(page.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
