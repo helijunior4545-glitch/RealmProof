@@ -1,0 +1,48 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#101216">
+<meta name="description" content="RealmProof — independent source intelligence and reproducible smart contract testing for Gno.">
+<title>RealmProof — Project Studio</title>
+<link rel="stylesheet" href="{% static 'studio/tokens.css' %}">
+<link rel="stylesheet" href="{% static 'studio/entry.css' %}">
+<script defer src="{% static 'studio/interactions.js' %}"></script>
+</head>
+<body class="rp-entry">
+<a class="rp-skip-link" href="#main-content">Skip to main content</a>
+<header class="rp-entry-header"><div class="rp-entry-wrap">
+<a class="rp-entry-brand" href="{% url 'studio:public_demo' %}" aria-label="RealmProof home"><span class="rp-entry-mark" aria-hidden="true">◈</span> realmproof</a>
+<a class="rp-entry-signin" href="{% url 'login' %}">Sign in <span aria-hidden="true">↗</span></a>
+</div></header>
+<main id="main-content" tabindex="-1" class="rp-entry-main">
+<div class="rp-entry-wrap">
+{% for message in messages %}<p class="rp-entry-message" role="status">{{ message }}</p>{% endfor %}
+<section class="rp-entry-hero rp-hero" aria-labelledby="rp-entry-title">
+<span class="rp-entry-eyebrow">SMART CONTRACT ENGINEERING · GNO</span>
+<h1 id="rp-entry-title">Verify smart contracts.<br><span>Work directly in the studio.</span></h1>
+<p>Inspect source, define expectations, execute supported local tests and review reproducible evidence in one workspace.</p>
+<div class="rp-entry-action">
+{% if isolated_guest %}
+<details class="rp-guest-disclosure" {% if form.errors %}open{% endif %}>
+<summary>Open Project Studio <span aria-hidden="true">→</span></summary>
+<div class="rp-entry-form-head"><h2>Prepare a private workspace</h2><p>Each visitor receives an isolated temporary environment. Your suggestions are editable.</p></div>
+<form method="post" action="{% url 'studio:guest_start' %}" class="jury-launch rp-creation-form" data-pending-label="Preparing workspace…">
+{% csrf_token %}{{ form.as_p }}
+<div class="rp-form-actions"><button class="rp-entry-submit" type="submit" aria-label="Create Workspace">Create workspace <span aria-hidden="true">→</span></button><a class="rp-regenerate" href="{% url 'studio:public_demo' %}#workspace">Generate another example ↗</a></div>
+</form>
+<p class="rp-entry-fine">Access expires after one hour. Do not upload secrets or private source.</p>
+</details>
+{% else %}
+<a class="rp-entry-primary" href="{% url 'login' %}">Open Project Studio <span aria-hidden="true">→</span></a>
+{% endif %}
+</div>
+<div class="rp-entry-foot"><span>Independent engineering tools</span><span>Local tests are not on-chain proof</span></div>
+</section>
+</div>
+</main>
+<footer class="rp-entry-footer"><div class="rp-entry-wrap"><span>© 2026 RealmProof</span><span>Independent project · Not affiliated with Gno.land</span></div></footer>
+</body></html>

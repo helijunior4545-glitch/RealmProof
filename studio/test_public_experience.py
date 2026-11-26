@@ -40,3 +40,33 @@ class PublicExperienceTests(SimpleTestCase):
         self.assertIsNotNone(finders.find("studio/public-experience.js"))
         self.assertIsNotNone(finders.find("studio/public-labs.js"))
         self.assertIsNotNone(finders.find("studio/hero-project-studio.svg"))
+
+
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+from django.urls import reverse
+
+
+class InternalEngineeringRoutingTests(TestCase):
+    def test_public_entry_does_not_expose_internal_lab(self):
+        response = self.client.get(reverse("studio:public_demo"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Verify smart contracts.")
+        self.assertNotContains(response, "INTERACTIVE VERIFICATION MODEL")
+        self.assertNotContains(response, "rp-panel-policy")
+
+    def test_internal_lab_requires_login(self):
+        response = self.client.get(reverse("studio:engineering_lab"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/accounts/login/", response.url)
+
+    def test_internal_lab_preserves_all_tools_and_truthful_labels(self):
+        user = get_user_model().objects.create_user(username="engineering-tester", password="example-credential")
+        self.client.force_login(user)
+        response = self.client.get(reverse("studio:engineering_lab"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "INTERACTIVE VERIFICATION MODEL")
+        self.assertContains(response, "ON-CHAIN VERIFIED: NO")
+        self.assertContains(response, "rp-panel-policy")
+        self.assertContains(response, "rp-panel-diff")
+        self.assertContains(response, "rp-panel-fingerprint")

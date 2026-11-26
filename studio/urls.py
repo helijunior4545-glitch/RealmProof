@@ -8,6 +8,7 @@ from . import source_views
 app_name = "studio"
 urlpatterns = [
     path("", guest.entry, name="public_demo"),
+    path("workspace/engineering/", guest.engineering, name="engineering_lab"),
     path("guest/start/", guest.start, name="guest_start"),
     path("reference/", public_demo.home, name="reference_demo"),
     path("workspace/", views.dashboard, name="dashboard"),
