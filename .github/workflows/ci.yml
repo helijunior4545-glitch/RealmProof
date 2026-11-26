@@ -7,7 +7,7 @@ on:
 jobs:
   django:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     services:
       postgres:
         image: postgres:16
@@ -44,5 +44,11 @@ jobs:
       - run: python manage.py test -v 2
       - name: Verify PostgreSQL concurrency
         run: python manage.py audit_engines concurrency-v1
+      - name: Verify Gno functional and specialized engines
+        run: python manage.py audit_engines transfer-v1 ledger-v1 integration-v1 property-v1 fuzz-v1 invariant-v1
+      - name: Verify mutation and security engines
+        run: python manage.py audit_engines mutation-v1 security-v1
+      - name: Verify regression and performance engines
+        run: python manage.py audit_engines regression-v1 performance-v1
       - name: Verify production static manifest
         run: DJANGO_DEBUG=0 DJANGO_SECRET_KEY=ci-static-build DATABASE_URL=postgresql://ci:ci@localhost:5432/ci python manage.py collectstatic --noinput
