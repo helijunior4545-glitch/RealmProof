@@ -1,0 +1,31 @@
+<div class="lp-deck lp-report lp-panel-example" data-demo-report>
+  <h3><i class="lp-icon lp-file" aria-hidden="true"></i> Execution report <small>Example</small></h3>
+  <div class="lp-report-highlight">
+    <div>
+      <strong class="lp-rejected"><i class="lp-icon lp-warning" aria-hidden="true"></i> Transfer rejected</strong>
+      <small>Test passed</small>
+    </div>
+    <dl class="lp-demo-balance" aria-label="Example balance comparison">
+      <div><dt>Expected</dt><dd>100</dd></div>
+      <div><dt>Sample</dt><dd>100</dd></div>
+    </dl>
+  </div>
+  <div class="lp-report-switch" role="group" aria-label="Example report view" hidden>
+    <button type="button" aria-pressed="true" aria-controls="lp-sample-trace">Trace</button>
+    <button type="button" aria-pressed="false" aria-controls="lp-sample-state">State</button>
+    <button type="button" aria-pressed="false" aria-controls="lp-sample-diff">Diff</button>
+  </div>
+  <ol id="lp-sample-trace" class="lp-execution-lines">
+    <li><b>call</b><code>Transfer(100, 150, true)</code></li>
+    <li><b>expect</b><code>rejected · balance 100</code></li>
+    <li><b>sample</b><code>rejected · balance 100</code></li>
+  </ol>
+  <dl id="lp-sample-state" class="lp-scenario-code" hidden>
+    <dt>Initial balance</dt><dd>100</dd>
+    <dt>Sample balance</dt><dd>100</dd>
+  </dl>
+  <dl id="lp-sample-diff" class="lp-scenario-code" hidden>
+    <dt>Balance change</dt><dd>0</dd>
+    <dt>State changed</dt><dd>No</dd>
+  </dl>
+</div>

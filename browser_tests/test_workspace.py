@@ -78,6 +78,18 @@ class BrowserTests(unittest.TestCase):
         page.get_by_role("button", name="State", exact=True).click()
         expect(page.locator("#lp-report-live")).to_contain_text("Awaiting run")
 
+    def test_example_panels_without_react_bundle(self):
+        page = self.context().new_page()
+        page.route("**/static/studio/react/landing.js", lambda route: route.abort())
+        page.goto(BASE + "/studio/")
+        expect(page.get_by_role("heading", name="State comparison")).to_be_visible()
+        expect(page.get_by_role("heading", name="Execution report")).to_be_visible()
+        report = page.locator("[data-demo-report]")
+        report.get_by_role("button", name="Diff").click()
+        expect(report.get_by_text("Balance change")).to_be_visible()
+        expect(report.get_by_text("Transfer(100, 150, true)")).to_be_hidden()
+        expect(page.locator(".lp-invite-panel").get_by_role("button", name="Open Project Studio")).to_be_visible()
+
     def test_native_launch_without_javascript(self):
         page = self.context(java_script_enabled=False).new_page()
         page.goto(BASE + "/studio/")

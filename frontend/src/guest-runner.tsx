@@ -23,6 +23,7 @@ function GuestRunner({scenarios, endpoint, csrf, enabled, selected, initialResul
 }) {
   const [scenario, select] = useState(scenarios.find(item => item.id === selected) ?? scenarios[0]);
   const [result, setResult] = useState<Result | undefined>(initialResult ?? undefined);
+  const [showLive, setShowLive] = useState(Boolean(initialResult || initialError));
   const [reportView, setReportView] = useState("Trace");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(initialError ?? "");
@@ -30,6 +31,7 @@ function GuestRunner({scenarios, endpoint, csrf, enabled, selected, initialResul
 
   function choose(next: Scenario) {
     if (inFlight.current || scenario.id === next.id) return;
+    setShowLive(true);
     select(next);
     setResult(undefined);
     setError("");
@@ -38,6 +40,7 @@ function GuestRunner({scenarios, endpoint, csrf, enabled, selected, initialResul
   async function run() {
     if (!enabled || inFlight.current) return;
     inFlight.current = true;
+    setShowLive(true);
     setPending(true);
     setResult(undefined);
     setError("");
@@ -115,7 +118,7 @@ function GuestRunner({scenarios, endpoint, csrf, enabled, selected, initialResul
       {executionSteps}
     </section>
   </div>
-  {workflowHost && createPortal(<div className="lp-workflow-grid">
+  {showLive && workflowHost && createPortal(<div className="lp-workflow-grid">
     <div className="lp-deck">
       <h3><i className="lp-icon lp-file" aria-hidden="true" /> Scenario</h3>
       <p>{scenario.name}</p>
@@ -145,7 +148,7 @@ function GuestRunner({scenarios, endpoint, csrf, enabled, selected, initialResul
       </div>
     </div>
   </div>, workflowHost)}
-  {reportHost && createPortal(<div className="lp-deck lp-report">
+  {showLive && reportHost && createPortal(<div className="lp-deck lp-report">
     <h3><i className="lp-icon lp-file" aria-hidden="true" /> Execution report <small>Local Gno</small></h3>
     <div className="lp-report-highlight">
       <div>
@@ -189,8 +192,6 @@ const data = document.getElementById("lp-scenarios")?.textContent;
 if (host?.dataset.endpoint && csrf && data) {
   const scenarios: Scenario[] = JSON.parse(data);
   if (scenarios.length) {
-    workflowHost?.replaceChildren();
-    reportHost?.replaceChildren();
     createRoot(host).render(<GuestRunner scenarios={scenarios} endpoint={host.dataset.endpoint} csrf={csrf}
       enabled={host.dataset.enabled === "true"} selected={host.dataset.selected}
       initialResult={JSON.parse(document.getElementById("lp-initial-result")?.textContent ?? "null")}

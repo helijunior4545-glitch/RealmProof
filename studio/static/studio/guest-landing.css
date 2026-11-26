@@ -296,3 +296,12 @@
 .lp-native-scenario:has(input:checked) { background: #6ae1ef17; border-color: #82dce447; }
 .lp-native-scenario input { margin: 0; accent-color: var(--cyan); }
 .lp-native-scenario .lp-icon { color: var(--iris); }
+
+.lp-examples:has(> .lp-live-panel:not(:empty)) > .lp-panel-example { display: none; }
+.lp-panel-example [hidden] { display: none; }
+.lp-panel-example h3 small { margin-left: auto; color: var(--quiet); font: 11px var(--mono); }
+.lp-invite-panel {
+  width: min(100%, 550px);
+  padding: clamp(18px, 3vw, 28px);
+  background: linear-gradient(145deg, #1b2131e8, #111620d9);
+}

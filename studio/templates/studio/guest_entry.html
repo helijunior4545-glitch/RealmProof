@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="{% static 'studio/tokens.css' %}">
   <link rel="stylesheet" href="{% static 'studio/guest-landing.css' %}">
   <script defer src="{% static 'studio/interactions.js' %}"></script>
+  <script defer src="{% static 'studio/guest-example.js' %}"></script>
   {% react_frontend_available as react_ready %}
   {% if react_ready %}<script type="module" src="{% static 'studio/react/landing.js' %}"></script>{% endif %}
 </head>
@@ -51,7 +52,10 @@
     <section id="workflow" class="lp-wrap lp-workflow" aria-labelledby="workflow-title">
       <h2 id="workflow-title">From scenario to evidence</h2>
       <p class="lp-section-copy">Choose a Gno scenario, execute it, and compare the contract’s response with the behavior you expect.</p>
-      <div id="lp-workflow-live"><p class="lp-message">Run a scenario to inspect its state comparison.</p></div>
+      <div class="lp-examples">
+        {% include "studio/guest_workflow_example.html" %}
+        <div class="lp-live-panel" id="lp-workflow-live"></div>
+      </div>
     </section>
     <section class="lp-evidence" aria-labelledby="evidence-title">
       <div class="lp-wrap lp-evidence-grid">
@@ -59,14 +63,19 @@
           <h2 id="evidence-title">A verdict you can <em>explain.</em></h2>
           <p>When a transfer exceeds the balance, the contract should reject it and leave the balance intact. The test passes when both expectations match.</p>
         </div>
-        <div id="lp-report-live"><p class="lp-message">The execution report appears after a local run.</p></div>
+        <div class="lp-examples">
+          {% include "studio/guest_report_example.html" %}
+          <div class="lp-live-panel" id="lp-report-live"></div>
+        </div>
       </div>
     </section>
     <section class="lp-invite" aria-labelledby="invite-title">
       <div class="lp-wrap">
-      <h2 id="invite-title">Try the transfer lab.</h2>
-      <p>Open a prepared project to run more scenarios and review your results.</p>
-      {% include "studio/landing_action.html" %}
+        <div class="lp-deck lp-invite-panel">
+          <h2 id="invite-title">Try the transfer lab.</h2>
+          <p>Open a prepared project to run more scenarios and review your results.</p>
+          {% include "studio/landing_action.html" %}
+        </div>
       </div>
     </section>
   </main>

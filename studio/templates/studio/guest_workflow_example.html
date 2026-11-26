@@ -1,0 +1,29 @@
+<div class="lp-workflow-grid lp-panel-example">
+  <div class="lp-deck">
+    <h3><i class="lp-icon lp-file" aria-hidden="true"></i> Scenario</h3>
+    <p>Insufficient balance</p>
+    <dl class="lp-scenario-code">
+      <dt>Initial balance</dt><dd>100</dd>
+      <dt>Transfer amount</dt><dd>150</dd>
+      <dt>Expected outcome</dt><dd>Rejected</dd>
+    </dl>
+  </div>
+  <div class="lp-workflow-output">
+    <ol class="lp-stage">
+      <li><i class="lp-icon lp-terminal" aria-hidden="true"></i><div><strong>Execute</strong><small>Local Gno</small></div></li>
+      <li><i class="lp-icon lp-file" aria-hidden="true"></i><div><strong>Observe</strong><small>Read the result</small></div></li>
+      <li><i class="lp-icon lp-shield" aria-hidden="true"></i><div><strong>Compare</strong><small>Check expectations</small></div></li>
+    </ol>
+    <div class="lp-deck">
+      <h3>State comparison <small>Example</small></h3>
+      <table class="lp-compare">
+        <thead><tr><th scope="col">Assertion</th><th scope="col">Expected</th><th scope="col">Sample</th><th scope="col">Result</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Outcome</th><td>Rejected</td><td>Rejected</td><td class="lp-passed">Match</td></tr>
+          <tr><th scope="row">Remaining balance</th><td>100</td><td>100</td><td class="lp-passed">Match</td></tr>
+          <tr><th scope="row">State changed</th><td>No</td><td>No</td><td class="lp-passed">Match</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
