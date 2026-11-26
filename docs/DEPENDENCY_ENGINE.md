@@ -1,0 +1,3 @@
+# Dependency intelligence V5.2 foundation
+
+The static Go-compatible AST parser records call expression candidates within named function and method bodies, with caller and call line numbers and syntactic target classification. Nested anonymous function bodies are excluded. The inventory is capped at 2,000 calls per file and reports truncation. No imported code is executed. The source explorer exposes candidates on demand. These are not resolved dependency edges: type conversions, shadowing, dynamic dispatch and cross-file resolution require further analysis. Cycle detection, impact analysis, package graph and native Gno semantic resolution remain pending.

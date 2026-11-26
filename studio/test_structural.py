@@ -15,3 +15,14 @@ class StructuralTests(SimpleTestCase):
 
     def test_invalid_syntax(self):
         self.assertEqual(analyze("package ledger\nfunc Broken(")["status"], "syntax_error")
+
+    def test_call_candidates(self):
+        result = analyze('package ledger\nimport "fmt"\nfunc A() { B(); fmt.Println("x"); f := func(){ Hidden() }; f() }\nfunc B() {}')
+        self.assertEqual(result["status"], "parsed")
+        self.assertEqual([(c["caller"], c["target"], c["kind"]) for c in result["calls"]], [("A", "B", "identifier"), ("A", "fmt.Println", "selector"), ("A", "f", "identifier")])
+        self.assertFalse(result["calls_truncated"])
+
+    def test_call_limit(self):
+        result = analyze("package ledger\nfunc A() {" + "B();" * 2001 + "}")
+        self.assertEqual(len(result["calls"]), 2000)
+        self.assertTrue(result["calls_truncated"])

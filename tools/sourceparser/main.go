@@ -19,6 +19,13 @@ type Symbol struct {
  Line int `json:"line"`
  Signature string `json:"signature"`
 }
+type Call struct {
+ Caller string `json:"caller"`
+ CallerLine int `json:"caller_line"`
+ Target string `json:"target"`
+ Line int `json:"line"`
+ Kind string `json:"kind"`
+}
 func render(f *token.FileSet, n ast.Node) string {
  var b bytes.Buffer
  if n != nil { _ = format.Node(&b, f, n) }
@@ -34,6 +41,8 @@ func main() {
   return
  }
  symbols := []Symbol{}
+ calls := []Call{}
+ truncated := false
  add := func(kind string, name *ast.Ident, sig string) {
   symbols = append(symbols, Symbol{kind,name.Name,name.IsExported(),fs.Position(name.Pos()).Line,sig})
  }
@@ -44,6 +53,23 @@ func main() {
    sig := render(fs,v.Type)
    if v.Recv != nil { kind = "method"; sig = render(fs,v.Recv)+" "+sig }
    add(kind,v.Name,sig)
+   if v.Body != nil {
+    ast.Inspect(v.Body, func(n ast.Node) bool {
+     if _, ok := n.(*ast.FuncLit); ok { return false }
+     c, ok := n.(*ast.CallExpr)
+     if !ok { return true }
+     if len(calls) >= 2000 { truncated = true; return false }
+     target, classification := "", "expression"
+     switch fn := c.Fun.(type) {
+     case *ast.Ident: target, classification = fn.Name, "identifier"
+     case *ast.SelectorExpr: target, classification = render(fs,fn), "selector"
+     default: target = render(fs,c.Fun)
+     }
+     if len(target)>512 { target = "[complex expression]" }
+     calls = append(calls,Call{v.Name.Name,fs.Position(v.Name.Pos()).Line,target,fs.Position(c.Pos()).Line,classification})
+     return true
+    })
+   }
   case *ast.GenDecl:
    for _, s := range v.Specs {
     switch n := s.(type) {
@@ -56,5 +82,5 @@ func main() {
  }
  imports := []string{}
  for _, i := range file.Imports { imports = append(imports,i.Path.Value) }
- _ = json.NewEncoder(os.Stdout).Encode(map[string]any{"status":"parsed","package":file.Name.Name,"symbols":symbols,"imports":imports,"parser":"go-syntax"})
+ _ = json.NewEncoder(os.Stdout).Encode(map[string]any{"status":"parsed","package":file.Name.Name,"symbols":symbols,"imports":imports,"parser":"go-syntax","calls":calls,"calls_truncated":truncated})
 }
