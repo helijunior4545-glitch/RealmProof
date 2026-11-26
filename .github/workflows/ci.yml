@@ -81,3 +81,35 @@ jobs:
           done
           docker logs rp-web
           exit 1
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DJANGO_SETTINGS_MODULE: realmproof.settings_local
+      REALMPROOF_ISOLATED_GUESTS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt -r requirements-browser.txt
+      - run: python -m playwright install --with-deps chromium
+      - run: python manage.py setup_local_demo
+      - name: Browser acceptance
+        run: |
+          python manage.py runserver 127.0.0.1:8765 --noreload > browser-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8765/studio/health/ && break
+            sleep 1
+          done
+          python -m unittest discover -s browser_tests -v
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-diagnostics
+          path: |
+            browser-server.log
+            browser-artifacts/
