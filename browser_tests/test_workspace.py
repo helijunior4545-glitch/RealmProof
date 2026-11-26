@@ -65,6 +65,9 @@ class BrowserTests(unittest.TestCase):
     def test_landing_scenario_selection_and_expected_values(self):
         page = self.context().new_page()
         page.goto(BASE + "/studio/")
+        expect(page.get_by_role("region", name="Scenarios")).to_be_visible()
+        expect(page.get_by_role("region", name="Report", exact=True)).to_contain_text("Example · expected values")
+        expect(page.get_by_role("region", name="Trace Execution summary", exact=True)).to_contain_text("Transfer(100, 150, true)")
         scenario = page.get_by_role("button", name="Exact balance")
         scenario.click()
         expect(scenario).to_have_attribute("aria-pressed", "true")
@@ -72,6 +75,8 @@ class BrowserTests(unittest.TestCase):
         expect(balance.get_by_role("cell").first).to_have_text("0")
         expect(balance.get_by_role("cell").nth(1)).to_have_text("—")
         expect(page.get_by_role("button", name="Run scenario")).to_be_enabled()
+        page.get_by_role("button", name="State", exact=True).click()
+        expect(page.locator("#lp-report-live")).to_contain_text("Awaiting run")
 
     def test_native_launch_without_javascript(self):
         page = self.context(java_script_enabled=False).new_page()

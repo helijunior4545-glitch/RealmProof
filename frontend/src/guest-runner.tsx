@@ -22,7 +22,7 @@ function GuestRunner({scenarios, endpoint, csrf, enabled}: {
 }) {
   const [scenario, select] = useState(scenarios.find(item => item.id === "insufficient") ?? scenarios[0]);
   const [result, setResult] = useState<Result>();
-  const [reportView, setReportView] = useState("Overview");
+  const [reportView, setReportView] = useState("Trace");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const inFlight = useRef(false);
@@ -68,39 +68,51 @@ function GuestRunner({scenarios, endpoint, csrf, enabled}: {
       observed: result && (result.observed.state_changed ? "Yes" : "No")},
   ];
 
+  const displayed = result?.observed ?? scenario.expected;
+  const executionSteps = <ol className="lp-execution-lines">
+    <li><b>call</b><code>Transfer({scenario.inputs.balance}, {scenario.inputs.amount}, {String(scenario.inputs.authorized)})</code></li>
+    <li><b>expect</b><code>{scenario.expected.status} · balance {scenario.expected.balance}</code></li>
+    <li><b>{result ? "return" : "example"}</b><code>{displayed.status} · balance {displayed.balance}</code></li>
+    <li><b>verify</b><code>{result ? `Test ${result.verdict}` : "Run to verify expectations"}</code></li>
+  </ol>;
+
   return <>
-  <div className="lp-runner">
-    <div className="lp-scenarios" role="group" aria-label="Scenarios">
-      <span>Scenarios</span>
+  <div className="lp-runner lp-demo-stack">
+    <section className="lp-scenarios lp-demo-card" aria-label="Scenarios">
+      <h3><i className="lp-icon lp-file" aria-hidden="true" /> Scenarios ({scenarios.length})</h3>
       {scenarios.map(item => <button key={item.id} type="button" disabled={pending} aria-pressed={scenario.id === item.id}
-        onClick={() => choose(item)}><i className="lp-icon lp-file" aria-hidden="true" />{item.name}</button>)}
-    </div>
-    <div className="lp-run-panel">
-      <dl className="lp-inputs">
-        <div><dt>Initial balance</dt><dd>{scenario.inputs.balance}</dd></div>
-        <div><dt>Amount</dt><dd>{scenario.inputs.amount}</dd></div>
-        <div><dt>Sender</dt><dd>{scenario.inputs.authorized ? "Authorized" : "Unauthorized"}</dd></div>
-      </dl>
+        onClick={() => choose(item)}><i className={`lp-icon ${item.expected.status === "rejected" ? "lp-warning" : "lp-shield"}`} aria-hidden="true" />{item.name}</button>)}
+    </section>
+    <section className="lp-run-panel lp-demo-card" aria-labelledby="lp-demo-report-title">
+      <h3 id="lp-demo-report-title"><i className="lp-icon lp-file" aria-hidden="true" /> Report</h3>
+      <p className="lp-demo-mode">{pending ? "Running in Gno…" : result ? "Observed run" : "Example · expected values"}</p>
+      <div className="lp-demo-summary">
+        <div className="lp-result" role="status" aria-label="Execution result">
+          <span className={displayed.status === "rejected" ? "lp-rejected" : "lp-passed"}>
+            <i className={`lp-icon ${displayed.status === "rejected" ? "lp-warning" : "lp-shield"}`} aria-hidden="true" />
+            {result ? "Transfer" : "Expected"} {describe(displayed.status).toLowerCase()}
+          </span>
+          <span className={result?.verdict === "failed" ? "lp-failed" : "lp-passed"}>
+            <i className="lp-icon lp-shield" aria-hidden="true" />
+            {result ? `Test ${result.verdict}` : "Awaiting run"}
+          </span>
+        </div>
+        <dl className="lp-demo-balance" aria-label="Remaining balance">
+          <div><dt>Expected</dt><dd>{scenario.expected.balance}</dd></div>
+          <div><dt>Observed</dt><dd>{result?.observed.balance ?? "—"}</dd></div>
+        </dl>
+      </div>
       <button className="lp-run-button" type="button" disabled={pending || !enabled} onClick={run}>
         <i className={`lp-icon ${pending ? "lp-spinner" : "lp-terminal"}`} aria-hidden="true" />
         {pending ? "Running in Gno…" : "Run scenario"}
       </button>
-      <div className="lp-result" role="status" aria-label="Execution result">
-        {result && <>
-          <span className={result.observed.status === "rejected" ? "lp-rejected" : "lp-passed"}>
-            <i className={`lp-icon ${result.observed.status === "rejected" ? "lp-warning" : "lp-shield"}`} aria-hidden="true" />
-            Transfer {describe(result.observed.status).toLowerCase()}
-          </span>
-          <span className={result.verdict === "passed" ? "lp-passed" : "lp-failed"}>
-            <i className={`lp-icon ${result.verdict === "passed" ? "lp-shield" : "lp-warning"}`} aria-hidden="true" />
-            Test {result.verdict}
-          </span>
-        </>}
-      </div>
       {error && <p className="lp-error" role="alert">{error}</p>}
       {!enabled && <p className="lp-message">Public execution is unavailable on this deployment.</p>}
-      <p className="lp-run-note">Compare the expected and observed values in the <a href="#workflow">workflow</a>.</p>
-    </div>
+    </section>
+    <section className="lp-demo-card lp-demo-trace" aria-labelledby="lp-demo-trace-title">
+      <h3 id="lp-demo-trace-title"><i className="lp-icon lp-terminal" aria-hidden="true" /> Trace <small>Execution summary</small></h3>
+      {executionSteps}
+    </section>
   </div>
   {workflowHost && createPortal(<div className="lp-workflow-grid">
     <div className="lp-deck">
@@ -134,19 +146,38 @@ function GuestRunner({scenarios, endpoint, csrf, enabled}: {
   </div>, workflowHost)}
   {reportHost && createPortal(<div className="lp-deck lp-report">
     <h3><i className="lp-icon lp-file" aria-hidden="true" /> Execution report <small>Local Gno</small></h3>
+    <div className="lp-report-highlight">
+      <div>
+        <strong className={displayed.status === "rejected" ? "lp-rejected" : "lp-passed"}>
+          <i className={`lp-icon ${displayed.status === "rejected" ? "lp-warning" : "lp-shield"}`} aria-hidden="true" />
+          {result ? "Transfer" : "Expected"} {describe(displayed.status).toLowerCase()}
+        </strong>
+        <small>{result ? `Test ${result.verdict}` : "Example · expected values"}</small>
+      </div>
+      <dl className="lp-demo-balance" aria-label="Report balance comparison">
+        <div><dt>Expected</dt><dd>{scenario.expected.balance}</dd></div>
+        <div><dt>Observed</dt><dd>{result?.observed.balance ?? "—"}</dd></div>
+      </dl>
+    </div>
     <div className="lp-report-switch" role="group" aria-label="Report view">
-      {["Overview", "Evidence"].map(view => <button type="button" key={view} aria-pressed={reportView === view}
+      {["Trace", "State", "Diff", "Evidence"].map(view => <button type="button" key={view} aria-pressed={reportView === view}
         onClick={() => setReportView(view)}>{view}</button>)}
     </div>
-    {!result ? <p>Run the selected scenario to populate this report.</p> : reportView === "Overview" ?
-      <dl className="lp-scenario-code">
-        <dt>Scenario</dt><dd>{scenario.name}</dd>
-        <dt>Transfer</dt><dd>{describe(result.observed.status)}</dd>
-        <dt>Test</dt><dd>{result.verdict}</dd>
-        <dt>Duration</dt><dd>{result.duration_ms} ms</dd>
-      </dl> :
+    {reportView === "Trace" && executionSteps}
+    {reportView === "State" && <dl className="lp-scenario-code">
+      <dt>Initial balance</dt><dd>{scenario.inputs.balance}</dd>
+      <dt>Expected balance</dt><dd>{scenario.expected.balance}</dd>
+      <dt>Observed balance</dt><dd>{result?.observed.balance ?? "Awaiting run"}</dd>
+    </dl>}
+    {reportView === "Diff" && <dl className="lp-scenario-code">
+      {rows.map(row => <div className="lp-diff-row" key={row.key}>
+        <dt>{row.label}</dt><dd>{row.expected} → {row.observed ?? "—"}</dd>
+      </div>)}
+    </dl>}
+    {reportView === "Evidence" && (result ?
       <dl className="lp-fingerprints"><dt>Source SHA-256</dt><dd>{result.source_sha256}</dd>
-        <dt>Harness SHA-256</dt><dd>{result.harness_sha256}</dd></dl>}
+        <dt>Harness SHA-256</dt><dd>{result.harness_sha256}</dd><dt>Duration</dt><dd>{result.duration_ms} ms</dd></dl> :
+      <p>Run the selected scenario to generate fingerprints.</p>)}
   </div>, reportHost)}
   </>;
 }
