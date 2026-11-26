@@ -3,11 +3,12 @@ from . import views, review, suites, builder, public_demo, guest
 
 from . import network, ledger_views, catalog_views, universal_views
 
-from . import source_views
+from . import source_views, transfer_bench
 
 app_name = "studio"
 urlpatterns = [
     path("", guest.entry, name="public_demo"),
+    path("test/", transfer_bench.bench, name="test_bench"),
     path("guest/start/", guest.start, name="guest_start"),
     path("reference/", public_demo.home, name="reference_demo"),
     path("workspace/", views.dashboard, name="dashboard"),
