@@ -65,6 +65,26 @@ class BrowserTests(unittest.TestCase):
                 expect(page.locator("#main-content")).to_be_focused()
                 page.screenshot(path=str(ART / f"landing-{width}.png"), full_page=True)
 
+    def test_verification_model_interactive_and_honest(self):
+        page = self.context().new_page()
+        page.goto(BASE + "/studio/")
+        page.locator('[data-case="funds"]').click()
+        expect(page.locator("#rp-trace-expected")).to_contain_text("status=insufficient_funds")
+        expect(page.locator("#rp-trace-observed")).to_contain_text("Select")
+        page.locator("#rp-preview").click()
+        expect(page.locator("#rp-trace-observed")).to_contain_text("status=insufficient_funds")
+        expect(page.locator("#rp-preview-status")).to_contain_text("MODEL PREVIEW MATCHES EXPECTED")
+        expect(page.get_by_text("ON-CHAIN VERIFIED: NO")).to_be_visible()
+        page.locator('[data-case="permission"]').click()
+        expect(page.locator("#rp-trace-expected")).to_contain_text("status=permission_denied")
+        expect(page.locator("#rp-trace-observed")).to_contain_text("Select")
+        page.locator("#rp-authorized").uncheck()
+        page.locator("#rp-authorized").check()
+        expect(page.locator("#rp-trace-expected")).to_contain_text("status=ok")
+        page.locator("#rp-amount").fill("-1")
+        expect(page.locator("#rp-preview")).to_be_disabled()
+        page.screenshot(path=str(ART / "verification-inspector.png"), full_page=True)
+
     def test_native_launch_without_javascript(self):
         page = self.context(java_script_enabled=False).new_page()
         page.goto(BASE + "/studio/")
