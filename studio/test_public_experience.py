@@ -17,8 +17,13 @@ class PublicExperienceTests(SimpleTestCase):
         self.assertIn("EXECUTION CENTER", text)
         self.assertIn("EVIDENCE & REPORTS", text)
         self.assertIn("not affiliated", text.lower())
-        self.assertIn("lucide", text)
+        self.assertIn("rp-panel-policy", text)
+        self.assertIn("rp-panel-diff", text)
+        self.assertIn("rp-panel-fingerprint", text)
+        self.assertNotIn("onyx.testnets", text)
+        self.assertNotIn("lucide", text)
 
     def test_assets_are_packaged(self):
         self.assertIsNotNone(finders.find("studio/public.css"))
         self.assertIsNotNone(finders.find("studio/public-experience.js"))
+        self.assertIsNotNone(finders.find("studio/public-labs.js"))
