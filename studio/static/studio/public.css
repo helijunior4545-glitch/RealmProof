@@ -8,3 +8,6 @@
 
 /* Decorative orbital diagrams cannot change viewport width on narrow screens. */
 .rp-hero-visual{overflow:hidden}
+
+/* Retain visual halos while preventing transforms from creating document-level horizontal scrolling. */
+html,body.rp-public{overflow-x:clip}

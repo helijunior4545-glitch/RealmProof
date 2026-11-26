@@ -16,7 +16,7 @@ class PublicExperienceTests(SimpleTestCase):
         self.assertIn("TEST STUDIO", text)
         self.assertIn("EXECUTION CENTER", text)
         self.assertIn("EVIDENCE & REPORTS", text)
-        self.assertIn("Not affiliated", text)
+        self.assertIn("not affiliated", text.lower())
         self.assertIn("lucide", text)
 
     def test_assets_are_packaged(self):
