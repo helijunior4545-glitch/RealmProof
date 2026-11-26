@@ -30,7 +30,6 @@
       </a>
       <div class="nav-group-label">PLATFORM</div>
       <a class="nav-link chroma-amber" {% if request.resolver_match.url_name == 'public_demo' %}aria-current="page"{% endif %} href="{% url 'studio:public_demo' %}"><span class="factory-icon factory-assembly" aria-hidden="true"></span> Home</a>
-      {% if user.is_authenticated %}<a class="nav-link chroma-pink" {% if request.resolver_match.url_name == 'engineering_lab' %}aria-current="page"{% endif %} href="{% url 'studio:engineering_lab' %}"><span class="factory-icon factory-scanner" aria-hidden="true"></span> Engineering lab</a>{% endif %}
       {% if user.is_authenticated %}<a class="nav-link chroma-pink" {% if request.resolver_match.url_name == 'reference_demo' %}aria-current="page"{% endif %} href="{% url 'studio:reference_demo' %}"><span class="factory-icon factory-scanner" aria-hidden="true"></span> Reference demo</a>{% endif %}
       
       {% if user.is_authenticated %}<a class="nav-link chroma-violet" {% if request.resolver_match.url_name == 'dashboard' %}aria-current="page"{% endif %} href="{% url 'studio:dashboard' %}"><span class="factory-icon factory-reactor" aria-hidden="true"></span> My workspaces</a>{% endif %}

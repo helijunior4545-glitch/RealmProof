@@ -4,7 +4,6 @@ import logging
 import secrets
 from django import forms
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -42,27 +41,7 @@ def studio_destination(request):
 @never_cache
 @require_GET
 def entry(request):
-    # Returning users go straight to their actual workbench, not the explainer.
-    if request.user.is_authenticated:
-        return redirect(studio_destination(request) or "studio:dashboard")
-    return render(request, "studio/public_entry.html", {
-        "form": suggested_form(),
-        "isolated_guest": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1",
-    })
-
-
-@never_cache
-@login_required
-@require_GET
-def engineering(request):
-    # Do not let an expired isolated guest use an internal route indefinitely.
-    if request.user.username.startswith("rp_guest_") and not studio_destination(request):
-        raise Http404
-    return render(request, "studio/guest_entry.html", {
-        "studio_url": studio_destination(request),
-        "dashboard_url": reverse("studio:dashboard"),
-        "isolated_guest": False,
-    })
+    return render(request, "studio/guest_entry.html", {"studio_url": studio_destination(request), "dashboard_url": reverse("studio:dashboard"), "form": suggested_form(), "isolated_guest": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1"})
 
 @never_cache
 @require_POST
@@ -71,7 +50,7 @@ def start(request):
         return redirect(studio_destination(request) or "studio:dashboard")
     form = WorkspaceForm(request.POST) if request.POST.get("name") is not None else suggested_form()
     if form.is_bound and not form.is_valid():
-        return render(request, "studio/public_entry.html", {"form": form, "isolated_guest": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1"}, status=400)
+        return render(request, "studio/guest_entry.html", {"form": form, "isolated_guest": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1"}, status=400)
     username = os.getenv("REALMPROOF_DEMO_USERNAME", "")
     password = os.getenv("REALMPROOF_DEMO_PASSWORD", "")
     user = authenticate(request, username=username, password=password) if username == "hackathon_demo_public" and password else None

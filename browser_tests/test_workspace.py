@@ -64,20 +64,6 @@ class BrowserTests(unittest.TestCase):
         self.assertEqual(other.goto(first).status, 404)
         page.screenshot(path=str(ART / "workspace.png"), full_page=True)
 
-    def open_engineering_lab(self, page):
-        # Enter through the real guest flow; the lab must never be anonymous.
-        page.goto(BASE + "/studio/")
-        page.locator(".rp-guest-disclosure summary").click()
-        page.get_by_role("button", name="Create Workspace").click()
-        expect(page.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
-        page.goto(BASE + "/studio/workspace/engineering/")
-        expect(page.get_by_role("heading", name="Explore verification logic")).to_be_visible()
-
-    def test_internal_engineering_rejects_anonymous_access(self):
-        page = self.context().new_page()
-        page.goto(BASE + "/studio/workspace/engineering/")
-        self.assertIn("/accounts/login/", page.url)
-
     def test_landing_responsive_and_keyboard(self):
         for width in (320, 768, 1280, 1366, 1920):
             with self.subTest(width=width):
@@ -85,20 +71,18 @@ class BrowserTests(unittest.TestCase):
                 page = context.new_page()
                 page.goto(BASE + "/studio/")
                 expect(page.locator(".rp-guest-disclosure summary")).to_be_visible()
-                expect(page.get_by_role("heading", name="Verify smart contracts.")).to_be_visible()
-                self.assertEqual(page.locator("#rp-preview").count(), 0)
                 self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
                 page.keyboard.press("Tab")
                 expect(page.get_by_role("link", name="Skip to main content")).to_be_focused()
                 page.keyboard.press("Enter")
                 expect(page.locator("#main-content")).to_be_focused()
-                expect(page.locator(".rp-entry-main")).to_be_visible()
+                expect(page.locator(".rp-product-visual img")).to_be_visible()
                 self.assertTrue(page.evaluate("document.querySelector(\'.rp-hero\').getBoundingClientRect().width <= innerWidth"))
                 page.screenshot(path=str(ART / f"landing-{width}.png"), full_page=True)
 
     def test_verification_model_interactive_and_honest(self):
         page = self.context().new_page()
-        self.open_engineering_lab(page)
+        page.goto(BASE + "/studio/")
         page.locator('[data-case="funds"]').click()
         expect(page.locator("#rp-trace-expected")).to_contain_text("status=insufficient_funds")
         expect(page.locator("#rp-trace-observed")).to_contain_text("Select")
@@ -125,7 +109,7 @@ class BrowserTests(unittest.TestCase):
     def test_interactive_engineering_desk_and_mismatch(self):
         import re
         page = self.context(reduced_motion="reduce").new_page()
-        self.open_engineering_lab(page)
+        page.goto(BASE + "/studio/")
         page.locator("#rp-expect-status").select_option("permission_denied")
         page.locator("#rp-preview").click()
         expect(page.locator("#rp-preview-status")).to_contain_text("DIFFERS FROM EXPECTED")
@@ -154,12 +138,12 @@ class BrowserTests(unittest.TestCase):
         hero = page.locator(".rp-hero")
         self.assertLessEqual(hero.bounding_box()["height"], 520)
         expect(page.locator(".rp-guest-disclosure summary")).to_be_in_viewport()
-        expect(page.locator(".rp-entry-foot")).to_contain_text("not on-chain proof")
+        expect(page.locator(".rp-product-visual figcaption")).to_contain_text("not live evidence")
         self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
 
     def test_capability_hover_and_static_hero(self):
         page = self.context(viewport={"width":1366,"height":768}).new_page()
-        self.open_engineering_lab(page)
+        page.goto(BASE + "/studio/")
         image = page.locator(".rp-product-visual img")
         expect(image).to_be_visible()
         self.assertTrue(image.evaluate("(img) => img.complete && img.naturalWidth > 0"))
