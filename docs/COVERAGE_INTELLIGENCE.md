@@ -1,0 +1,3 @@
+# Coverage intelligence V5.5 foundation
+
+Inventory named functions and methods for the selected file. Attribute proposed tests only when a callable name is unique within the file; ambiguous or missing names remain unresolved. Display at most 500 declarations, explicitly marking partial inventories. Counts are review-planning metrics, not execution coverage. Runtime coverage is null and evidence is not linked. No proposal is not proof of missing tests. Anonymous functions, cross-file identity, receiver resolution, statement/branch instrumentation, persisted scenarios and source-hash-bound execution evidence remain future work.

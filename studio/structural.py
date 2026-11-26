@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 from .test_intelligence import recommend
+from .coverage_intelligence import summarize
 
 def analyze(source):
     binary = shutil.which(os.environ.get("REALMPROOF_SOURCE_PARSER", "realmproof-source-parser"))
@@ -16,6 +17,7 @@ def analyze(source):
         result = subprocess.run([binary], input=data, capture_output=True, timeout=3, check=True)
         structure = json.loads(result.stdout)
         structure['recommendations'] = recommend(structure)
+        structure['coverage'] = summarize(structure)
         return structure
     except (OSError, ValueError, subprocess.SubprocessError):
         return {"status": "unavailable"}
