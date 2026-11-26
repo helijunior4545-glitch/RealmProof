@@ -19,13 +19,34 @@
 <header class="rp-header"><div class="rp-wrap rp-header-inner"><a class="rp-wordmark" href="{% url 'studio:public_demo' %}"><span class="rp-icon rp-library-icon rp-icon-shield" aria-hidden="true"></span> realmproof</a><nav class="rp-nav" aria-label="Main navigation"><a href="#capabilities">Platform</a><a href="#method">Transfer model</a><a href="#try-lab">Try the tools</a><a href="#resources">Resources</a></nav></div></header>
 <main id="main-content" tabindex="-1" class="rp-wrap">
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
-<section class="rp-hero" id="workspace"><div class="rp-intro"><span class="rp-kicker">SMART CONTRACT / VERIFICATION STUDIO</span><h1>Trust the evidence.</h1><p>Understand, test and verify smart-contract behavior in one engineering environment.</p><div class="rp-flow"><span><span class="rp-icon rp-library-icon rp-icon-code" aria-hidden="true"></span> Source</span><span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span><span><span class="rp-icon rp-library-icon rp-icon-sliders" aria-hidden="true"></span> Intent</span><span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span><span><span class="rp-icon rp-library-icon rp-icon-shield" aria-hidden="true"></span> Evidence</span></div><p class="rp-muted">Source-bound analysis. Explicit expectations. Traceable results.</p><a class="rp-explore-link" href="#try-lab">Explore interactive tools <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a></div> <div class="rp-workspace-form" data-reveal>
- {% if user.is_authenticated %}
- <span class="rp-kicker">SESSION ACTIVE</span><h3>Continue in Project Studio.</h3><p>Your existing workspace is available. Open the engineering environment directly.</p><a class="rp-button rp-primary" href="{{ studio_url|default:dashboard_url }}">Open Project Studio <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a>
+<section class="rp-hero rp-hero-v2" id="workspace">
+ <div class="rp-hero-top">
+  <div class="rp-intro">
+   <span class="rp-kicker">SMART CONTRACT / VERIFICATION STUDIO</span>
+   <h1>Trust the <span>evidence.</span></h1>
+   <p>Understand, test and verify smart-contract behavior in one engineering environment.</p>
+   <div class="rp-flow"><span><span class="rp-icon rp-library-icon rp-icon-code" aria-hidden="true"></span> Source</span><span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span><span><span class="rp-icon rp-library-icon rp-icon-sliders" aria-hidden="true"></span> Intent</span><span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span><span><span class="rp-icon rp-library-icon rp-icon-shield" aria-hidden="true"></span> Evidence</span></div>
+   <p class="rp-muted">Source-bound analysis. Explicit expectations. Traceable results.</p>
+   <a class="rp-explore-link" href="#try-lab">Explore interactive tools <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a>
+  </div>
+  <figure class="rp-product-visual" aria-labelledby="rp-product-visual-title">
+   <div class="rp-preview-frame"><img src="{% static 'studio/hero-project-studio.svg' %}" width="960" height="600" alt="A static schematic of the actual RealmProof testing workbench layout with scenario lists, source discovery and a local-only execution panel." loading="eager" fetchpriority="high" decoding="async"></div>
+   <figcaption id="rp-product-visual-title"><span class="rp-preview-indicator"></span> Based on Project Studio interface <span>· Static schematic, not live evidence</span></figcaption>
+  </figure>
+ </div>
+ <div class="rp-workspace-form rp-hero-entry" data-reveal>
+ {% if studio_url %}
+ <div class="rp-entry-copy"><span class="rp-kicker">SESSION ACTIVE</span><h3>Continue in Project Studio.</h3><p>Your existing workspace is available. Open the engineering environment directly.</p></div>
+ <a class="rp-button rp-primary" href="{{ studio_url }}">Open Project Studio <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a>
+ {% elif user.is_authenticated %}
+ <div class="rp-entry-copy"><span class="rp-kicker">WORKSPACE STATUS</span><h3>Your workspace is ready to manage.</h3><p>Access your organization and project overview.</p></div>
+ <a class="rp-button rp-primary" href="{{ dashboard_url }}">Open Workspace Overview <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a>
  {% elif isolated_guest %}
- <span class="rp-kicker">ISOLATED GUEST WORKSPACE</span><h3>Prepared to begin.</h3><p>Adjust any value or launch with the generated suggestions.</p><form method="post" action="{% url 'studio:guest_start' %}" class="jury-launch rp-creation-form" data-pending-label="Preparing workspace…">{% csrf_token %}{{ form.as_p }}<div class="rp-form-actions"><button class="rp-button rp-primary" type="submit" aria-label="Create Workspace">Open Project Studio <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></button><a class="rp-regenerate" href="{% url 'studio:public_demo' %}#workspace">Generate another example ↗</a></div></form><p class="rp-form-footnote">Temporary independent environment. Session access expires after one hour. Do not upload secrets or private source.</p>
+ <div class="rp-entry-copy"><span class="rp-kicker">ISOLATED GUEST WORKSPACE</span><h3>Prepare a private workspace.</h3><p>Generated suggestions are editable. Each visitor receives a separate environment.</p></div>
+ <form method="post" action="{% url 'studio:guest_start' %}" class="jury-launch rp-creation-form" data-pending-label="Preparing workspace…">{% csrf_token %}{{ form.as_p }}<div class="rp-form-actions"><button class="rp-button rp-primary" type="submit" aria-label="Create Workspace">Open Project Studio <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></button><a class="rp-regenerate" href="{% url 'studio:public_demo' %}#workspace">Generate another example ↗</a></div></form><p class="rp-form-footnote">Temporary independent environment. Session access expires after one hour. Do not upload secrets or private source.</p>
  {% else %}
- <span class="rp-kicker">PUBLIC EXPLORATION</span><h3>Discover the platform.</h3><p>New isolated guest workspaces are currently disabled by this deployment. You can explore the methodology and inspect the open-source code without an account.</p><a class="rp-button rp-primary" href="https://github.com/helijunior4545-glitch/RealmProof">View source repository <span class="rp-icon rp-library-icon rp-icon-external" aria-hidden="true"></span></a>
+ <div class="rp-entry-copy"><span class="rp-kicker">PUBLIC EXPLORATION</span><h3>Discover the platform.</h3><p>New isolated workspaces are disabled in this deployment. Explore the interactive models below or review the source repository.</p></div>
+ <a class="rp-button rp-primary" href="https://github.com/helijunior4545-glitch/RealmProof">View source repository <span class="rp-icon rp-library-icon rp-icon-external" aria-hidden="true"></span></a>
  {% endif %}
  </div>
 </section>

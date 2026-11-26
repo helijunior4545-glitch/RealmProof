@@ -63,7 +63,7 @@ class BrowserTests(unittest.TestCase):
         page.screenshot(path=str(ART / "workspace.png"), full_page=True)
 
     def test_landing_responsive_and_keyboard(self):
-        for width in (320, 768, 1280, 1920):
+        for width in (320, 768, 1280, 1366, 1920):
             with self.subTest(width=width):
                 context = self.context(viewport={"width":width,"height":900}, reduced_motion="reduce")
                 page = context.new_page()
@@ -74,6 +74,8 @@ class BrowserTests(unittest.TestCase):
                 expect(page.get_by_role("link", name="Skip to main content")).to_be_focused()
                 page.keyboard.press("Enter")
                 expect(page.locator("#main-content")).to_be_focused()
+                expect(page.locator(".rp-product-visual img")).to_be_visible()
+                self.assertTrue(page.evaluate("document.querySelector(\'.rp-hero\').getBoundingClientRect().width <= innerWidth"))
                 page.screenshot(path=str(ART / f"landing-{width}.png"), full_page=True)
 
     def test_verification_model_interactive_and_honest(self):
@@ -126,6 +128,16 @@ class BrowserTests(unittest.TestCase):
         page.locator("#rp-fingerprint-run").click()
         expect(page.locator("#rp-fingerprint-status")).to_contain_text("DIGESTS MATCH")
         page.screenshot(path=str(ART / "engineering-desk.png"), full_page=True)
+
+    def test_compact_hero_laptop_and_existing_workspace(self):
+        # A typical laptop must expose the real Project Studio entry without scrolling.
+        page = self.context(viewport={"width":1366,"height":768}, reduced_motion="reduce").new_page()
+        page.goto(BASE + "/studio/")
+        hero = page.locator(".rp-hero")
+        self.assertLessEqual(hero.bounding_box()["height"], 520)
+        expect(page.get_by_role("button", name="Create Workspace")).to_be_in_viewport()
+        expect(page.locator(".rp-product-visual figcaption")).to_contain_text("not live evidence")
+        self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
 
     def test_native_launch_without_javascript(self):
         page = self.context(java_script_enabled=False).new_page()
