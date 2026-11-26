@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction, connection
-from django.db.models import Case, Count, Q, Value, When
+from django.db.models import Count, Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
@@ -109,12 +109,6 @@ def project(request, slug, project_id):
     member = membership_for(request, slug)
     item = get_object_or_404(Project, pk=project_id, organization=member.organization)
     scenarios = Scenario.objects.filter(project=item, organization=member.organization).annotate(run_count=Count("runs")).order_by("-created_at")
-    if request.session.get("realmproof_guest"):
-        starter_order = [
-            When(name=name, input_data__engine="transfer", then=Value(index))
-            for index, (name, *_case) in enumerate(engine.CASES)
-        ]
-        scenarios = scenarios.order_by(Case(*starter_order, default=Value(len(starter_order))), "-created_at")
     runs = TestRun.objects.filter(organization=member.organization, scenario__project=item).select_related("scenario").order_by("-started_at")[:8]
     total_runs = TestRun.objects.filter(organization=member.organization, scenario__project=item)
     metrics = {"total": total_runs.count(), "passed": total_runs.filter(status="passed").count(), "failed": total_runs.filter(status="failed").count(), "pending": total_runs.filter(status="pending").count()}

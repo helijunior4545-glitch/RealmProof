@@ -31,9 +31,9 @@ def studio_destination(request):
 def entry(request):
     if request.user.is_authenticated:
         return redirect(studio_destination(request) or "studio:dashboard")
-    if os.getenv("REALMPROOF_ISOLATED_GUESTS") != "1":
-        return render(request, "studio/guest_entry.html")
-    return render(request, "studio/guest_entry.html", {"auto_start": True})
+    return render(request, "studio/guest_entry.html", {
+        "guest_enabled": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1",
+    })
 
 
 @never_cache
@@ -52,7 +52,7 @@ def start(request):
 
                 result = provision(user)
                 if result is None:
-                    return render(request, "studio/guest_entry.html", {"at_capacity": True}, status=503)
+                    return render(request, "studio/guest_entry.html", {"guest_error": "All guest workspaces are occupied."}, status=503)
                 visitor, org, project = result
                 login(request, visitor, backend="django.contrib.auth.backends.ModelBackend")
                 request.session.set_expiry(3600)
@@ -67,4 +67,6 @@ def start(request):
                 return redirect("studio:project", slug=organization.slug, project_id=project.pk)
             return redirect("studio:organization", slug=organization.slug)
     logger.warning("Demo launch rejected: configured=%s authenticated=%s", bool(username and password), bool(user))
-    return render(request, "studio/guest_entry.html", status=503)
+    return render(request, "studio/guest_entry.html", {
+        "guest_error": "Guest lab unavailable.",
+    }, status=503)

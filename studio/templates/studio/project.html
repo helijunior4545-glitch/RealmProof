@@ -1,31 +1,25 @@
 {% extends "studio/base.html" %}
-{% load static %}
-{% block extra_head %}<link href="{% static 'studio/project-workbench.css' %}" rel="stylesheet">{% endblock %}
 {% block title %}{{ project.name }}{% endblock %}
 {% block context_label %}PROJECT / {{ project.name|upper }}{% endblock %}
-{% block content %}
-<div class="project-intro">
-  <div>
-    <span class="project-context">{{ member.organization.name }}</span>
-    <h1>{{ project.name }}</h1>
-    <p>{{ project.description|default:"Define test scenarios and inspect their results." }}</p>
-  </div>
-  <div class="project-intro-actions">
-    {% if request.session.realmproof_guest %}<span class="chip subtle">Guest session</span>{% endif %}
-    {% if member.role != "viewer" %}<a class="button secondary" href="{% url 'studio:create_scenario' member.organization.slug project.pk %}">+ New scenario</a>{% endif %}
-  </div>
+{% block content %}{% comment %}Project actions are placed after the workbench heading.{% endcomment %}<div class="breadcrumbs"><a href="{% url 'studio:dashboard' %}">Overview</a><span>/</span><a href="{% url 'studio:organization' member.organization.slug %}">{{ member.organization.name }}</a><span>/</span><span>{{ project.name }}</span></div>
+<div class="page-heading rp-heading"><span class="rp-object rp-cube" aria-hidden="true"><i></i><b></b><em></em></span>
+  <div><div class="eyebrow"><span class="eyebrow-line"></span> TESTING WORKBENCH</div><h1>{{ project.name }}</h1><p class="lede">{{ project.description|default:"Organize contract behavior, assertions, and supporting evidence." }}</p></div>
+  {% if member.role != "viewer" %}<a class="button secondary" href="{% url 'studio:create_scenario' member.organization.slug project.pk %}">+ New scenario <span aria-hidden="true">→</span></a>{% endif %}
 </div>
+{% if request.session.realmproof_guest or user.username == "hackathon_demo_public" %}<div class="guided-banner"><div><span class="eyebrow">GUIDED DEMO · STEP 01</span><h2>Start with a valid transfer</h2><p>Run the prepared scenario, then inspect the assertion results. Local execution requires the Gno CLI.</p></div>{% for scenario in scenarios %}{% if scenario.name == "Valid transfer" and scenario.input_data.engine == "transfer" %}<form method="post" action="{% url 'studio:execute_scenario' member.organization.slug scenario.pk %}">{% csrf_token %}<button class="button primary" type="submit">▶ Run first test</button></form>{% endif %}{% endfor %}</div>{% endif %}<section class="pi-strip pi-project" aria-label="Project run summary">
+<div class="pi-dial"><div class="pi-ring"><strong>{{ metrics.total }}</strong></div><div><span class="pi-label">Total runs</span><small>Recorded attempts</small></div></div>
+<div class="pi-matrix"><span class="pi-label">Evidence comparisons</span><div class="pi-outcomes"><div><strong class="status-passed">{{ metrics.passed }}</strong><small>Matched assertions</small></div><div><strong class="status-failed">{{ metrics.failed }}</strong><small>Mismatched</small></div></div><small>Investigate mismatches in run details.</small></div>
+<div class="pi-state"><span class="pi-wave pi-await" aria-hidden="true"><svg viewBox="0 0 48 32"><path d="M10 4H38M10 28H38M14 4V9L24 16 34 9V4M14 28V23L24 16 34 23V28" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span><div><span class="pi-label">Awaiting evidence</span><strong class="status-pending">{{ metrics.pending }}</strong><small>Not executed on-chain</small></div></div>
+</section>
+<section class="panel"><h2>Source discovery</h2><p class="helper">Inspect versioned source inventories without executing imported code.</p><a class="button secondary" href="{% url 'studio:source_discovery' member.organization.slug project.pk %}">Open source explorer →</a></section>
 <div class="workbench-grid">
   <section class="panel" aria-labelledby="scenarios-title">
-    <div class="panel-head"><h2 id="scenarios-title">Scenarios <span class="count-chip">{{ scenarios|length }}</span></h2></div>
+    <div class="panel-head"><div><span class="eyebrow">01 / DEFINE INTENT</span><h2 id="scenarios-title">Test scenarios <span class="count-chip">{{ scenarios|length }}</span></h2></div></div>
     {% for scenario in scenarios %}
-      <div class="scenario-row project-scenario" data-family="{{ scenario.family }}">
+      <div class="scenario-row">
         <div class="scenario-glyph"><span class="rp-object rp-orbit" aria-hidden="true"><i></i><b></b><em></em></span></div>
-        <div class="scenario-main"><span class="eyebrow">{{ scenario.get_family_display }}</span><h3>{{ scenario.name }}</h3>{% if scenario.input_data.engine == "transfer" %}
-          <p><span>Balance <strong>{{ scenario.input_data.balance }}</strong></span> <span>Amount <strong>{{ scenario.input_data.amount }}</strong></span>
-          {% if scenario.expected.status == "success" %}<span>Expect acceptance</span>{% elif scenario.expected.status == "rejected" %}<span>Expect rejection</span>{% endif %}</p>
-          {% else %}<p>{{ scenario.objective|truncatechars:140 }}</p>{% endif %}<small>{{ scenario.run_count }} run{{ scenario.run_count|pluralize }}</small></div>
-        {% if member.role != "viewer" %}<form method="post" action="{% if scenario.input_data.engine == 'transfer' %}{% url 'studio:execute_scenario' member.organization.slug scenario.pk %}{% else %}{% url 'studio:start_run' member.organization.slug scenario.pk %}{% endif %}">{% csrf_token %}<button type="submit" class="button {% if forloop.first and scenario.input_data.engine == 'transfer' %}primary{% else %}secondary{% endif %} small-button">{% if scenario.input_data.engine == "transfer" %}Execute Gno →{% else %}Create run →{% endif %}</button></form>{% endif %}
+        <div class="scenario-main"><span class="eyebrow">{{ scenario.get_family_display }}</span><h3>{{ scenario.name }}</h3><p>{{ scenario.objective|truncatechars:140 }}</p><small>{{ scenario.run_count }} run{{ scenario.run_count|pluralize }}</small></div>
+        {% if member.role != "viewer" %}<form method="post" action="{% if scenario.input_data.engine == 'transfer' %}{% url 'studio:execute_scenario' member.organization.slug scenario.pk %}{% else %}{% url 'studio:start_run' member.organization.slug scenario.pk %}{% endif %}">{% csrf_token %}<button type="submit" class="button secondary small-button">{% if scenario.input_data.engine == "transfer" %}Execute Gno →{% else %}Create run →{% endif %}</button></form>{% endif %}
       </div>
     {% empty %}
       <div class="empty-state in-panel"><span class="empty-icon">⌘</span><h3>Define your first test intent</h3><p>Start with what a contract should do, then define how to prove it.</p>
@@ -35,23 +29,20 @@
   </section>
   <div>
     <section class="panel compact-panel">
-      <div class="panel-head"><h2>Recent runs</h2></div>
+      <div class="panel-head"><div><span class="eyebrow">EXECUTION STATUS</span><h2>Environment</h2></div><span class="chip amber">LOCAL ONLY</span></div>
+      <p class="helper">Bundled transfer scenarios execute locally using the Gno CLI. Other scenarios accept external evidence. No public chain transaction is submitted.</p>
+      <div class="env-line"><span>Chain execution</span><strong>Not connected</strong></div>
+      <div class="env-line"><span>Evidence provenance</span><strong>User supplied</strong></div>
+      <div class="env-line"><span>Verification engine</span><strong>Deterministic</strong></div>
+    </section>
+    <section class="panel compact-panel">
+      <div class="panel-head"><div><span class="eyebrow">02 / INVESTIGATE</span><h2>Recent runs</h2></div></div>
       {% for run in recent_runs %}
         <a class="recent-row" href="{% url 'studio:run_detail' member.organization.slug run.pk %}"><span class="status-indicator status-{{ run.status }}"></span><span class="recent-info"><strong>{{ run.scenario.name|truncatechars:28 }}</strong><small>{{ run.started_at|date:"M j, Y · H:i" }} UTC</small></span><span class="run-state status-{{ run.status }}">{{ run.get_status_display }}</span></a>
       {% empty %}
-        <p class="helper">Execution results will appear here.</p>
+        <p class="helper">Create a run from a scenario to begin collecting comparison evidence.</p>
       {% endfor %}
     </section>
-    <section class="panel compact-panel project-environment" aria-labelledby="project-environment">
-      <div class="panel-head"><h2 id="project-environment">Execution environment</h2></div>
-      <p><span class="project-local-dot" aria-hidden="true"></span> Local Gno</p>
-      <p class="helper">Transfer scenarios run in the local Gno CLI. Chain transactions are not submitted.</p>
-      <div class="env-line"><span>Runs</span><strong>{{ metrics.total }}</strong></div>
-      <div class="env-line"><span>Passed</span><strong class="status-passed">{{ metrics.passed }}</strong></div>
-      <div class="env-line"><span>Failed</span><strong class="status-failed">{{ metrics.failed }}</strong></div>
-      <div class="env-line"><span>Pending</span><strong>{{ metrics.pending }}</strong></div>
-    </section>
-    <section class="panel compact-panel"><h2>Source discovery</h2><p class="helper">Inspect versioned source inventories.</p><a class="button secondary" href="{% url 'studio:source_discovery' member.organization.slug project.pk %}">Open source explorer →</a></section>
   </div>
 </div>
 <details class="panel action-disclosure"><summary class="disclosure-title">Advanced project actions · regression, export and sharing</summary><div class="workspace-grid"><section class="panel"><h2>Regression suite</h2><p class="helper">Queue up to 20 trusted local scenarios for the execution worker.</p>{% if member.role != "viewer" %}<form method="post" action="{% url 'studio:queue_suite' member.organization.slug project.pk %}">{% csrf_token %}<button class="button secondary">Queue regression suite</button></form>{% endif %}<a class="button secondary" href="{% url 'studio:export_project' member.organization.slug project.pk %}">Export evidence JSON</a></section>

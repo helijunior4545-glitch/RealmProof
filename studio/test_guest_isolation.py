@@ -25,7 +25,7 @@ class IsolatedGuestTests(TestCase):
         self.assertEqual(b.get(first.url).status_code, 404)
         project = a.get(first.url)
         self.assertContains(project, "Execute Gno", count=6)
-        self.assertEqual(project.context["scenarios"][0].name, "Valid transfer")
+        self.assertContains(project, "Run first test")
         self.assertRedirects(a.get(reverse("studio:public_demo")), first.url)
         self.assertRedirects(a.get("/studio/test/"), reverse("studio:public_demo"), fetch_redirect_response=False)
         self.assertEqual(Scenario.objects.count(), 12)

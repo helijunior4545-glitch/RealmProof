@@ -1,29 +1,108 @@
-{% load static %}
+{% load static react_frontend %}
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RealmProof Studio</title>
-  <link rel="stylesheet" href="{% static 'studio/tokens.css' %}">
-  <link rel="stylesheet" href="{% static 'studio/entry.css' %}">
-  {% if auto_start %}<script defer src="{% static 'studio/guest-entry.js' %}"></script>{% endif %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#080a0e">
+<meta name="description" content="RealmProof is an independent engineering studio for source intelligence, scenario testing and reproducible evidence in the Gno.land ecosystem.">
+<title>RealmProof — Verify what matters</title>
+<link rel="stylesheet" href="{% static 'studio/tokens.css' %}">
+<link rel="stylesheet" href="{% static 'studio/public.css' %}">
+<link rel="stylesheet" href="{% static 'studio/capabilities.css' %}">
+<script defer src="{% static 'studio/interactions.js' %}"></script>
+<script defer src="{% static 'studio/public-experience.js' %}"></script>
+<script defer src="{% static 'studio/public-labs.js' %}"></script>
+<script defer src="{% static 'studio/public-capabilities.js' %}"></script>
+{% react_frontend_available as react_frontend_available %}{% if react_frontend_available %}<script type="module" src="{% static 'studio/react/landing.js' %}"></script>{% endif %}
 </head>
-<body class="studio-entry">
-  <main>
-    <div class="studio-entry-brand"><span aria-hidden="true">◈</span> realmproof</div>
-    {% if auto_start %}
-      <h1>Opening the transfer lab</h1>
-      <form id="guest-entry" method="post" action="{% url 'studio:guest_start' %}">
-        {% csrf_token %}
-        <button type="submit">Open transfer lab <span aria-hidden="true">→</span></button>
-      </form>
-    {% else %}
-      <h1>Guest lab unavailable</h1>
-      {% if at_capacity %}<p>All guest workspaces are occupied.</p>{% else %}<p>Guest access is unavailable in this deployment.</p>{% endif %}
-      {% if at_capacity %}<a href="{% url 'studio:public_demo' %}">Try again</a>{% endif %}
-      <a href="{% url 'login' %}">Sign in to an existing workspace</a>
-    {% endif %}
-  </main>
-</body>
-</html>
+<body class="rp-public">
+
+<a class="rp-skip-link" href="#main-content">Skip to main content</a>
+<header class="rp-header"><div class="rp-wrap rp-header-inner"><a class="rp-wordmark" href="{% url 'studio:public_demo' %}"><span class="rp-icon rp-library-icon rp-icon-shield" aria-hidden="true"></span> realmproof</a><nav class="rp-nav" aria-label="Main navigation"><a href="#capabilities">Platform</a><a href="#method">Transfer model</a><a href="#try-lab">Try the tools</a><a href="#resources">Resources</a></nav></div></header>
+<main id="main-content" tabindex="-1" class="rp-wrap">
+{% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
+<section class="rp-hero rp-hero-v2 rp-editorial" id="workspace">
+<div class="rp-hero-top"><div class="rp-intro"><h1>Test Gno contracts.<br><span>See what changed.</span></h1><p>Run a transfer scenario, compare the result with your expectations, and inspect the execution evidence.</p></div>
+ <div class="rp-workspace-form rp-hero-entry">
+ {% if guest_error %}<p role="alert">{{ guest_error }}</p>{% endif %}
+ {% if guest_enabled %}
+ <form method="post" action="{% url 'studio:guest_start' %}" class="jury-launch" data-pending-label="Opening Studio…">
+  {% csrf_token %}
+  <button class="rp-button rp-primary" type="submit">Open Studio as guest <span aria-hidden="true">→</span></button>
+ </form>
+ <p class="rp-form-footnote">No account needed. Guest access lasts one hour.</p>
+ {% else %}
+ <a class="rp-button rp-primary" href="{% url 'login' %}">Sign in to Studio <span aria-hidden="true">→</span></a>
+ {% endif %}
+ </div>
+
+<a class="rp-explore-link" href="#try-lab">Explore interactive tools <span aria-hidden="true">↓</span></a>
+<figure class="rp-product-visual" aria-labelledby="rp-product-visual-title"><div class="rp-device"><div class="rp-preview-frame"><img src="{% static 'studio/hero-project-studio.svg' %}" width="960" height="600" alt="Illustrative Project Studio interface, not a live execution." loading="eager" fetchpriority="high"></div><div class="rp-device-base" aria-hidden="true"></div></div><figcaption id="rp-product-visual-title">Project Studio · Static schematic, not live evidence</figcaption></figure></div></section>
+<section id="capabilities" class="rp-capabilities"><div class="rp-cap-heading"><div><h2>Engineering capabilities</h2></div><p>From source to evidence.</p></div><div class="rp-cap-explorer"><details class="rp-cap-item" data-capability="source" style="--cap-accent:#70c9ff" open><summary><span class="rp-cap-symbol"><span class="rp-icon rp-library-icon rp-icon-code" aria-hidden="true"></span></span><span class="rp-cap-name"><strong>Source intelligence</strong></span><span class="rp-cap-arrow" aria-hidden="true">↗</span></summary><div class="rp-cap-content"><h3>Inspect before executing</h3><div class="rp-cap-preview" aria-label="Illustrative workflow"><small>WORKFLOW PREVIEW · SAMPLE</small><div class="rp-cap-step"><span>Baseline guard</span><code>authorized &amp;&amp; amount > 0</code></div><div class="rp-cap-step"><span>Changed guard</span><code>amount > 0</code></div><div class="rp-cap-step"><span>Text comparison</span><code>Authorization term removed</code></div></div><div class="rp-cap-features"><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Source snapshots</span></div><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Declarations and revisions</span></div><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Structural risk indicators</span></div></div><a class="rp-explore-link" href="#try-lab">Compare source versions <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a></div></details><details class="rp-cap-item" data-capability="test" style="--cap-accent:#c2a2ff" ><summary><span class="rp-cap-symbol"><span class="rp-icon rp-library-icon rp-icon-sliders" aria-hidden="true"></span></span><span class="rp-cap-name"><strong>Test Studio</strong></span><span class="rp-cap-arrow" aria-hidden="true">↗</span></summary><div class="rp-cap-content"><h3>Define the expected behavior</h3><div class="rp-cap-preview" aria-label="Illustrative workflow"><small>WORKFLOW PREVIEW · SAMPLE</small><div class="rp-cap-step"><span>Initial balance</span><code>120</code></div><div class="rp-cap-step"><span>Transfer amount</span><code>35</code></div><div class="rp-cap-step"><span>Expected remaining</span><code>85</code></div></div><div class="rp-cap-features"><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Scenario design</span></div><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Boundary conditions</span></div><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Independent expectations</span></div></div><a class="rp-explore-link" href="#method">Try transfer verification <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a></div></details><details class="rp-cap-item" data-capability="execution" style="--cap-accent:#67e3b1" ><summary><span class="rp-cap-symbol"><span class="rp-icon rp-library-icon rp-icon-terminal" aria-hidden="true"></span></span><span class="rp-cap-name"><strong>Execution Center</strong></span><span class="rp-cap-arrow" aria-hidden="true">↗</span></summary><div class="rp-cap-content"><h3>Trace supported local execution</h3><div class="rp-cap-preview" aria-label="Illustrative workflow"><small>WORKFLOW PREVIEW · SAMPLE</small><div class="rp-cap-step"><span>Model input</span><code>120 − 35</code></div><div class="rp-cap-step"><span>Model outcome</span><code>ok</code></div><div class="rp-cap-step"><span>Observed remaining</span><code>85</code></div></div><div class="rp-cap-features"><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Gno fixtures</span></div><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Execution provenance</span></div><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Observed outcomes</span></div></div><a class="rp-explore-link" href="#method">Explore the model <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a></div></details><details class="rp-cap-item" data-capability="security" style="--cap-accent:#f5bb71" ><summary><span class="rp-cap-symbol"><span class="rp-icon rp-library-icon rp-icon-lock" aria-hidden="true"></span></span><span class="rp-cap-name"><strong>Security Center</strong></span><span class="rp-cap-arrow" aria-hidden="true">↗</span></summary><div class="rp-cap-content"><h3>Explore authorization and safety</h3><div class="rp-cap-preview" aria-label="Illustrative workflow"><small>WORKFLOW PREVIEW · SAMPLE</small><div class="rp-cap-step"><span>Sample role</span><code>Viewer</code></div><div class="rp-cap-step"><span>Operation</span><code>Publish report</code></div><div class="rp-cap-step"><span>Policy decision</span><code>Denied</code></div></div><div class="rp-cap-features"><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Permission scenarios</span></div><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Financial safety</span></div><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>State transitions</span></div></div><a class="rp-explore-link" href="#try-lab">Try permission policy <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a></div></details><details class="rp-cap-item" data-capability="evidence" style="--cap-accent:#62ded5" ><summary><span class="rp-cap-symbol"><span class="rp-icon rp-library-icon rp-icon-shield" aria-hidden="true"></span></span><span class="rp-cap-name"><strong>Evidence & Reports</strong></span><span class="rp-cap-arrow" aria-hidden="true">↗</span></summary><div class="rp-cap-content"><h3>Keep results traceable</h3><div class="rp-cap-preview" aria-label="Illustrative workflow"><small>WORKFLOW PREVIEW · SAMPLE</small><div class="rp-cap-step"><span>Expected remaining</span><code>85</code></div><div class="rp-cap-step"><span>Observed remaining</span><code>85</code></div><div class="rp-cap-step"><span>Comparison</span><code>Match · model only</code></div></div><div class="rp-cap-features"><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Expected vs. observed</span></div><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Evidence records</span></div><div><span class="rp-cap-node" aria-hidden="true">✓</span><span>Content fingerprints</span></div></div><a class="rp-explore-link" href="#try-lab">Explore evidence tools <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></a></div></details></div></section>
+<section id="method" class="rp-method"><h2>Explore verification logic</h2><p class="rp-muted">Change a scenario and compare the illustrative model output. This is not a Gno execution.</p> <div class="rp-inspector" data-reveal>
+  <div class="rp-inspector-top"><span><span class="rp-icon rp-library-icon rp-icon-terminal" aria-hidden="true"></span> INTERACTIVE VERIFICATION MODEL</span><span class="rp-model-label"><span class="rp-led rp-led-violet"></span> BROWSER ILLUSTRATION — NOT A BLOCKCHAIN TRANSACTION</span></div>
+  <div class="rp-inspector-layout">
+   <div class="rp-inspector-controls">
+    <p class="rp-minilabel">SELECT A BEHAVIOR</p>
+    <div class="rp-choice-group" role="group" aria-label="Illustrative test scenario">
+     <button type="button" class="rp-choice is-selected" data-case="valid" aria-pressed="true"><span>01</span> Authorized transfer <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></button>
+     <button type="button" class="rp-choice" data-case="funds" aria-pressed="false"><span>02</span> Insufficient funds <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></button>
+     <button type="button" class="rp-choice" data-case="permission" aria-pressed="false"><span>03</span> Permission denied <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></button>
+    </div>
+    <div class="rp-input-matrix"><div><label for="rp-balance">Available balance</label><input type="number" id="rp-balance" value="120" min="0" max="1000000" step="1"></div><div><label for="rp-amount">Transfer amount</label><input type="number" id="rp-amount" value="35" min="1" max="1000000" step="1"></div></div>
+    <div class="rp-boolean"><span>Caller authorized</span><label class="rp-toggle"><input id="rp-authorized" type="checkbox" checked><span class="rp-toggle-ui"></span><span class="rp-toggle-text">Yes</span></label></div>
+    <div class="rp-expect-control"><label for="rp-expect-status">Expected outcome <small>Adjust to reveal a mismatch</small></label><select id="rp-expect-status"><option value="ok">Authorized · ok</option><option value="insufficient_funds">Insufficient funds</option><option value="permission_denied">Permission denied</option></select></div>
+    <button class="rp-button rp-execute" id="rp-preview" type="button">Preview model result <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></button>
+    <p class="rp-inspector-disclaimer">This browser-side illustration demonstrates comparison logic. It does not invoke Gno, change on-chain state or constitute verification evidence.</p>
+   </div>
+   <div class="rp-output" aria-live="polite" aria-atomic="true">
+    <div class="rp-output-toolbar"><span>VERIFICATION TRACE</span><span class="rp-output-no">MODEL / 001</span></div>
+    <div class="rp-trace-row"><span class="rp-trace-number">01</span><div><small>INPUT</small><code id="rp-trace-input">balance=120 · amount=35 · authorized=true</code></div><span class="rp-icon rp-library-icon rp-icon-code" aria-hidden="true"></span></div>
+    <div class="rp-trace-row"><span class="rp-trace-number">02</span><div><small>EXPECTED BEHAVIOR</small><code id="rp-trace-expected">status=ok · remaining=85</code></div><span class="rp-icon rp-library-icon rp-icon-sliders" aria-hidden="true"></span></div>
+    <div class="rp-trace-row rp-trace-result"><span class="rp-trace-number">03</span><div><small>ILLUSTRATIVE MODEL OUTPUT</small><code id="rp-trace-observed">Select “Preview model result” to compare</code></div><span class="rp-icon rp-library-icon rp-icon-shield" aria-hidden="true"></span></div>
+    <figure class="rp-balance-chart" aria-label="Illustrative balance comparison"><figcaption>Balance comparison <span>MODEL · NOT LIVE DATA</span></figcaption><div class="rp-chart-row"><span>Initial</span><div class="rp-chart-track"><div id="rp-chart-initial" class="rp-chart-bar"></div></div><strong id="rp-chart-initial-value">120</strong></div><div class="rp-chart-row"><span>Expected</span><div class="rp-chart-track"><div id="rp-chart-expected" class="rp-chart-bar"></div></div><strong id="rp-chart-expected-value">85</strong></div><div class="rp-chart-row"><span>Preview</span><div class="rp-chart-track"><div id="rp-chart-preview" class="rp-chart-bar"></div></div><strong id="rp-chart-preview-value">—</strong></div></figure><div class="rp-output-bottom"><span id="rp-preview-status"><span class="rp-status-dot"></span> NOT EVALUATED</span><span>ON-CHAIN VERIFIED: NO</span></div>
+   </div>
+  </div>
+ </div>
+</section>
+<section class="rp-tools" id="try-lab" aria-labelledby="rp-tools-heading">
+ <div class="rp-section-heading"><div><span class="rp-kicker">INTERACTIVE ENGINEERING DESK / 003 TOOLS</span><h2 id="rp-tools-heading">Test the thinking, not just the interface.</h2><p class="rp-muted">Three small, hands-on experiments. Change the inputs and inspect the result. All examples run only in your browser.</p></div><span class="rp-desk-mark" aria-hidden="true">RP<span> / 03</span></span></div>
+ <div class="rp-lab" data-reveal>
+  <div class="rp-lab-rail" role="tablist" aria-label="Interactive engineering experiments" aria-orientation="vertical">
+   <button type="button" class="rp-lab-tab is-active" role="tab" id="rp-tab-policy" aria-controls="rp-panel-policy" aria-selected="true" tabindex="0" data-lab="policy"><span class="rp-lab-tab-index">01</span><span><strong>Permission policy</strong><small>Evaluate access rules</small></span><span class="rp-icon rp-library-icon rp-icon-lock" aria-hidden="true"></span></button>
+   <button type="button" class="rp-lab-tab" role="tab" id="rp-tab-diff" aria-controls="rp-panel-diff" aria-selected="false" tabindex="-1" data-lab="diff"><span class="rp-lab-tab-index">02</span><span><strong>Source comparison</strong><small>Find an altered guard</small></span><span class="rp-icon rp-library-icon rp-icon-code" aria-hidden="true"></span></button>
+   <button type="button" class="rp-lab-tab" role="tab" id="rp-tab-fingerprint" aria-controls="rp-panel-fingerprint" aria-selected="false" tabindex="-1" data-lab="fingerprint"><span class="rp-lab-tab-index">03</span><span><strong>Evidence fingerprint</strong><small>Calculate SHA-256 locally</small></span><span class="rp-icon rp-library-icon rp-icon-shield" aria-hidden="true"></span></button>
+   <p class="rp-lab-rail-note"><span class="rp-led rp-led-violet"></span> Demonstration only · no network calls · no transaction</p>
+  </div>
+  <div class="rp-lab-body">
+   <section class="rp-lab-panel" role="tabpanel" id="rp-panel-policy" aria-labelledby="rp-tab-policy" tabindex="0">
+    <div class="rp-lab-heading"><span class="rp-lab-eyebrow">SECURITY / POLICY MODEL</span><h3>Who should be allowed?</h3><p>Choose a role and operation to evaluate a sample workspace policy. This is not a live account authorization check.</p></div>
+    <div class="rp-lab-fields"><div><label for="rp-policy-role">Workspace role</label><select id="rp-policy-role"><option value="viewer">Viewer</option><option value="editor" selected>Editor</option><option value="owner">Owner</option></select></div><div><label for="rp-policy-action">Requested operation</label><select id="rp-policy-action"><option value="read">Read project</option><option value="modify">Edit scenario</option><option value="publish" selected>Publish report</option></select></div></div>
+    <div class="rp-policy-map" aria-label="Sample permission matrix"><span>Role</span><span>Read</span><span>Edit</span><span>Publish</span><span>Viewer</span><span class="rp-policy-allow">✓</span><span class="rp-policy-deny">—</span><span class="rp-policy-deny">—</span><span>Editor</span><span class="rp-policy-allow">✓</span><span class="rp-policy-allow">✓</span><span class="rp-policy-allow">✓</span><span>Owner</span><span class="rp-policy-allow">✓</span><span class="rp-policy-allow">✓</span><span class="rp-policy-allow">✓</span></div>
+    <button type="button" class="rp-button rp-lab-action" id="rp-policy-run">Evaluate sample policy <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></button>
+    <div class="rp-lab-result" role="status" aria-live="polite"><span class="rp-result-key">DECISION TRACE</span><strong id="rp-policy-verdict">Ready for evaluation</strong><code id="rp-policy-reason">Select Evaluate to inspect the rule applied.</code></div>
+   </section>
+   <section class="rp-lab-panel" role="tabpanel" id="rp-panel-diff" aria-labelledby="rp-tab-diff" tabindex="0" hidden>
+    <div class="rp-lab-heading"><span class="rp-lab-eyebrow">SOURCE / LINE-LEVEL CHANGE</span><h3>Spot a missing permission guard.</h3><p>Edit either Gno-like example, then compare the actual text lines. The comparison is textual, not a parser or security audit.</p></div>
+    <div class="rp-source-grid"><div><label for="rp-source-before">Baseline snippet</label><textarea id="rp-source-before" spellcheck="false" maxlength="1600" rows="5">func CanWithdraw(authorized bool, amount int64, balance int64) bool {
+    return authorized && amount > 0 && amount <= balance
+}</textarea></div><div><label for="rp-source-after">Changed snippet</label><textarea id="rp-source-after" spellcheck="false" maxlength="1600" rows="5">func CanWithdraw(authorized bool, amount int64, balance int64) bool {
+    return amount > 0 && amount <= balance
+}</textarea></div></div>
+    <div class="rp-lab-actions"><button type="button" class="rp-button rp-lab-action" id="rp-diff-run">Compare source <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></button><button type="button" class="rp-button rp-lab-secondary" id="rp-diff-reset">Restore example</button></div>
+    <div class="rp-lab-result"><span class="rp-result-key">TEXT DIFFERENCE <span id="rp-diff-count">NOT COMPARED</span></span><div class="rp-diff-output" id="rp-diff-output" aria-live="polite" aria-label="Source comparison result">Run comparison to inspect changed lines.</div></div>
+   </section>
+   <section class="rp-lab-panel" role="tabpanel" id="rp-panel-fingerprint" aria-labelledby="rp-tab-fingerprint" tabindex="0" hidden>
+    <div class="rp-lab-heading"><span class="rp-lab-eyebrow">EVIDENCE / CONTENT INTEGRITY</span><h3>Change one byte. Change the fingerprint.</h3><p>Calculate real SHA-256 digests in your browser. Matching hashes only demonstrate matching text here; they do not establish authenticity or on-chain proof.</p></div>
+    <div class="rp-source-grid"><div><label for="rp-fingerprint-a">Original text</label><textarea id="rp-fingerprint-a" spellcheck="false" maxlength="2048" rows="4">verdict=inconclusive
+verified_on_chain=false</textarea></div><div><label for="rp-fingerprint-b">Comparison text</label><textarea id="rp-fingerprint-b" spellcheck="false" maxlength="2048" rows="4">verdict=inconclusive
+verified_on_chain=true</textarea></div></div>
+    <button type="button" class="rp-button rp-lab-action" id="rp-fingerprint-run">Calculate SHA-256 <span class="rp-icon rp-library-icon rp-icon-arrow" aria-hidden="true"></span></button>
+    <div class="rp-lab-result" role="status" aria-live="polite"><span class="rp-result-key">CONTENT FINGERPRINTS <span id="rp-fingerprint-status">NOT COMPUTED</span></span><p class="rp-hash-label">Original · SHA-256</p><code class="rp-hash" id="rp-fingerprint-hash-a">Run calculation to generate the digest.</code><p class="rp-hash-label">Comparison · SHA-256</p><code class="rp-hash" id="rp-fingerprint-hash-b">Run calculation to generate the digest.</code><p class="rp-fingerprint-note" id="rp-fingerprint-note">Local computation only; no blockchain verification.</p></div>
+   </section>
+  </div>
+ </div>
+ <p class="rp-tools-disclaimer">These experiments are illustrative, execute no Gno realm, and write no project data. For workspace-scoped functionality, use Open Project Studio above.</p><noscript><p class="rp-tools-disclaimer">Interactive experiments require JavaScript; the Project Studio entry remains available without it.</p></noscript>
+</section></main><footer class="rp-footer" id="resources"><div class="rp-wrap rp-footer-grid"><div><a class="rp-wordmark" href="{% url 'studio:public_demo' %}">realmproof</a><p>RealmProof is an independent engineering platform for Gno.land smart contracts. It combines source intelligence, scenario design, supported local Gno execution, security-oriented testing and evidence review. Developers can compare declared expectations with observed behavior, trace results to their source and understand the limits of each verification.</p><p>Local tests and browser illustrations are not on-chain proof.</p></div><div><h3>Platform</h3><a href="#workspace">Workspace information</a><a href="#method">Transfer model</a><a href="#try-lab">Interactive experiments</a><a href="#capabilities">Capabilities</a><a href="{% url 'studio:health' %}">Health endpoint</a></div><div><h3>Resources</h3><a href="https://github.com/helijunior4545-glitch/RealmProof">GitHub ↗</a><a href="https://docs.gno.land/">Gno documentation ↗</a></div></div><div class="rp-wrap rp-footer-legal"><span>© 2026 RealmProof</span><span>Independent project. Not affiliated with Gno.land.</span><span>English · EN</span></div></footer></body></html>

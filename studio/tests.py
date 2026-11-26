@@ -116,9 +116,9 @@ class ConsoleFlowTests(TestCase):
 
     def test_project_workbench_shows_scenario_and_environment_boundary(self):
         response = self.client.get(reverse("studio:project", args=[self.org.slug, self.project.pk]))
-        self.assertContains(response, "Execution environment")
+        self.assertContains(response, "TESTING WORKBENCH")
         self.assertContains(response, self.scenario.name)
-        self.assertContains(response, "Chain transactions are not submitted.")
+        self.assertContains(response, "Not connected")
         self.assertContains(response, "Recent runs")
 
     def test_scenario_builder_has_three_steps_and_templates(self):
