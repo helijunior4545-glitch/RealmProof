@@ -19,6 +19,7 @@
   const toggleLabel=document.querySelector(".rp-toggle-text");
   const cases={valid:{balance:120,amount:35,authorized:true},funds:{balance:20,amount:35,authorized:true},permission:{balance:120,amount:35,authorized:false}};
   let lastPreview=null;
+  const chart=(e,shown=false)=>{const b=Number(balance.value);const scale=Math.max(1,b,e?.remaining||0);for(const [key,value] of [["initial",e?b:null],["expected",e?.remaining??null],["preview",shown?e?.remaining??null:null]]){document.getElementById("rp-chart-"+key).style.width=value===null?"0%":(100*value/scale)+"%";document.getElementById("rp-chart-"+key+"-value").textContent=value===null?"—":String(value);}};
   const evaluate=()=>{
    const b=Number(balance.value), a=Number(amount.value), authorized=auth.checked;
    if(!Number.isSafeInteger(b)||!Number.isSafeInteger(a)||b<0||a<=0||b>1000000||a>1000000) return null;
@@ -31,6 +32,7 @@
    input.textContent="balance="+(balance.value||"?")+" · amount="+(amount.value||"?")+" · authorized="+auth.checked;
    expected.textContent=e?"status="+e.outcome+" · remaining="+e.remaining:"Enter whole numbers within the stated limits";
    preview.disabled=!e;
+   chart(e);
    if (!lastPreview || lastPreview!==input.textContent){observed.textContent="Select “Preview model result” to compare";status.innerHTML='<span class="rp-status-dot"></span> NOT EVALUATED';}
   };
   document.querySelectorAll("[data-case]").forEach(btn=>btn.addEventListener("click",()=>{
@@ -43,6 +45,7 @@
   preview.addEventListener("click",()=>{
    const e=evaluate();if(!e)return;
    lastPreview=input.textContent;
+   chart(e,true);
    observed.textContent="status="+e.outcome+" · remaining="+e.remaining;
    status.innerHTML='<span class="rp-status-dot"></span> MODEL PREVIEW MATCHES EXPECTED';
   });
