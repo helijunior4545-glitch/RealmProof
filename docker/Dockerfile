@@ -1,5 +1,17 @@
+# Runtime versions match the trusted CI environment.
+FROM golang:1.27.3 AS gno-build
+RUN git clone --depth 1 --branch v1.8.0 https://github.com/gnolang/gno.git /opt/gno \
+ && cd /opt/gno && test "$(git rev-parse HEAD)" = fc79041f4cd1a7b3ed4b316dc5ac14162eb78730 \
+ && go build -o /usr/local/bin/gno ./gnovm/cmd/gno
+COPY tools/sourceparser/main.go /tmp/sourceparser.go
+RUN CGO_ENABLED=0 go build -o /usr/local/bin/realmproof-source-parser /tmp/sourceparser.go
+
 FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ENV GNOROOT=/opt/gno
+COPY --from=gno-build /opt/gno /opt/gno
+COPY --from=gno-build /usr/local/bin/gno /usr/local/bin/gno
+COPY --from=gno-build /usr/local/bin/realmproof-source-parser /usr/local/bin/realmproof-source-parser
 WORKDIR /app
 RUN useradd --create-home --uid 10001 app
 COPY requirements.txt .
