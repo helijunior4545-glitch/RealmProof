@@ -22,6 +22,7 @@
         <a href="#workflow">Workflow</a>
         <a href="https://github.com/helijunior4545-glitch/RealmProof">GitHub <i class="lp-icon lp-out" aria-hidden="true"></i></a>
       </nav>
+      <div class="lp-header-action">{% include "studio/landing_action.html" %}</div>
     </div>
   </header>
   <main id="main-content" tabindex="-1">
@@ -29,7 +30,7 @@
       <div class="lp-wrap lp-hero-grid">
         <div class="lp-lead">
           {% for message in messages %}<p class="lp-message" role="status">{{ message }}</p>{% endfor %}
-          <h1 id="hero-title">See where your contract <em>breaks.</em></h1>
+          <h1 id="hero-title"><span>See where your</span> <span>contract <em>breaks.</em></span></h1>
           <p>Run Gno scenarios and inspect the evidence behind every verdict.</p>
           <div class="lp-actions">
             {% include "studio/landing_action.html" %}
@@ -48,11 +49,8 @@
     </section>
     <section id="workflow" class="lp-wrap lp-workflow" aria-labelledby="workflow-title">
       <h2 id="workflow-title">From scenario to evidence</h2>
-      <ol>
-        <li><i class="lp-icon lp-file" aria-hidden="true"></i><h3>Choose a scenario</h3><p>Start with a prepared transfer and inspect its inputs and expected behavior.</p></li>
-        <li><i class="lp-icon lp-terminal" aria-hidden="true"></i><h3>Run in Gno</h3><p>Execute the bundled contract with the local Gno runtime.</p></li>
-        <li><i class="lp-icon lp-shield" aria-hidden="true"></i><h3>Inspect the evidence</h3><p>Compare expected and observed values, then inspect the execution fingerprints.</p></li>
-      </ol>
+      <p class="lp-section-copy">Choose a Gno scenario, execute it, and compare the contract’s response with the behavior you expect.</p>
+      <div id="lp-workflow-live"><p class="lp-message">Run a scenario to inspect its state comparison.</p></div>
     </section>
     <section class="lp-evidence" aria-labelledby="evidence-title">
       <div class="lp-wrap lp-evidence-grid">
@@ -60,17 +58,15 @@
           <h2 id="evidence-title">A verdict you can <em>explain.</em></h2>
           <p>When a transfer exceeds the balance, the contract should reject it and leave the balance intact. The test passes when both expectations match.</p>
         </div>
-        <div class="lp-example">
-          <span>Example · insufficient balance</span>
-          <p class="lp-rejected"><i class="lp-icon lp-warning" aria-hidden="true"></i> Transfer rejected</p>
-          <p class="lp-passed"><i class="lp-icon lp-shield" aria-hidden="true"></i> Test passed</p>
-        </div>
+        <div id="lp-report-live"><p class="lp-message">The execution report appears after a local run.</p></div>
       </div>
     </section>
-    <section class="lp-wrap lp-invite" aria-labelledby="invite-title">
+    <section class="lp-invite" aria-labelledby="invite-title">
+      <div class="lp-wrap">
       <h2 id="invite-title">Try the transfer lab.</h2>
       <p>Open a prepared project to run more scenarios and review your results.</p>
       {% include "studio/landing_action.html" %}
+      </div>
     </section>
   </main>
   <footer class="lp-header">

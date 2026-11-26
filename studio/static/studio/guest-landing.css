@@ -35,11 +35,7 @@
 @keyframes lp-spin { to { transform: rotate(360deg); } }
 
 .lp-hero { position: relative; isolation: isolate; overflow: clip; border-bottom: 1px solid var(--stroke); }
-.lp-hero::before { content: ""; position: absolute; z-index: -1; inset: 0; background:
-  radial-gradient(ellipse at 80% 78%, #51449b52, transparent 48%),
-  radial-gradient(ellipse at 51% 100%, #268b943c, transparent 48%),
-  repeating-linear-gradient(90deg, transparent 0 65px, #a1a9eb0b 65px 66px),
-  repeating-linear-gradient(0deg, transparent 0 65px, #a1a9eb0b 65px 66px); }
+.lp-hero::before { content: ""; position: absolute; z-index: -1; inset: 0; }
 .lp-hero-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: clamp(30px, 5vw, 76px); padding-block: clamp(48px, 8vw, 114px); }
 .lp h1, .lp h2, .lp h3, .lp p { margin: 0; }
 .lp h1 { max-width: 11ch; font-size: clamp(48px, 6vw, 88px); line-height: .99; letter-spacing: -.075em; font-weight: 735; }
@@ -105,11 +101,6 @@
 .lp-evidence-grid { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: clamp(22px, 6vw, 80px); }
 .lp-evidence h2 { max-width: 14ch; }
 .lp-evidence h2 + p, .lp-invite h2 + p { margin-top: 12px; }
-.lp-example { display: grid; gap: 9px; padding: 17px; background: #10131b; border: 1px solid #54456f; border-radius: 12px; font: 13px/1.45 var(--mono); }
-.lp-example > span { color: var(--quiet); }
-.lp-example p { display: flex; align-items: center; gap: 7px; padding: 8px; border: 1px solid var(--stroke); border-radius: 6px; }
-.lp-example .lp-rejected { color: #ffd17d; }
-.lp-example .lp-passed { color: #75ebae; }
 .lp-invite { text-align: center; }
 .lp-invite .lp-action { margin-top: 18px; }
 .lp-footer { padding-block: 19px; border-top: 1px solid var(--stroke); flex-wrap: wrap; }
@@ -132,4 +123,74 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .lp *, .lp *::before, .lp *::after { animation: none !important; transition: none !important; }
+}
+
+/* Scenic plates sit behind the live console and the Studio entry. */
+.lp-header-inner nav { margin-left: auto; }
+.lp-header-action .lp-action { padding: 7px 12px; font-size: 13px; }
+.lp-hero::before {
+  background: linear-gradient(90deg, #0b0d13db, #0b0d1336 48%, transparent),
+    url("landing/hero-rocks.webp") center bottom / cover no-repeat, #0b0d13;
+}
+.lp-hero-grid { padding-block: clamp(54px, 7.5vw, 104px) clamp(64px, 9vw, 122px); }
+.lp-console {
+  background: linear-gradient(153deg, #191d2bf7 0%, #10131df7 64%);
+  box-shadow: 0 32px 80px #000a, 0 0 45px #9a7bea38;
+}
+.lp-console-head { background: #bca4ff0a; border-radius: 17px 17px 0 0; }
+.lp-run-note { padding-top: 12px; color: var(--quiet); font-size: 12px; }
+.lp-run-note a { color: var(--cyan); text-decoration: underline; text-underline-offset: 3px; }
+.lp-workflow { padding-block: clamp(30px, 5vw, 70px); }
+.lp-section-copy { padding-block: 10px 26px; max-width: 66ch; color: var(--quiet); }
+.lp-workflow-grid { display: grid; grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr); gap: 18px; }
+.lp-workflow-output { min-width: 0; }
+.lp-deck {
+  min-width: 0; padding: 16px; border: 1px solid #444962; border-radius: 13px;
+  background: linear-gradient(145deg, #1d2131, #12151e 66%);
+  box-shadow: 0 14px 32px #0004;
+}
+.lp-deck h3 { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.lp-deck h3 i { color: var(--iris); }
+.lp-deck h3 + p, .lp-report > p { margin-top: 11px; color: var(--quiet); }
+.lp-scenario-code {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 7px 16px; margin: 12px 0 0;
+  padding: 13px; border-radius: 8px; background: #090b1270; font: 12px/1.55 var(--mono);
+}
+.lp-scenario-code dt { color: var(--iris); }
+.lp-scenario-code dd { margin: 0; overflow-wrap: anywhere; }
+.lp-workflow .lp-stage { margin: 0 0 12px; gap: 8px; }
+.lp-stage li { display: flex; align-items: center; gap: 8px; padding: 8px 9px; border-color: #3b7780; }
+.lp-stage li:nth-child(2) { border-color: #77609c; }
+.lp-stage li:nth-child(2) > i { color: var(--iris); }
+.lp-stage li:nth-child(3) { border-color: #407960; }
+.lp-stage li:nth-child(3) > i { color: #75ebae; }
+.lp-stage strong, .lp-stage small { display: block; font-size: 12px; }
+.lp-stage small, .lp-report small { color: var(--quiet); }
+.lp-report small { margin-left: auto; font: 11px var(--mono); }
+.lp-report-switch { display: flex; gap: 10px; margin-top: 12px; border-bottom: 1px solid var(--stroke); }
+.lp-report-switch button {
+  border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--quiet);
+  padding: 6px 9px; font-size: 12px; transition: color 160ms, border-color 160ms;
+}
+.lp-report-switch button[aria-pressed="true"], .lp-report-switch button:hover { color: var(--iris); border-color: var(--iris); }
+.lp-invite {
+  position: relative; isolation: isolate; text-align: left;
+  background: linear-gradient(90deg, #0b0d13d6, #0b0d1350 51%, transparent),
+    url("landing/transfer-rocks.webp") center / cover no-repeat, #0b0d13;
+}
+.lp-invite p { max-width: 40ch; color: var(--paper); }
+@media (min-width: 1100px) {
+  .lp h1 { max-width: none; font-size: clamp(50px, 5vw, 74px); }
+  .lp h1 span { display: block; }
+  .lp-console { transform: perspective(1500px) rotateY(-9deg) rotateZ(-2deg); }
+}
+@media (max-width: 760px) {
+  .lp-header-action { display: none; }
+  .lp-workflow-grid { grid-template-columns: 1fr; }
+  .lp-hero::before, .lp-invite { background-position: 65% bottom; }
+}
+@media (max-width: 580px) {
+  .lp-workflow .lp-stage { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lp-stage li { display: block; }
+  .lp-compare th, .lp-compare td { overflow-wrap: anywhere; }
 }

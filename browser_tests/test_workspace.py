@@ -52,7 +52,7 @@ class BrowserTests(unittest.TestCase):
                 context = self.context(viewport={"width":width,"height":900}, reduced_motion="reduce")
                 page = context.new_page()
                 page.goto(BASE + "/studio/")
-                expect(page.get_by_role("button", name="Open Project Studio").first).to_be_visible()
+                expect(page.locator(".lp-hero").get_by_role("button", name="Open Project Studio")).to_be_visible()
                 self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
                 page.keyboard.press("Tab")
                 expect(page.get_by_role("link", name="Skip to main content")).to_be_focused()
@@ -70,7 +70,7 @@ class BrowserTests(unittest.TestCase):
         expect(scenario).to_have_attribute("aria-pressed", "true")
         balance = page.get_by_role("row", name="Remaining balance")
         expect(balance.get_by_role("cell").first).to_have_text("0")
-        expect(balance.get_by_role("cell").last).to_have_text("—")
+        expect(balance.get_by_role("cell").nth(1)).to_have_text("—")
         expect(page.get_by_role("button", name="Run scenario")).to_be_enabled()
 
     def test_native_launch_without_javascript(self):
