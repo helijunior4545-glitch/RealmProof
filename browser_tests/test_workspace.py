@@ -90,6 +90,12 @@ class BrowserTests(unittest.TestCase):
         expect(page.locator("#rp-trace-expected")).to_contain_text("status=permission_denied")
         expect(page.locator("#rp-trace-observed")).to_contain_text("Select")
         page.locator(".rp-toggle").click()
+        # Expectations remain independently chosen when the input changes.
+        expect(page.locator("#rp-trace-expected")).to_contain_text("status=permission_denied")
+        page.locator("#rp-preview").click()
+        expect(page.locator("#rp-trace-observed")).to_contain_text("status=ok")
+        expect(page.locator("#rp-preview-status")).to_contain_text("DIFFERS FROM EXPECTED")
+        page.locator("#rp-expect-status").select_option("ok")
         expect(page.locator("#rp-trace-expected")).to_contain_text("status=ok")
         page.locator("#rp-amount").fill("-1")
         expect(page.locator("#rp-preview")).to_be_disabled()
