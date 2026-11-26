@@ -1,47 +1,260 @@
-/* RealmProof capability explorer. One accessible source of truth for desktop and mobile. */
-.rp-capabilities{border-top:0}
-.rp-cap-heading{display:flex;align-items:end;justify-content:space-between;gap:22px;margin-bottom:29px}
-.rp-cap-heading h2{font-size:clamp(30px,3.3vw,46px);letter-spacing:-.05em;font-weight:660;line-height:1.12;margin:12px 0 10px}
-.rp-cap-heading .rp-kicker{font-size:10px;letter-spacing:.14em}
-.rp-cap-subtitle{color:#b8c4cf;font-size:14px!important;line-height:1.65;margin:0!important;max-width:600px}
-.rp-cap-hint{color:#92a4b2;font-size:11px;margin:0;max-width:200px;text-align:right}
-.rp-cap-explorer{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;min-width:0}
-.rp-cap-item{display:contents;--cap-accent:#c2a2ff}
-.rp-cap-item>summary{grid-row:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:20px;position:relative;padding:20px 18px 18px;min-height:155px;min-width:0;background:#1b2027;border:1px solid #39434e;border-radius:10px;list-style:none;cursor:pointer;color:#e6edf3;transition:background .2s,border-color .2s,transform .2s,box-shadow .2s}
-.rp-cap-item>summary::-webkit-details-marker{display:none}
-.rp-cap-item>summary::marker{content:""}
-.rp-cap-item>summary:after{content:none}
-.rp-cap-item>summary:hover{background:#252d37;border-color:#657888;transform:translateY(-3px);box-shadow:0 15px 32px #0005}
-.rp-cap-item[open]>summary{background:#252e38;border-color:#8799a5;box-shadow:inset 0 2px 0 var(--cap-accent)}
-.rp-cap-item>summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
-.rp-cap-symbol{display:grid;place-items:center;flex:0 0 39px;width:39px;height:39px;border:1px solid color-mix(in srgb,var(--cap-accent) 32%,#343b45);border-radius:9px;background:color-mix(in srgb,var(--cap-accent) 9%,#1b2027)}
-.rp-cap-symbol .rp-library-icon{display:block;width:22px;height:22px;background:var(--cap-accent);mask:var(--cap-icon) center/contain no-repeat;filter:none}
-.rp-cap-item[data-capability="source"]{--cap-icon:url("phosphor/file-code.svg")}
-.rp-cap-item[data-capability="test"]{--cap-icon:url("phosphor/sliders-horizontal.svg")}
-.rp-cap-item[data-capability="execution"]{--cap-icon:url("phosphor/terminal-window.svg")}
-.rp-cap-item[data-capability="security"]{--cap-icon:url("phosphor/shield-warning.svg")}
-.rp-cap-item[data-capability="evidence"]{--cap-icon:url("phosphor/shield-check.svg")}
-.rp-cap-name strong{display:block;color:inherit;font-size:clamp(12px,1.2vw,16px);line-height:1.36;font-weight:650}
-.rp-cap-arrow{position:absolute;right:15px;top:16px;color:#8fa0b0;font-size:15px}
-.rp-cap-item[open]>summary .rp-cap-arrow{color:var(--cap-accent)}
-.rp-cap-content{grid-column:1/-1;grid-row:2;min-width:0;border:1px solid #3e4955;border-radius:12px;background:linear-gradient(150deg,#1b222b,#151a21);padding:36px;animation:rp-cap-arrive .24s ease both}
-.rp-cap-item:not([open])>.rp-cap-content{display:none}
-.rp-cap-item[open]>.rp-cap-content{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.8fr);gap:0 45px}
-.rp-cap-content h3{grid-column:1;margin:0 0 24px;color:#eef2f6;font-size:clamp(25px,2.6vw,37px);line-height:1.2;letter-spacing:-.04em}
-.rp-cap-preview{grid-column:1;grid-row:2 / span 2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-content:start;gap:14px 0;margin:0;min-width:0}
-.rp-cap-preview>small{grid-column:1/-1;color:#9dafbd;font-size:10px;letter-spacing:.12em}
-.rp-cap-step{min-width:0;display:flex;flex-direction:column;gap:9px;padding-right:13px}
-.rp-cap-step+.rp-cap-step{border-left:1px solid #394550;padding-left:20px}
-.rp-cap-step span{font-size:12px;line-height:1.45;color:#b8c6d3}
-.rp-cap-step code{color:var(--cap-accent);font:650 clamp(13px,1.5vw,20px)/1.4 var(--mono);overflow-wrap:anywhere}
-.rp-cap-item[data-capability="source"] .rp-cap-step code,.rp-cap-item[data-capability="security"] .rp-cap-step code,.rp-cap-item[data-capability="evidence"] .rp-cap-step code{font-size:clamp(12px,1.15vw,15px)}
-.rp-cap-features{grid-column:2;grid-row:1/span 2;display:grid;align-content:start;gap:16px;padding:10px 0 0 28px;border-left:1px solid #3b4853}
-.rp-cap-features>div{display:flex;align-items:baseline;gap:10px;color:#c8d3de;font-size:13px}
-.rp-cap-node{color:var(--cap-accent);flex:none}
-.rp-cap-content .rp-explore-link{grid-column:2;grid-row:3;justify-self:start;margin:19px 0 0 28px;color:var(--cap-accent);font-size:13px}
-.rp-cap-content .rp-explore-link:hover{color:#edf1f5}
-@keyframes rp-cap-arrive{from{opacity:.5;transform:translateY(6px)}to{opacity:1;transform:none}}
-@media(max-width:900px){.rp-cap-explorer{grid-template-columns:repeat(3,minmax(0,1fr))}.rp-cap-item>summary{grid-row:auto;min-height:126px}.rp-cap-item[open]>.rp-cap-content{grid-row:3}.rp-cap-content{padding:25px}.rp-cap-item[open]>.rp-cap-content{gap:12px 22px}.rp-cap-features{padding-left:20px}.rp-cap-content .rp-explore-link{margin-left:20px}}
-@media(max-width:760px){.rp-cap-heading{flex-direction:column;align-items:flex-start}.rp-cap-hint{text-align:left;max-width:100%}.rp-cap-explorer{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-cap-item[open]>.rp-cap-content{grid-row:4;grid-template-columns:1fr;padding:23px 18px;gap:18px}.rp-cap-content h3,.rp-cap-preview,.rp-cap-features,.rp-cap-content .rp-explore-link{grid-column:1;grid-row:auto}.rp-cap-features{padding:0;border:0;gap:9px}.rp-cap-content .rp-explore-link{margin:0}.rp-cap-preview{gap:10px 0}.rp-cap-step+.rp-cap-step{padding-left:10px}.rp-cap-step{padding-right:6px}.rp-cap-step code{font-size:12px}.rp-cap-item>summary{min-height:126px;padding:15px}}
-@media(max-width:410px){.rp-cap-item>summary{min-height:110px}.rp-cap-name strong{font-size:12px}.rp-cap-content{padding:17px}.rp-cap-preview{grid-template-columns:1fr}.rp-cap-step,.rp-cap-step+.rp-cap-step{padding:0;border:0}.rp-cap-step{gap:3px}}
-@media(prefers-reduced-motion:reduce){.rp-cap-item>summary{transition:none}.rp-cap-content{animation:none}}
+/* RealmProof capabilities — complete replacement, one owner for layout and color.
+   Native <details> retain keyboard, touch, and no-JavaScript operation. */
+.rp-capabilities {
+  padding: 25px 0 20px;
+  border-top: 1px solid var(--line);
+}
+.rp-cap-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.rp-cap-heading h2 {
+  margin: 0;
+  font-size: clamp(20px, 2.4vw, 27px);
+  line-height: 1.2;
+  font-weight: 650;
+  letter-spacing: -.035em;
+}
+.rp-cap-heading p { margin: 0; color: var(--muted); font-size: 12px; }
+
+/* The five summaries form a compact navigation strip; contents are not cards. */
+.rp-cap-explorer {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  column-gap: 10px;
+  row-gap: 0;
+  min-width: 0;
+}
+.rp-cap-item {
+  display: contents;
+  --cap-accent: #c2a2ff;
+}
+.rp-cap-item > summary {
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 11px;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: #eef3fb;
+  cursor: pointer;
+  list-style: none;
+  position: relative;
+  transition: background-color .2s ease, border-color .2s ease,
+              box-shadow .2s ease, transform .2s ease;
+}
+.rp-cap-item > summary::-webkit-details-marker { display: none; }
+.rp-cap-item > summary::marker { content: ""; }
+.rp-cap-item > summary::after { content: none; }
+.rp-cap-item > summary:hover {
+  border-color: var(--cap-accent);
+  background: var(--cap-accent);
+  box-shadow: 0 0 21px color-mix(in srgb, var(--cap-accent) 27%, transparent),
+              inset 0 1px 0 #ffffff18;
+  color: #10151c;
+}
+.rp-cap-item > summary:focus-visible {
+  outline: 2px solid #b9c4d2;
+  outline-offset: 3px;
+}
+.rp-cap-symbol {
+  display: grid;
+  place-items: center;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+}
+.rp-cap-symbol .rp-library-icon {
+  display: block;
+  flex: none;
+  width: 25px;
+  height: 25px;
+  background: var(--cap-accent);
+  mask: var(--cap-icon) center / contain no-repeat;
+  filter: none;
+}
+.rp-cap-item[data-capability="source"] { --cap-icon: url("phosphor/file-code.svg"); }
+.rp-cap-item[data-capability="test"] { --cap-icon: url("phosphor/sliders-horizontal.svg"); }
+.rp-cap-item[data-capability="execution"] { --cap-icon: url("phosphor/terminal-window.svg"); }
+.rp-cap-item[data-capability="security"] { --cap-icon: url("phosphor/shield-warning.svg"); }
+.rp-cap-item[data-capability="evidence"] { --cap-icon: url("phosphor/shield-check.svg"); }
+.rp-cap-item > summary:hover .rp-library-icon {
+  background: #10151c;
+}
+.rp-cap-name { min-width: 0; }
+.rp-cap-name strong {
+  display: block;
+  color: inherit;
+  font-size: clamp(11px, 1.08vw, 14px);
+  font-weight: 650;
+  line-height: 1.25;
+}
+.rp-cap-arrow { display: none; }
+
+/* One shared, neutral content zone across all five navigation options. */
+.rp-cap-content {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
+  margin-top: 19px;
+  padding: 23px 2px 22px;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  animation: rp-cap-arrive .22s ease both;
+}
+.rp-cap-item:not([open]) > .rp-cap-content { display: none; }
+.rp-cap-item[open] > .rp-cap-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(240px, 1fr);
+  column-gap: clamp(28px, 5vw, 78px);
+  align-items: start;
+}
+.rp-cap-content h3 {
+  grid-column: 1;
+  margin: 0 0 17px;
+  font-size: clamp(20px, 2.5vw, 30px);
+  line-height: 1.23;
+  letter-spacing: -.035em;
+  font-weight: 650;
+  max-width: 580px;
+}
+.rp-cap-preview {
+  grid-column: 1;
+  grid-row: 2 / span 2;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+  gap: 12px 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.rp-cap-preview > small {
+  grid-column: 1 / -1;
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .055em;
+  line-height: 1.5;
+}
+.rp-cap-step {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 1px 13px 1px 0;
+}
+.rp-cap-step + .rp-cap-step {
+  padding-left: 16px;
+  border-left: 1px solid var(--line);
+}
+.rp-cap-step span {
+  color: #b9c4d2;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.rp-cap-step code {
+  color: var(--cap-accent);
+  font: 600 clamp(13px, 1.65vw, 23px) / 1.3 ui-monospace, SFMono-Regular, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+.rp-cap-item[data-capability="source"] .rp-cap-step code,
+.rp-cap-item[data-capability="security"] .rp-cap-step code,
+.rp-cap-item[data-capability="evidence"] .rp-cap-step code {
+  font-size: clamp(12px, 1.15vw, 16px);
+}
+.rp-cap-features {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: grid;
+  align-content: start;
+  gap: 13px;
+  padding: 9px 0 0 28px;
+  border-left: 1px solid var(--line);
+}
+.rp-cap-features > div {
+  display: flex;
+  align-items: baseline;
+  gap: 11px;
+  color: #cbd3de;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.rp-cap-node { flex: none; color: var(--cap-accent); }
+.rp-cap-content .rp-explore-link {
+  grid-column: 2;
+  grid-row: 3;
+  justify-self: start;
+  margin: 17px 0 0 28px;
+  padding: 7px 0;
+  color: var(--cap-accent);
+  font-size: 14px;
+  font-weight: 650;
+  white-space: normal;
+}
+.rp-cap-content .rp-explore-link:hover { color: #f4f5fb; }
+@keyframes rp-cap-arrive {
+  from { opacity: .4; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mid-sized viewports keep the same interaction without cramped tab titles. */
+@media (max-width: 1000px) {
+  .rp-cap-explorer { gap: 8px; }
+  .rp-cap-item > summary { gap: 6px; padding: 9px 6px; }
+  .rp-cap-symbol { width: 22px; height: 22px; }
+  .rp-cap-symbol .rp-library-icon { width: 22px; height: 22px; }
+  .rp-cap-name strong { font-size: 11px; }
+  .rp-cap-item[open] > .rp-cap-content { column-gap: 25px; }
+  .rp-cap-features { padding-left: 18px; }
+  .rp-cap-content .rp-explore-link { margin-left: 18px; }
+}
+
+/* Compact screens use a two-column tab grid with a neutral content area below. */
+@media (max-width: 760px) {
+  .rp-cap-heading { align-items: flex-start; flex-direction: column; gap: 3px; margin-bottom: 15px; }
+  .rp-cap-explorer { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .rp-cap-item > summary { grid-row: auto; justify-content: flex-start; padding: 11px; }
+  .rp-cap-name strong { font-size: 12px; }
+  .rp-cap-item[open] > .rp-cap-content {
+    grid-row: 4;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+    padding: 18px 0 20px;
+    margin-top: 10px;
+  }
+  .rp-cap-content h3,
+  .rp-cap-preview,
+  .rp-cap-features,
+  .rp-cap-content .rp-explore-link { grid-column: 1; grid-row: auto; }
+  .rp-cap-content h3 { margin: 0; font-size: 21px; }
+  .rp-cap-preview { gap: 10px 0; }
+  .rp-cap-step { padding-right: 8px; }
+  .rp-cap-step + .rp-cap-step { padding-left: 11px; }
+  .rp-cap-step span { font-size: 11px; }
+  .rp-cap-step code { font-size: clamp(12px, 3vw, 17px); }
+  .rp-cap-features { border: 0; padding: 4px 0 0; gap: 8px; }
+  .rp-cap-content .rp-explore-link { margin: 0; }
+}
+@media (max-width: 390px) {
+  .rp-cap-explorer { gap: 6px; }
+  .rp-cap-item > summary { gap: 6px; padding: 9px 7px; }
+  .rp-cap-symbol, .rp-cap-symbol .rp-library-icon { width: 19px; height: 19px; }
+  .rp-cap-name strong { font-size: 11px; }
+  .rp-cap-preview { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  .rp-cap-step, .rp-cap-step + .rp-cap-step { padding: 0; border: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rp-cap-item > summary { transition: none; }
+  .rp-cap-content { animation: none; }
+}
