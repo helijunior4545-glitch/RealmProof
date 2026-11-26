@@ -23,6 +23,11 @@ jobs:
       DJANGO_SECRET_KEY: "ci-only-not-for-production"
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund && npm run build
+        working-directory: frontend
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -90,6 +95,11 @@ jobs:
       REALMPROOF_ISOLATED_GUESTS: "1"
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund && npm run build
+        working-directory: frontend
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

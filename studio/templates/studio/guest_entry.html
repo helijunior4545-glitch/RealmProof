@@ -1,4 +1,4 @@
-{% load static %}
+{% load static react_frontend %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -13,6 +13,7 @@
 <script defer src="{% static 'studio/public-experience.js' %}"></script>
 <script defer src="{% static 'studio/public-labs.js' %}"></script>
 <script defer src="{% static 'studio/public-capabilities.js' %}"></script>
+{% react_frontend_available as react_frontend_available %}{% if react_frontend_available %}<script type="module" src="{% static 'studio/react/landing.js' %}"></script>{% endif %}
 </head>
 <body class="rp-public">
 

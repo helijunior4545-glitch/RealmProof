@@ -1,3 +1,8 @@
+FROM node:22-bookworm-slim AS frontend-build
+WORKDIR /frontend
+COPY frontend/ ./
+RUN npm install --no-audit --no-fund && npm run build
+
 # Runtime versions match the trusted CI environment.
 FROM golang:1.27.3 AS gno-build
 RUN git clone --depth 1 --branch v1.8.0 https://github.com/gnolang/gno.git /opt/gno \
@@ -17,6 +22,7 @@ RUN useradd --create-home --uid 10001 app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
+COPY --from=frontend-build /studio/static/studio/react/ studio/static/studio/react/
 RUN DJANGO_SECRET_KEY=build-only-not-for-runtime DATABASE_URL=postgresql://build:build@localhost:5432/build python manage.py collectstatic --noinput
 USER app
 EXPOSE 8000
