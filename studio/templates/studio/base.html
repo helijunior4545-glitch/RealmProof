@@ -16,6 +16,7 @@
   <link href="{% static 'studio/precision.css' %}" rel="stylesheet">
 </head>
 <body>
+  <a class="rp-skip-link" href="#main-content">Skip to main content</a>
   <div class="app-shell">
     <aside class="sidebar" aria-label="Main navigation">
       <a class="brand" href="{% url 'studio:public_demo' %}" aria-label="RealmProof home">
@@ -23,20 +24,21 @@
         <span class="brand-name">realm<span>proof</span><small>CONSOLE</small></span>
       </a>
       <div class="nav-group-label">PLATFORM</div>
-      <a class="nav-link chroma-amber" {% if request.resolver_match.url_name == 'public_demo' %}aria-current="page"{% endif %} href="{% url 'studio:public_demo' %}"><span class="factory-icon factory-assembly" aria-hidden="true"></span> Overview</a>
+      <a class="nav-link chroma-amber" {% if request.resolver_match.url_name == 'public_demo' %}aria-current="page"{% endif %} href="{% url 'studio:public_demo' %}"><span class="factory-icon factory-assembly" aria-hidden="true"></span> Home</a>
       {% if user.is_authenticated %}<a class="nav-link chroma-pink" {% if request.resolver_match.url_name == 'reference_demo' %}aria-current="page"{% endif %} href="{% url 'studio:reference_demo' %}"><span class="factory-icon factory-scanner" aria-hidden="true"></span> Reference demo</a>{% endif %}
       
       {% if user.is_authenticated %}<a class="nav-link chroma-violet" {% if request.resolver_match.url_name == 'dashboard' %}aria-current="page"{% endif %} href="{% url 'studio:dashboard' %}"><span class="factory-icon factory-reactor" aria-hidden="true"></span> My workspaces</a>{% endif %}
       {% if member %}
       <div class="nav-group-label nav-group-gap">WORKSPACE / {{ member.organization.name|truncatechars:16 }}</div>
       <a class="nav-link chroma-green" {% if request.resolver_match.url_name == 'organization' %}aria-current="page"{% endif %} href="{% url 'studio:organization' member.organization.slug %}"><span class="factory-icon factory-vault" aria-hidden="true"></span> {{ member.organization.name|truncatechars:19 }}</a>
+      <div class="nav-group-label nav-group-gap">VERIFICATION TOOLS</div>
       <a class="nav-link chroma-cyan" {% if request.resolver_match.url_name == 'network' %}aria-current="page"{% endif %} href="{% url 'studio:network' member.organization.slug %}"><span class="factory-icon factory-network" aria-hidden="true"></span> Network explorer</a>
       <a class="nav-link chroma-violet" {% if request.resolver_match.url_name == 'ledger_lab' %}aria-current="page"{% endif %} href="{% url 'studio:ledger_lab' member.organization.slug %}"><span class="factory-icon factory-engine" aria-hidden="true"></span> Ledger validation lab</a>
       <a class="nav-link chroma-orange" {% if request.resolver_match.url_name == 'native_catalog' %}aria-current="page"{% endif %} href="{% url 'studio:native_catalog' member.organization.slug %}"><span class="factory-icon factory-archive" aria-hidden="true"></span> Native test catalog</a>
-      <a class="nav-link chroma-violet" href="{% url 'studio:universal' member.organization.slug %}"><span class="factory-icon factory-engine" aria-hidden="true"></span> Universal test engine</a>
+      <a class="nav-link chroma-violet" {% if request.resolver_match.url_name == 'universal' %}aria-current="page"{% endif %} href="{% url 'studio:universal' member.organization.slug %}"><span class="factory-icon factory-engine" aria-hidden="true"></span> Universal test engine</a>
       {% endif %}
       <div class="sidebar-bottom">
-        <div class="sidebar-meta"><span class="status-dot"></span> REALMPROOF STUDIO <span class="muted-tag">v0.2</span></div>
+        <div class="sidebar-meta"><span class="status-dot"></span> REALMPROOF STUDIO </div>
         <div class="sidebar-note">Independent developer tooling for the Gno.land ecosystem.</div>
         {% if user.is_authenticated %}
           <div class="account-box"><span class="avatar">{{ user.username|slice:":1"|upper }}</span><span class="account-name">{% if request.session.realmproof_guest %}Guest session{% else %}{{ user.username }}{% endif %}</span></div>
@@ -54,7 +56,7 @@
           {% block topbar_action %}{% endblock %}
         </div>
       </header>
-      <main class="content" id="main-content">
+      <main class="content" id="main-content" tabindex="-1">
         {% for message in messages %}<div class="notice" role="status">{{ message }}</div>{% endfor %}
         {% block content %}{% endblock %}
       </main>
