@@ -7,6 +7,7 @@ from django.views.decorators.http import require_http_methods
 from .models import Project, SourceSnapshot
 from .views import membership_for
 from .source_discovery import capture, compare
+from .structural import analyze
 
 def unique_pairs(pairs):
     result = {}
@@ -45,4 +46,4 @@ def overview(request, slug, project_id):
     previous = snapshots.filter(created_at__lt=selected.created_at).first() if selected else None
     path = request.GET.get("file", "")
     record = selected.files.get(path) if selected else None
-    return render(request, "studio/source_discovery.html", {"member": member, "project": project, "snapshots": snapshots, "selected": selected, "changes": compare(previous, selected) if previous else None, "record": record, "path": path, "error": error}, status=400 if error else 200)
+    return render(request, "studio/source_discovery.html", {"member": member, "project": project, "snapshots": snapshots, "selected": selected, "changes": compare(previous, selected) if previous else None, "record": record, "structure": analyze(record["source"]) if record else None, "path": path, "error": error}, status=400 if error else 200)

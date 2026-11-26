@@ -38,6 +38,8 @@ jobs:
           go build -o "$RUNNER_TEMP/gno-bin/gno" ./gnovm/cmd/gno
           echo "$RUNNER_TEMP/gno-bin" >> "$GITHUB_PATH"
           echo "GNOROOT=$RUNNER_TEMP/gno" >> "$GITHUB_ENV"
+      - name: Build static source parser
+        run: go build -o "$RUNNER_TEMP/gno-bin/realmproof-source-parser" tools/sourceparser/main.go
       - run: python manage.py check
       - run: python manage.py makemigrations --check --dry-run
       - run: python manage.py migrate --noinput
