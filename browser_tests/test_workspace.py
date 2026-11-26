@@ -42,6 +42,12 @@ class BrowserTests(unittest.TestCase):
             expect(page.get_by_text("Preparing workspace…", exact=True)).to_be_visible()
             page.locator(".jury-launch").evaluate("(form) => form.requestSubmit(form.querySelector('button'))")
         self.assertEqual(submitted.value.method, "POST")
+        # A request event can precede its route callback: pump the browser event loop
+        # until the route interception has actually registered, without sleeping blindly.
+        for _ in range(40):
+            if requests:
+                break
+            page.wait_for_timeout(50)
         self.assertEqual(requests, ["POST"])
         # Playwright screenshots wait for navigations; keep the pending-state assertions
         # above and capture the settled workspace after releasing the held request.
