@@ -4,17 +4,20 @@ import logging
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.shortcuts import redirect, render
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 from .models import Membership
 
 logger = logging.getLogger(__name__)
 
+@never_cache
 @require_GET
 def entry(request):
     if request.user.is_authenticated:
         return redirect("studio:dashboard")
     return render(request, "studio/guest_entry.html")
 
+@never_cache
 @require_POST
 def start(request):
     if request.user.is_authenticated:
@@ -27,6 +30,7 @@ def start(request):
         if len(memberships) == 1 and memberships[0].organization.slug.startswith("review-") and memberships[0].role == "editor":
             login(request, user)
             request.session.set_expiry(3600)
+            request.session['realmproof_guest'] = True
             from .models import Project
             project = Project.objects.filter(organization=memberships[0].organization, name="Transfer verification lab").order_by("created_at").first()
             if project:

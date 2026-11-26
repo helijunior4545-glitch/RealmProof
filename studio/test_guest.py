@@ -20,3 +20,17 @@ class GuestTests(TestCase):
             user.is_staff = True
             user.save()
             self.assertRedirects(self.client.post(reverse("studio:guest_start")), reverse("studio:public_demo"))
+
+    def test_guest_session_and_membership_revocation(self):
+        user = get_user_model().objects.create_user(username="hackathon_demo_public", password="test-password-123")
+        org = Organization.objects.create(name="Demo", slug="review-test")
+        Membership.objects.create(user=user, organization=org, role="editor")
+        with patch.dict("os.environ", {"REALMPROOF_DEMO_USERNAME":user.username,"REALMPROOF_DEMO_PASSWORD":"test-password-123"}):
+            response = self.client.post(reverse("studio:guest_start"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("no-store", response["Cache-Control"])
+        self.assertTrue(self.client.session["realmproof_guest"])
+        other = Organization.objects.create(name="Private", slug="private-test")
+        Membership.objects.create(user=user, organization=other, role="editor")
+        self.assertEqual(self.client.get(reverse("studio:organization", args=[other.slug])).status_code, 404)
+        self.assertEqual(self.client.get(reverse("studio:organization", args=[org.slug])).status_code, 404)

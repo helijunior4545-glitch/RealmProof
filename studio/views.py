@@ -24,6 +24,11 @@ def membership_for(request, slug, write=False):
         organization__slug=slug,
         user=request.user,
     )
+    if request.user.username == "hackathon_demo_public":
+        if (not member.organization.slug.startswith("review-") or member.role != "editor"
+                or request.user.is_staff or request.user.is_superuser
+                or Membership.objects.filter(user=request.user).count() != 1):
+            raise Http404
     if write and member.role not in WRITE_ROLES:
         from django.core.exceptions import PermissionDenied
         raise PermissionDenied("You do not have permission to modify this workspace.")
