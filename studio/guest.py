@@ -6,6 +6,10 @@ from django import forms
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.http import Http404
+from .views import membership_for
+from .models import Project
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 from .models import Membership
@@ -21,16 +25,29 @@ def suggested_form():
     return WorkspaceForm(initial={"name": secrets.choice(["Atlas", "Orion", "Meridian", "Vector", "Nova"]) + " Verification " + secrets.token_hex(2).upper(),
         "description": "Explore contract behavior, define expectations and inspect reproducible evidence.", "starter": "transfer"})
 
+def studio_destination(request):
+    if not request.user.is_authenticated:
+        return None
+    for slug in Membership.objects.filter(user=request.user).order_by("organization__slug").values_list("organization__slug", flat=True):
+        try:
+            member = membership_for(request, slug)
+        except Http404:
+            continue
+        project = Project.objects.filter(organization=member.organization).order_by("-created_at", "pk").first()
+        if project:
+            return reverse("studio:project", kwargs={"slug": slug, "project_id": project.pk})
+    return None
+
 @never_cache
 @require_GET
 def entry(request):
-    return render(request, "studio/guest_entry.html", {"form": suggested_form(), "isolated_guest": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1"})
+    return render(request, "studio/guest_entry.html", {"studio_url": studio_destination(request), "dashboard_url": reverse("studio:dashboard"), "form": suggested_form(), "isolated_guest": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1"})
 
 @never_cache
 @require_POST
 def start(request):
     if request.user.is_authenticated:
-        return redirect("studio:dashboard")
+        return redirect(studio_destination(request) or "studio:dashboard")
     form = WorkspaceForm(request.POST) if request.POST.get("name") is not None else suggested_form()
     if form.is_bound and not form.is_valid():
         return render(request, "studio/guest_entry.html", {"form": form, "isolated_guest": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1"}, status=400)
