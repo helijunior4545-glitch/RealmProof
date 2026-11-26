@@ -33,6 +33,13 @@ class PublicExperienceTests(SimpleTestCase):
         for accent in ("#70c9ff", "#c2a2ff", "#67e3b1", "#f5bb71", "#62ded5"):
             self.assertIn(accent, source)
 
+    def test_studio_entry_uses_authorized_destination_or_guest_post(self):
+        text = get_template("studio/guest_entry.html").template.source
+        self.assertIn('href="{{ studio_url }}"', text)
+        self.assertIn('action="{% url \'studio:guest_start\' %}"', text)
+        self.assertIn("Open Project Studio", text)
+        self.assertNotIn("guest-4ef1e5083a884008931495d2bc813082", text)
+
     def test_assets_are_packaged(self):
         self.assertIsNotNone(finders.find("studio/capabilities.css"))
         self.assertIsNotNone(finders.find("studio/public-capabilities.js"))
