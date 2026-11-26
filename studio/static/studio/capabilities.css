@@ -1,0 +1,36 @@
+/* Capability explorer — single source of component styles. */
+.rp-capabilities{padding:24px 0;border-top:1px solid var(--line)}
+.rp-cap-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.rp-cap-heading h2{font-size:clamp(20px,2.4vw,27px);font-weight:600;letter-spacing:-.035em;margin:0}
+.rp-cap-heading p{font-size:12px;color:var(--muted);margin:0}
+.rp-cap-explorer{position:relative;border-block:1px solid var(--line)}
+.rp-cap-item{border-bottom:1px solid var(--line)}
+.rp-cap-item:last-child{border-bottom:0}
+.rp-cap-item summary{position:relative;display:flex;align-items:center;gap:12px;list-style:none;cursor:pointer;padding:12px;color:var(--muted);background:transparent;transition:color .22s ease}
+.rp-cap-item summary::-webkit-details-marker{display:none}
+.rp-cap-item summary:after{content:none}
+.rp-cap-item summary:hover,.rp-cap-item[open] summary{color:var(--text)}
+.rp-cap-symbol{display:grid;place-items:center;width:30px;height:30px;color:var(--cap-accent);opacity:.75;transition:transform .25s ease,filter .25s ease,opacity .25s ease}
+.rp-cap-symbol .rp-library-icon{width:26px;height:26px}
+.rp-cap-item[open] .rp-cap-symbol,.rp-cap-item summary:hover .rp-cap-symbol{opacity:1;transform:translateY(-2px);filter:drop-shadow(0 0 8px var(--cap-accent))}
+.rp-cap-name strong{font-size:12px;font-weight:600;letter-spacing:-.01em}
+.rp-cap-arrow{margin-left:auto;color:var(--cap-accent)}
+.rp-cap-content{padding:18px 12px;background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--cap-accent) 7%,transparent),transparent 75%);animation:rp-cap-reveal .24s ease both}
+.rp-cap-content h3{font-size:clamp(18px,2vw,23px);font-weight:550;letter-spacing:-.035em;margin:0 0 12px}
+.rp-cap-features{display:grid;gap:8px}
+.rp-cap-features>div{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.rp-cap-node{color:var(--cap-accent);font-size:12px}
+.rp-cap-content .rp-explore-link{color:var(--cap-accent);font-size:12px;margin-top:12px}
+@keyframes rp-cap-reveal{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+@media(min-width:761px){
+.rp-cap-explorer.is-enhanced{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding-bottom:132px}
+.rp-cap-explorer.is-enhanced .rp-cap-item{border:0;min-width:0}
+.rp-cap-explorer.is-enhanced summary{height:80px;flex-direction:column;justify-content:center;gap:5px;text-align:center;padding:8px 3px}
+.rp-cap-explorer.is-enhanced summary:before{content:"";position:absolute;bottom:0;left:15%;right:15%;height:2px;background:var(--cap-accent);transform:scaleX(0);opacity:0;transition:transform .25s ease,opacity .25s ease}
+.rp-cap-explorer.is-enhanced .rp-cap-item[open] summary:before{transform:scaleX(1);opacity:1}
+.rp-cap-explorer.is-enhanced .rp-cap-arrow{display:none}
+.rp-cap-explorer.is-enhanced .rp-cap-content{position:absolute;inset:80px 0 0;border-top:1px solid var(--line);text-align:center;overflow:auto;padding:14px}
+.rp-cap-explorer.is-enhanced .rp-cap-features{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 24px}
+}
+@media(max-width:760px){.rp-cap-heading{align-items:start;flex-direction:column;gap:2px}.rp-cap-item summary{min-height:48px}}
+@media(prefers-reduced-motion:reduce){.rp-cap-content{animation:none}.rp-cap-item summary,.rp-cap-symbol,.rp-cap-explorer.is-enhanced summary:before{transition:none}.rp-cap-item[open] .rp-cap-symbol,.rp-cap-item summary:hover .rp-cap-symbol{transform:none}}
