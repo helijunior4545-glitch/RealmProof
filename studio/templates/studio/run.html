@@ -1,56 +1,140 @@
 {% extends "studio/base.html" %}
+{% load static %}
 {% block title %}{{ run.scenario.name }}{% endblock %}
 {% block context_label %}RUN / {{ run.id|truncatechars:15 }}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'studio/run-report.css' %}">
+<script defer src="{% static 'studio/run-report.js' %}"></script>
+{% endblock %}
 {% block content %}
-<div class="breadcrumbs"><a href="{% url 'studio:dashboard' %}">Overview</a><span>/</span><a href="{% url 'studio:organization' member.organization.slug %}">{{ member.organization.name }}</a><span>/</span><a href="{% url 'studio:project' member.organization.slug run.scenario.project_id %}">{{ run.scenario.project.name }}</a><span>/</span><span>Test run</span></div>
-<div class="page-heading rp-heading"><span class="rp-object rp-orbit" aria-hidden="true"><i></i><b></b><em></em></span>
-  <div><div class="eyebrow"><span class="eyebrow-line"></span> TEST RUN / {{ run.id }}</div><h1>{{ run.scenario.name }}</h1><p class="lede">{{ run.scenario.objective }}</p></div>
-  <a class="button secondary" href="{% url 'studio:project' member.organization.slug run.scenario.project_id %}">{% if run.status != "pending" %}Continue testing →{% else %}← All scenarios{% endif %}</a>
-</div>
-<div class="stage-track" aria-label="Verification workflow">
-  <div class="stage done"><span>01</span><strong>Prepare</strong></div>
-  <div class="stage {% if run.status != 'pending' %}done{% else %}current{% endif %}"><span>02</span><strong>Evaluate</strong></div>
-  <div class="stage {% if run.status != 'pending' %}current{% endif %}"><span>03</span><strong>Investigate</strong></div>
-</div>
-<section class="pi-strip pi-run" aria-label="Run verdict and provenance">
-<div class="pi-state pi-verdict"><span class="pi-wave" aria-hidden="true"><svg viewBox="0 0 48 32"><path d="M1 16H10L15 6 22 26 29 10 34 16H47" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span><div><span class="pi-label">ASSERTION VERDICT</span><strong class="status-{{ run.status }}">{{ run.get_status_display|upper }}</strong><small>{{ run.reason }}</small></div></div>
-<div class="pi-matrix"><span class="pi-label">EXECUTION STATUS</span><strong class="pi-run-value">{% if run.execution_status == "not_executed" %}Not executed{% elif run.execution_status == "external_evidence" %}External evidence{% else %}{{ run.execution_status }}{% endif %}</strong><small>{% if run.execution_status == "external_evidence" %}User supplied · unverified{% elif run.execution_status == "local_gno" %}Local Gno execution · not on-chain{% else %}No evidence available{% endif %}</small></div>
-<div class="pi-measure"><span class="pi-label">Created · UTC</span><strong class="pi-run-value">{{ run.started_at|date:"M j, Y · H:i" }}</strong><span class="pi-ruler" aria-hidden="true"></span></div>
-</section>
-<div class="inline-note important-note"><strong>Verification boundary:</strong> This console does not currently submit transactions to Gno.land or verify chain authenticity. A passing assertion means observed values matched expectations, not that a blockchain transaction was proven.</div>
-<div class="run-layout">
-  <section class="panel" aria-labelledby="assertions-heading">
-    <div class="panel-head"><div><span class="eyebrow">EXPECTED VS OBSERVED</span><h2 id="assertions-heading">Assertion details</h2></div><span class="count-chip">{{ comparison|length }} fields</span></div>
-    {% if run.status == "pending" %}
-      <div class="empty-state in-panel"><span class="empty-icon">⌁</span><h3>Awaiting evidence</h3><p>The scenario is prepared. Add independent observed values to evaluate the assertions.</p></div>
-    {% else %}
-      <div class="comparison-list">{% for item in comparison %}
-        <div class="comparison-row"><div class="comparison-field"><span class="status-indicator {% if item.matches %}status-passed{% else %}status-failed{% endif %}"></span><code>{{ item.field }}</code></div><div><span class="compare-label">EXPECTED</span><code>{{ item.expected }}</code></div><div><span class="compare-label">OBSERVED</span><code>{% if item.present %}{{ item.actual }}{% else %}Field missing{% endif %}</code></div><span class="comparison-result {% if item.matches %}status-passed{% else %}status-failed{% endif %}">{% if item.matches %}MATCH{% else %}MISMATCH{% endif %}</span></div>
-      {% empty %}<p class="helper">No assertions were defined. The verdict is inconclusive.</p>{% endfor %}</div>
-    {% endif %}
-  </section>
-  <aside>
-    <section class="panel compact-panel">
-      <div class="panel-head"><div><span class="eyebrow">SOURCE DATA</span><h2>Input snapshot</h2></div></div>
-      <pre>{{ run.input_snapshot|default:"{}" }}</pre>
-    </section>
-    {% if run.status == "pending" and run.execution_status == "not_executed" and member.role != "viewer" %}
-      <section class="panel compact-panel">
-        <div class="panel-head"><div><span class="eyebrow">MANUAL EVIDENCE</span><h2>Evaluate observed values</h2></div></div>
-        <p class="helper">Paste observed JSON obtained independently. This action never sends a blockchain transaction.</p>
-        <form method="post" action="{% url 'studio:evaluate_run' member.organization.slug run.id %}" data-evidence-form>
-          {% csrf_token %}<label for="observed-json">Observed values (JSON object)</label><textarea id="observed-json" name="observed" class="code-input" rows="7" required spellcheck="false" placeholder='{"status": "reverted"}'></textarea>
-          <div class="json-feedback" data-json-feedback="observed-json" aria-live="polite"></div>
-          <button class="button primary block-button" type="submit">Evaluate assertions →</button>
+<div class="rr">
+  <a class="rr-back" href="{% url 'studio:project' member.organization.slug run.scenario.project_id %}"><span aria-hidden="true">←</span> {{ run.scenario.project.name }}</a>
+  <header class="rr-heading">
+    <div>
+      <p class="rr-kicker"><i class="rr-icon rr-terminal" aria-hidden="true"></i> Execution report</p>
+      <h1>{{ run.scenario.name }}</h1>
+      {% if run.scenario.objective %}<p class="rr-objective">{{ run.scenario.objective }}</p>{% endif %}
+    </div>
+    <div class="rr-actions">
+      <a class="button secondary" href="{% url 'studio:project' member.organization.slug run.scenario.project_id %}">Continue testing <span aria-hidden="true">→</span></a>
+      {% if transfer and run.scenario.input_data.engine == "transfer" and member.role != "viewer" and run.status != "pending" %}
+        <form method="post" action="{% url 'studio:execute_scenario' member.organization.slug run.scenario_id %}" data-pending-label="Running Gno…">
+          {% csrf_token %}
+          <button class="button primary" type="submit">Run scenario again</button>
         </form>
+      {% endif %}
+    </div>
+  </header>
+
+  <section class="rr-summary" aria-label="Run summary">
+    <div class="rr-card rr-summary-item">
+      <span class="rr-label"><i class="rr-icon rr-terminal" aria-hidden="true"></i> Operation outcome</span>
+      <strong id="rr-operation"{% if operation == "Rejected" %} class="rr-warning"{% elif operation == "Accepted" %} class="rr-success"{% endif %}>
+        {% if operation %}Transfer {{ operation|lower }}
+        {% elif run.execution_status == "external_evidence" %}External evidence
+        {% elif run.execution_status == "local_running" %}Running in Gno
+        {% elif run.execution_status == "local_error" %}Execution unavailable
+        {% elif run.execution_status == "local_gno" %}Local execution complete
+        {% else %}Not executed{% endif %}
+      </strong>
+      <p>{% if run.execution_status == "local_gno" %}Local Gno execution · not on-chain{% elif run.execution_status == "external_evidence" %}User supplied · unverified{% else %}No operation result recorded.{% endif %}</p>
+    </div>
+    <div class="rr-card rr-summary-item rr-verdict">
+      <span class="rr-label"><i class="rr-icon rr-shield" aria-hidden="true"></i> ASSERTION VERDICT</span>
+      <strong id="rr-verdict" class="rr-verdict-{{ run.status }}">{% if run.status == "passed" or run.status == "failed" %}Test {{ run.status }}{% else %}{{ run.get_status_display }}{% endif %}</strong>
+      {% if run.status == "passed" or run.status == "failed" %}<p>{{ matched_count }} of {{ comparison|length }} assertions matched.</p>
+      {% elif run.status == "pending" %}<p>Awaiting evidence.</p>
+      {% elif run.status == "error" %}<p>The runner could not produce a result.</p>
+      {% else %}<p>{{ run.reason }}</p>{% endif %}
+    </div>
+  </section>
+
+  <div class="rr-grid">
+    <section class="rr-card rr-panel" aria-labelledby="assertions-heading">
+      <h2 id="assertions-heading">Assertion details</h2>
+      {% if run.status == "pending" %}
+        <p class="rr-help">{% if run.execution_status == "local_running" %}The runner is collecting observed values.{% else %}Add observed values to evaluate these assertions.{% endif %}</p>
+      {% elif run.status == "error" %}
+        <p class="rr-help">The runner returned no evidence to compare.</p>
+        {% if run.reason %}<details class="rr-error"><summary>Runner error details</summary><pre>{{ run.reason }}</pre></details>{% endif %}
+      {% else %}
+        <p class="rr-help">Compare the expected behavior with the recorded result.</p>
+      {% endif %}
+      {% if comparison %}
+        <table class="rr-table">
+          <thead><tr><th scope="col">Assertion</th><th scope="col">Expected</th><th scope="col">Observed</th><th scope="col">Result</th></tr></thead>
+          <tbody>
+            {% for item in comparison %}<tr>
+              <th scope="row">{{ item.field }}</th>
+              <td><code>{{ item.expected }}</code></td>
+              {% if run.status == "pending" or run.status == "error" %}
+                <td>—</td><td>—</td>
+              {% else %}
+                <td>{% if item.present %}<code>{{ item.actual }}</code>{% else %}Field missing{% endif %}</td>
+                <td><span class="rr-result {% if item.matches %}rr-success{% else %}rr-failure{% endif %}">{% if item.matches %}MATCH{% else %}MISMATCH{% endif %}</span></td>
+              {% endif %}
+            </tr>{% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="rr-help">This run has no assertions.</p>
+      {% endif %}
+    </section>
+
+    <aside class="rr-aside" aria-label="Inputs and execution evidence">
+      <section class="rr-card rr-panel">
+        <h2>Input snapshot</h2>
+        {% if transfer %}
+          <dl class="rr-keys">
+            <div><dt>Initial balance</dt><dd>{{ run.input_snapshot.balance|default_if_none:"—" }}</dd></div>
+            <div><dt>Transfer amount</dt><dd>{{ run.input_snapshot.amount|default_if_none:"—" }}</dd></div>
+            <div><dt>Sender</dt><dd>{{ run.input_snapshot.authorized|yesno:"Authorized,Unauthorized,Unknown" }}</dd></div>
+          </dl>
+        {% else %}
+          <pre>{{ input_pretty }}</pre>
+        {% endif %}
       </section>
-    {% else %}
-      <section class="panel compact-panel"><div class="panel-head"><div><span class="eyebrow">EVIDENCE SOURCE</span><h2>Provenance</h2></div></div><div class="env-line"><span>Source</span><strong>{% if run.execution_status == "external_evidence" %}User supplied{% elif run.execution_status == "local_gno" %}Local Gno CLI{% else %}Not collected{% endif %}</strong></div><div class="env-line"><span>Verified on chain</span><strong class="status-failed">No</strong></div><div class="env-line"><span>Record status</span><strong>Read-only</strong></div></section>
-    {% endif %}
-  </aside>
+      {% if run.status == "pending" and run.execution_status == "not_executed" and member.role != "viewer" %}
+        <section class="rr-card rr-panel">
+          <h2>Evaluate observed values</h2>
+          <p class="rr-help">Paste observed JSON obtained independently.</p>
+          <form method="post" action="{% url 'studio:evaluate_run' member.organization.slug run.id %}" data-evidence-form>
+            {% csrf_token %}
+            <label for="observed-json">Observed values (JSON object)</label>
+            <textarea id="observed-json" name="observed" class="code-input" rows="7" required spellcheck="false" placeholder='{"status": "reverted"}'></textarea>
+            <div class="json-feedback" data-json-feedback="observed-json" aria-live="polite"></div>
+            <button class="button primary block-button" type="submit">Evaluate assertions →</button>
+          </form>
+        </section>
+      {% else %}
+        <section class="rr-card rr-panel">
+          <h2>Execution evidence</h2>
+          <dl class="rr-keys">
+            <div><dt>Source</dt><dd>{% if run.execution_status == "local_gno" %}Local Gno CLI{% elif run.execution_status == "external_evidence" %}User supplied{% else %}None recorded{% endif %}</dd></div>
+            {% if evidence_source.duration_ms is not None %}<div><dt>Duration</dt><dd>{{ evidence_source.duration_ms }} ms</dd></div>{% endif %}
+            <div><dt>On-chain verification</dt><dd>Unverified</dd></div>
+          </dl>
+          {% if evidence_source.source_sha256 or evidence_source.harness_sha256 %}
+            <details class="rr-fingerprints">
+              <summary>SHA-256 fingerprints</summary>
+              {% if evidence_source.source_sha256 %}<div class="rr-hash"><span>Contract source</span><code id="rr-source-hash">{{ evidence_source.source_sha256 }}</code><button type="button" data-copy-run-hash="rr-source-hash" hidden>Copy contract hash</button></div>{% endif %}
+              {% if evidence_source.harness_sha256 %}<div class="rr-hash"><span>Test harness</span><code id="rr-harness-hash">{{ evidence_source.harness_sha256 }}</code><button type="button" data-copy-run-hash="rr-harness-hash" hidden>Copy test hash</button></div>{% endif %}
+              <p class="rr-help" data-run-copy-status role="status"></p>
+            </details>
+          {% endif %}
+        </section>
+      {% endif %}
+    </aside>
+  </div>
+  <details class="rr-card rr-panel rr-raw">
+    <summary>Raw technical evidence</summary>
+    <div class="rr-raw-grid">
+      <div><h3>Inputs JSON</h3><pre>{{ input_pretty }}</pre></div>
+      <div><h3>Expected JSON</h3><pre>{{ expected_pretty }}</pre></div>
+      <div><h3>Observed JSON</h3><pre>{{ observed_pretty }}</pre></div>
+      <div><h3>Evidence JSON</h3><pre>{{ evidence_pretty }}</pre></div>
+    </div>
+  </details>
+  <p class="rr-boundary">This console does not currently submit transactions to Gno.land. The verdict reflects the recorded assertions.</p>
 </div>
-<details class="panel technical-panel">
-  <summary><span><span class="eyebrow">ADVANCED INSPECTION</span><strong>Raw technical evidence</strong></span><span class="summary-arrow">⌄</span></summary>
-  <div class="technical-grid"><div><span class="eyebrow">EXPECTED JSON</span><pre>{{ expected_pretty }}</pre></div><div><span class="eyebrow">OBSERVED JSON</span><pre>{{ observed_pretty }}</pre></div><div><span class="eyebrow">EVIDENCE JSON</span><pre>{{ evidence_pretty }}</pre></div></div>
-</details>
 {% endblock %}

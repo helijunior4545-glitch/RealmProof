@@ -156,13 +156,31 @@ def start_run(request, slug, scenario_id):
 def run_detail(request, slug, run_id):
     member = membership_for(request, slug)
     run = get_object_or_404(TestRun.objects.select_related("scenario"), pk=run_id, organization=member.organization)
+    transfer = run.input_snapshot.get("engine") == "transfer"
+    labels = {"status": "Transfer outcome", "balance": "Remaining balance", "state_changed": "State changed"}
+    outcomes = {"success": "Accepted", "rejected": "Rejected"}
     comparison = []
     for key, expected in run.expected_snapshot.items():
         present = key in run.observed
         actual = run.observed.get(key)
-        comparison.append({"field": key, "expected": expected, "actual": actual, "present": present, "matches": present and equal_json(actual, expected)})
+        matches = present and equal_json(actual, expected)
+        if transfer and key == "status":
+            if isinstance(expected, str):
+                expected = outcomes.get(expected, expected)
+            if isinstance(actual, str):
+                actual = outcomes.get(actual, actual)
+        comparison.append({
+            "field": labels.get(key, key) if transfer else key,
+            "expected": expected, "actual": actual, "present": present, "matches": matches,
+        })
+    outcome = run.observed.get("status")
+    operation = outcomes.get(outcome) if transfer and run.execution_status == "local_gno" and isinstance(outcome, str) else None
     return render(request, "studio/run.html", {
         "member": member, "run": run, "comparison": comparison,
+        "transfer": transfer, "operation": operation,
+        "matched_count": sum(item["matches"] for item in comparison),
+        "evidence_source": run.evidence.get("source") or {},
+        "input_pretty": json.dumps(run.input_snapshot, indent=2),
         "expected_pretty": json.dumps(run.expected_snapshot, indent=2),
         "observed_pretty": json.dumps(run.observed, indent=2),
         "evidence_pretty": json.dumps(run.evidence, indent=2),

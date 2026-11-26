@@ -1,0 +1,58 @@
+.rr { --rr-edge: #343c51; --rr-panel: #151924; --rr-dim: #aeb8cc; --rr-cyan: #8de7ef; --rr-green: #77eab0; --rr-amber: #ffd38a; --rr-red: #ffa4b5; }
+.rr h1, .rr h2, .rr h3, .rr p { margin: 0; }
+.rr-back { display: inline-flex; align-items: center; gap: 7px; color: var(--rr-cyan); font-size: 13px; }
+.rr-back:hover { text-decoration: underline; text-underline-offset: 4px; }
+.rr-heading { display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 14px 24px; margin-block: 17px 22px; }
+.rr-heading > div { min-width: 0; }
+.rr-kicker, .rr-label { display: flex; align-items: center; gap: 7px; color: var(--rr-cyan); font: 600 12px var(--mono); }
+.rr-heading h1 { margin-block: 5px; font-size: clamp(32px, 4.5vw, 58px); line-height: 1.05; letter-spacing: -.06em; overflow-wrap: anywhere; }
+.rr-objective { color: var(--rr-dim); }
+.rr-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.rr-actions form { margin: 0; }
+
+.rr-icon { width: 17px; height: 17px; flex: 0 0 auto; background: currentColor; mask: var(--rr-icon) center / contain no-repeat; }
+.rr-terminal { --rr-icon: url("phosphor/terminal-window.svg"); }
+.rr-shield { --rr-icon: url("phosphor/shield-check.svg"); }
+.rr-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin-bottom: 16px; }
+.rr-card { min-width: 0; border: 1px solid var(--rr-edge); border-radius: 13px; background: var(--rr-panel); }
+.rr-summary-item { padding: clamp(14px, 2vw, 22px); background: linear-gradient(140deg, #1c2938, #151924 72%); }
+.rr-verdict { background: linear-gradient(140deg, #25223b, #151924 74%); }
+.rr-verdict .rr-label { color: #cbadff; }
+.rr-summary strong { display: block; margin-top: 7px; font-size: clamp(22px, 3vw, 33px); line-height: 1.15; letter-spacing: -.04em; }
+.rr-summary p { margin-top: 6px; color: var(--rr-dim); font-size: 13px; }
+.rr-success, .rr-verdict-passed { color: var(--rr-green); }
+.rr-warning, .rr-verdict-pending, .rr-verdict-inconclusive { color: var(--rr-amber); }
+.rr-failure, .rr-verdict-failed, .rr-verdict-error { color: var(--rr-red); }
+
+.rr-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(235px, .85fr); gap: 16px; align-items: start; }
+.rr-panel { padding: clamp(13px, 2vw, 20px); }
+.rr-panel h2 { font-size: 19px; letter-spacing: -.025em; }
+.rr .rr-help { margin-top: 7px; color: var(--rr-dim); font-size: 13px; }
+.rr-table { width: 100%; margin-top: 14px; border-collapse: collapse; table-layout: fixed; text-align: left; font-size: 13px; }
+.rr-table th, .rr-table td { border-bottom: 1px solid var(--rr-edge); padding: 10px 5px; overflow-wrap: anywhere; }
+.rr-table thead { color: var(--rr-dim); background: #ffffff08; }
+.rr-table thead th:first-child { width: 31%; }
+.rr-table tbody th { font-weight: 600; }
+.rr-table code { white-space: pre-wrap; font: 12px var(--mono); color: var(--text); }
+.rr-result { font: 600 11px var(--mono); }
+.rr-aside { display: grid; gap: 14px; min-width: 0; }
+.rr-keys { margin: 8px 0 0; }
+.rr-keys div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-block: 7px; border-bottom: 1px solid var(--rr-edge); font-size: 13px; }
+.rr-keys dt { color: var(--rr-dim); }
+.rr-keys dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.rr pre { margin: 8px 0 0; max-height: 22rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.55 var(--mono); }
+.rr-fingerprints, .rr-error { margin-top: 12px; }
+.rr summary { cursor: pointer; color: var(--rr-cyan); font-weight: 650; }
+.rr-hash { margin-top: 10px; font-size: 12px; }
+.rr-hash code { display: block; margin-block: 4px; color: var(--rr-dim); overflow-wrap: anywhere; }
+.rr-hash button:not([hidden]) { border: 1px solid var(--rr-edge); border-radius: 6px; padding: 4px 7px; color: var(--rr-cyan); background: #1b2332; cursor: pointer; }
+.rr-raw { margin-top: 16px; }
+.rr-raw-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 13px; }
+.rr-raw-grid > div { min-width: 0; border: 1px solid var(--rr-edge); border-radius: 8px; padding: 10px; }
+.rr-raw-grid h3 { font-size: 12px; }
+.rr .rr-boundary { margin-top: 13px; font-size: 12px; color: var(--rr-dim); }
+@media (max-width: 1000px) { .rr-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 540px) {
+  .rr-summary, .rr-raw-grid { grid-template-columns: minmax(0, 1fr); }
+  .rr-table th, .rr-table td { font-size: 11px; padding-inline: 4px; }
+}

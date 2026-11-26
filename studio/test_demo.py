@@ -21,10 +21,21 @@ class DemoExecutionTests(TestCase):
         self.assertEqual(run.status, "passed")
         self.assertEqual(run.execution_status, "local_gno")
         self.assertFalse(run.evidence["source"]["verified_on_chain"])
+        report = self.client.get(reverse("studio:run_detail", args=["demo", run.pk]))
+        self.assertContains(report, "Transfer rejected")
+        self.assertContains(report, "Test passed")
+        self.assertContains(report, "3 of 3 assertions matched.")
+        self.assertContains(report, "Remaining balance")
+        self.assertNotContains(report, "Duration")
 
     def test_missing_engine_is_error(self):
         self.client.post(reverse("studio:create_demo", args=["demo"]))
         scenario = Scenario.objects.first()
         with patch("studio.engine.execute", side_effect=RuntimeError("Gno CLI unavailable")):
             self.client.post(reverse("studio:execute_scenario", args=["demo",scenario.pk]))
-        self.assertEqual(TestRun.objects.get().status, "error")
+        run = TestRun.objects.get()
+        self.assertEqual(run.status, "error")
+        report = self.client.get(reverse("studio:run_detail", args=["demo", run.pk]))
+        self.assertContains(report, "Infrastructure error")
+        self.assertContains(report, "Gno CLI unavailable")
+        self.assertNotContains(report, "MISMATCH")

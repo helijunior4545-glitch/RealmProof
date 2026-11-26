@@ -175,7 +175,7 @@ class ConsoleFlowTests(TestCase):
         )
         response = self.client.get(reverse("studio:run_detail", args=[self.org.slug, run.pk]))
         self.assertContains(response, "MISMATCH")
-        self.assertContains(response, "FAILED")
+        self.assertContains(response, "Test failed")
 
     def test_unrelated_tenant_cannot_open_console_run(self):
         self.client.post(reverse("studio:start_run", args=[self.org.slug, self.scenario.pk]))
