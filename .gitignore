@@ -8,3 +8,5 @@ staticfiles/
 .coverage
 htmlcov/
 .realmproof-local-key
+frontend/node_modules/
+studio/static/studio/react/
