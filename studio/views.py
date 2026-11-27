@@ -278,6 +278,8 @@ def complete_local_run(run):
     except (RuntimeError, ValueError, OSError, subprocess.TimeoutExpired) as exc:
         run.status = "error"
         run.execution_status = "local_error"
+        if isinstance(exc, engine.GnoExecutionError):
+            run.evidence = {"source": exc.evidence}
         run.reason = str(exc)[:2400]
         run.finished_at = timezone.now()
         run.save()

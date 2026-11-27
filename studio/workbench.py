@@ -1,5 +1,6 @@
 """Project-scoped workbench backed by the Studio's existing run records."""
 
+import hashlib
 import json
 from threading import BoundedSemaphore
 from uuid import UUID
@@ -13,6 +14,7 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
+from .engine import transfer_files
 from .models import Project, Scenario, TestRun
 from .run_evidence import evidence_document
 from .services import parse_json_object, record_evaluation
@@ -45,6 +47,7 @@ def run_data(run, slug):
         "mismatches": (run.evidence.get("assertions") or {}).get("mismatches", {}),
         "duration": (run.evidence.get("source") or {}).get("duration_ms"),
         "digest": commitment[1] if commitment else None,
+        "console": reverse("studio:workbench_console", args=[slug, run.scenario.project_id, run.pk]),
         "report": reverse("studio:run_detail", args=[slug, run.pk]),
         "download": reverse("studio:download_run_evidence", args=[slug, run.pk]) if commitment else None,
     }
@@ -98,6 +101,31 @@ def home(request, slug, project_id):
 def history(request, slug, project_id):
     _, project = project_access(request, slug, project_id)
     return JsonResponse({"runs": [run_data(run, slug) for run in get_runs(project)[:30]]})
+
+
+@login_required
+@never_cache
+@require_GET
+def console(request, slug, project_id, run_id):
+    _, project = project_access(request, slug, project_id)
+    run = get_object_or_404(get_runs(project), pk=run_id)
+    source = run.evidence.get("source") or {}
+    files = {}
+    local = run.execution_status in {"local_gno", "local_error"} and source.get("type") == "local_gno"
+    if local:
+        try:
+            fixture, harness = transfer_files(run.input_snapshot)
+        except (OSError, ValueError):
+            pass
+        else:
+            for name, content in (("source", fixture), ("harness", harness)):
+                if hashlib.sha256(content.encode()).hexdigest() == source.get(f"{name}_sha256"):
+                    files[name] = content
+    return JsonResponse({
+        "output": source.get("output") if local else None,
+        "exitCode": source.get("exit_code") if local else None,
+        "files": files,
+    })
 
 
 def transfer_draft(scenario, draft):

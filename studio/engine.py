@@ -17,10 +17,13 @@ CASES = (
     ("Negative amount", "invalid", 100, -1, True, "rejected", 100),
 )
 
-def execute(inputs):
-    binary = shutil.which(os.environ.get("REALMPROOF_GNO_BINARY", "gno"))
-    if not binary:
-        raise RuntimeError("Gno CLI is unavailable. Install gno and restart the server.")
+class GnoExecutionError(RuntimeError):
+    def __init__(self, output, evidence):
+        super().__init__("Gno execution did not produce a valid result: " + output[-2000:])
+        self.evidence = evidence
+
+
+def transfer_files(inputs):
     balance, amount, authorized = (inputs.get(k) for k in ("balance", "amount", "authorized"))
     if type(balance) is not int or type(amount) is not int or type(authorized) is not bool:
         raise ValueError("Expected integer balance and amount, and boolean authorized.")
@@ -35,6 +38,15 @@ func TestScenario(t *testing.T) {
     fmt.Println("REALMPROOF_RESULT", status, balance)
 }
 """ % (balance, amount, str(authorized).lower())
+    return source, harness
+
+
+def execute(inputs):
+    binary = shutil.which(os.environ.get("REALMPROOF_GNO_BINARY", "gno"))
+    if not binary:
+        raise RuntimeError("Gno CLI is unavailable. Install gno and restart the server.")
+    source, harness = transfer_files(inputs)
+    balance = inputs["balance"]
     env = os.environ.copy()
     local_root = Path.home() / '.gno' / 'source'
     if not env.get('GNOROOT') and (local_root / 'gnovm' / 'stdlibs').is_dir():
@@ -51,12 +63,13 @@ func TestScenario(t *testing.T) {
                                 text=True, errors="replace")
     output = result.stdout
     matches = re.findall(r"(?m)^\s*REALMPROOF_RESULT (success|rejected) (-?\d+)\s*$", output)
-    if result.returncode or len(matches) != 1:
-        raise RuntimeError("Gno execution did not produce a valid result: " + output[-2000:])
-    status, final = matches[0]
-    return {"status": status, "balance": int(final), "state_changed": int(final) != balance}, {
+    evidence = {
         "type": "local_gno", "verified_on_chain": False, "duration_ms": round((time.monotonic()-started)*1000),
         "source_sha256": hashlib.sha256(source.encode()).hexdigest(),
         "harness_sha256": hashlib.sha256(harness.encode()).hexdigest(), "output": output[-12000:],
         "initial_balance": balance, "exit_code": result.returncode,
     }
+    if result.returncode or len(matches) != 1:
+        raise GnoExecutionError(output, evidence)
+    status, final = matches[0]
+    return {"status": status, "balance": int(final), "state_changed": int(final) != balance}, evidence

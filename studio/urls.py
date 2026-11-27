@@ -18,6 +18,7 @@ urlpatterns = [
     path("organizations/<slug:slug>/projects/<uuid:project_id>/", views.project, name="project"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/", workbench.home, name="workbench"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/runs/", workbench.history, name="workbench_history"),
+    path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/runs/<uuid:run_id>/console/", workbench.console, name="workbench_console"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/scenarios/<uuid:scenario_id>/execute/", workbench.execute, name="workbench_execute"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/suite/", workbench.suite, name="workbench_suite"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/scenarios/new/", views.create_scenario, name="create_scenario"),

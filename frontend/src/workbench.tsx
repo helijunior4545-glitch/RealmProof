@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
+import { Terminal, type TerminalRun } from "./workbench-terminal";
 
 type Fields = Record<string, unknown>;
 type Scenario = { id: string; name: string; family: string; objective: string; inputs: Fields; expected: Fields; execute: string };
-type Run = {
+type Run = TerminalRun & {
   id: string; scenario: string; name: string; status: string; execution: string; started: string;
   reason: string; inputs: Fields; expected: Fields; observed: Fields; mismatches: Fields;
   duration: number | null; digest: string | null; report: string; download: string | null;
@@ -97,7 +98,7 @@ function Configuration({ scenario, writable, busy, arrow, submit }: {
       <div><span className="wb-label">{scenario.family}</span><h2>{scenario.name}</h2><p>{scenario.objective}</p></div>
       <span className="wb-engine">{transfer ? "Local Gno CLI" : "External evidence"}</span>
     </div>
-    <form key={revision} onSubmit={run}>
+    <form key={revision} id="wb-scenario-form" onSubmit={run}>
       {editable ? <div className="wb-form-grid">
         <fieldset className="wb-subpanel" disabled={!writable || busy}>
           <legend>Execution inputs</legend>
@@ -150,7 +151,7 @@ function Assertions({ run }: { run: Run }) {
   </div>;
 }
 
-function Result({ run }: { run: Run }) {
+function Result({ run, showTerminal }: { run: Run; showTerminal: () => void }) {
   const details = useRef<HTMLDialogElement>(null);
   const outcome = run.execution === "local_gno" && (run.observed.status === "success" || run.observed.status === "rejected")
     ? (run.observed.status === "success" ? "Transfer accepted" : "Transfer rejected") : null;
@@ -161,6 +162,7 @@ function Result({ run }: { run: Run }) {
     <Assertions run={run} />
     <div className="wb-actions">
       <button type="button" onClick={() => details.current?.showModal()}>Inspect evidence</button>
+      <button type="button" onClick={showTerminal}>Open in terminal</button>
       <a href={run.report}>Full report</a>
       {run.download && <a href={run.download}>Download JSON</a>}
     </div>
@@ -213,6 +215,11 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const activeRequest = useRef(false);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const terminalDock = useRef<HTMLDivElement>(null);
+  const [terminalOpen, setTerminalOpen] = useState(true);
+  const [terminalExpanded, setTerminalExpanded] = useState(false);
+  const [executing, setExecuting] = useState("");
   const scenario = data.scenarios.find(item => item.id === selection.scenario) ?? data.scenarios[0];
   const result = runs.find(item => item.id === selection.run) ?? runs.find(item => item.scenario === scenario?.id);
   const visible = data.scenarios.filter(item => `${item.name} ${item.family}`.toLowerCase().includes(search.trim().toLowerCase()));
@@ -223,6 +230,27 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
     return () => window.removeEventListener("popstate", restore);
   }, [data, runs]);
 
+  useEffect(() => {
+    function handleShortcut(event: KeyboardEvent) {
+      if (event.defaultPrevented || event.repeat || document.querySelector("dialog[open]")) return;
+      if (event.altKey && event.shiftKey && event.code === "KeyT") {
+        event.preventDefault();
+        setTerminalOpen(value => !value);
+      }
+      if (event.altKey && event.shiftKey && event.code === "KeyF") {
+        event.preventDefault();
+        searchInput.current?.focus();
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && selection.tab === "Configure" && data.canWrite && !busy) {
+        event.preventDefault();
+        const form = document.getElementById("wb-scenario-form");
+        if (form instanceof HTMLFormElement) form.requestSubmit();
+      }
+    }
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [selection.tab, data.canWrite, busy]);
+
   function navigate(tab: Tab, scenarioId = scenario?.id ?? "", runId = "") {
     const url = new URL(window.location.href);
     url.searchParams.set("view", tab.toLowerCase());
@@ -231,12 +259,17 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
     else url.searchParams.delete("run");
     if (url.href !== window.location.href) window.history.pushState(null, "", url);
     setSelection({ tab, scenario: scenarioId, run: runId });
+    setNotice("");
   }
 
   async function request(url: string, payload?: Fields) {
     if (activeRequest.current) return;
     activeRequest.current = true;
     setBusy(true);
+    if (scenario && url === scenario.execute) {
+      setExecuting(scenario.name);
+      setTerminalOpen(true);
+    }
     setError("");
     setNotice("");
     try {
@@ -268,6 +301,7 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
     } finally {
       activeRequest.current = false;
       setBusy(false);
+      setExecuting("");
     }
   }
 
@@ -278,10 +312,18 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
     ["Ledger validation lab", "Check ledger evidence and commitments.", data.ledger, "shield-check"],
   ];
 
+  function showTerminal() {
+    setTerminalOpen(true);
+    requestAnimationFrame(() => {
+      terminalDock.current?.scrollIntoView({ block: "nearest" });
+      terminalDock.current?.querySelector("button")?.focus({ preventScroll: true });
+    });
+  }
+
   return <div className="wb-layout">
     <aside className="wb-panel wb-library" aria-labelledby="wb-library-title">
       <div className="wb-library-header"><div><span className="wb-label">Test library</span><h2 id="wb-library-title">Scenarios</h2></div><span className="wb-count">{data.scenarios.length}</span></div>
-      <label className="wb-search"><span>Filter scenarios</span><input type="search" placeholder="Search by name or category" value={search} onChange={event => setSearch(event.target.value)} /></label>
+      <label className="wb-search"><span>Filter scenarios <kbd>Alt Shift F</kbd></span><input ref={searchInput} type="search" placeholder="Search by name or category" value={search} onChange={event => setSearch(event.target.value)} /></label>
       <div className="wb-scenarios">{visible.map(item =>
         <button key={item.id} type="button" className="wb-scenario" aria-pressed={scenario?.id === item.id}
           onClick={() => navigate("Configure", item.id)}>
@@ -292,7 +334,12 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
       </div>
       {data.canWrite && <a className="wb-new" href={data.create}>+ New scenario</a>}
     </aside>
+    <div className="wb-main">
     <section className="wb-panel wb-console" aria-label="Test console">
+      <header className="wb-context">
+        <span><img alt="" src={data.icons["terminal-window"]} /> Workbench <span aria-hidden="true">/</span> <strong>{scenario?.name ?? "No scenario"}</strong></span>
+        <span><i data-active={!!executing} aria-hidden="true" /> {executing ? "Executing" : "Off-chain workspace"}</span>
+      </header>
       <nav className="wb-tabs" aria-label="Workbench views">{tabs.map(tab =>
         <button key={tab} type="button" aria-pressed={selection.tab === tab}
           onClick={() => navigate(tab, scenario?.id, tab === "Result" ? result?.id : "")}>{tab}</button>)}</nav>
@@ -302,7 +349,7 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
         <div hidden={selection.tab !== "Configure"}>{scenario ?
           <Configuration key={scenario.id} scenario={scenario} writable={data.canWrite} busy={busy} arrow={data.icons["arrow-right"]} submit={request} /> :
           <p className="wb-empty">Create a scenario to start testing.</p>}</div>
-        {selection.tab === "Result" && (result ? <Result key={result.id} run={result} /> :
+        {selection.tab === "Result" && (result ? <Result key={result.id} run={result} showTerminal={showTerminal} /> :
           <p className="wb-empty">Run the selected scenario to see its verdict and evidence.</p>)}
         {selection.tab === "Compare" && <Compare runs={runs} />}
         {selection.tab === "History" && <>
@@ -324,6 +371,14 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
         </>}
       </div>
     </section>
+    <div ref={terminalDock}>
+      <Terminal key={result?.id ?? "empty"} run={result} execution={executing} open={terminalOpen} expanded={terminalExpanded}
+        icon={data.icons["terminal-window"]} onToggle={() => setTerminalOpen(value => !value)} onExpand={() => setTerminalExpanded(value => !value)} />
+    </div>
+    <div className="wb-statusbar"><span>{data.canWrite ? "Editor access" : "Read only"}</span><span>{runs.length} recent runs</span>
+      {selection.tab === "Configure" && data.canWrite && <span>Run scenario <kbd>Ctrl / ⌘ Enter</kbd></span>}
+    </div>
+    </div>
   </div>;
 }
 
