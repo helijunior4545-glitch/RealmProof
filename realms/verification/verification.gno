@@ -7,10 +7,9 @@ import "strconv"
 // realm does not claim that the referenced external assertion is true.
 var submissionCount int
 var submitted = make(map[string]bool)
-var submissions = make(map[int]string)
 
-// RegisterEvidence rejects empty or repeated evidence digests.
-func RegisterEvidence(hash string) int {
+// RegisterEvidence rejects malformed or repeated evidence digests.
+func RegisterEvidence(_ realm, hash string) int {
     if len(hash) != 64 {
         panic("evidence hash must contain 64 hexadecimal characters")
     }
@@ -24,7 +23,6 @@ func RegisterEvidence(hash string) int {
     }
     submissionCount++
     submitted[hash] = true
-    submissions[submissionCount] = hash
     return submissionCount
 }
 
@@ -37,7 +35,14 @@ func HasEvidence(hash string) bool {
 }
 
 func Render(path string) string {
-    return "# RealmProof Evidence Registry\n\n" +
+    heading := "# RealmProof Evidence Registry\n\n"
+    if path != "" {
+        if !HasEvidence(path) {
+            return heading + "Evidence digest not found.\n"
+        }
+        return heading + "Registered evidence digest: `" + path + "`\n"
+    }
+    return heading +
         "Registered evidence hashes: " + strconv.Itoa(submissionCount) + "\n\n" +
         "This registry records evidence commitments but does not validate external test results."
 }

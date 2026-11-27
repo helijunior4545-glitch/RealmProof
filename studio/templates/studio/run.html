@@ -126,6 +126,18 @@
       {% endif %}
     </aside>
   </div>
+  {% if commitment_digest %}
+    <section class="rr-card rr-panel rr-raw">
+      <h2>Evidence commitment</h2>
+      <p class="rr-help">This SHA-256 digest identifies the downloadable report. Register it with the Gno evidence registry to timestamp the commitment.</p>
+      <div class="rr-hash">
+        <code id="rr-commitment-hash">{{ commitment_digest }}</code>
+        <button type="button" data-copy-run-hash="rr-commitment-hash" hidden>Copy evidence digest</button>
+      </div>
+      <a class="button secondary" href="{% url 'studio:download_run_evidence' member.organization.slug run.id %}">Download evidence JSON</a>
+      <p class="rr-help" data-run-copy-status role="status"></p>
+    </section>
+  {% endif %}
   <details class="rr-card rr-panel rr-raw">
     <summary>Raw technical evidence</summary>
     <div class="rr-raw-grid">
@@ -135,6 +147,6 @@
       <div><h3>Evidence JSON</h3><pre>{{ evidence_pretty }}</pre></div>
     </div>
   </details>
-  <p class="rr-boundary">This console does not currently submit transactions to Gno.land. The verdict reflects the recorded assertions.</p>
+  <p class="rr-boundary">This console does not currently submit transactions to Gno.land. A registered digest commits to the report bytes. The verdict reflects the recorded assertions.</p>
 </div>
 {% endblock %}

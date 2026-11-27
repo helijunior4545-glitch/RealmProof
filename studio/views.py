@@ -5,12 +5,13 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction, connection
 from django.db.models import Count, Q
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 from .forms import ProjectForm, ScenarioForm
 from .models import AuditEvent, Membership, Organization, Project, Scenario, TestRun
 from .services import parse_json_object, record_evaluation, equal_json
+from .run_evidence import evidence_document
 from . import engine
 from django.utils import timezone
 import subprocess
@@ -173,11 +174,13 @@ def run_detail(request, slug, run_id):
             "field": labels.get(key, key) if transfer else key,
             "expected": expected, "actual": actual, "present": present, "matches": matches,
         })
+    commitment = evidence_document(run)
     outcome = run.observed.get("status")
     operation = outcomes.get(outcome) if transfer and run.execution_status == "local_gno" and isinstance(outcome, str) else None
     return render(request, "studio/run.html", {
         "member": member, "run": run, "comparison": comparison,
         "transfer": transfer, "operation": operation,
+        "commitment_digest": commitment[1] if commitment else None,
         "matched_count": sum(item["matches"] for item in comparison),
         "evidence_source": run.evidence.get("source") or {},
         "input_pretty": json.dumps(run.input_snapshot, indent=2),
@@ -185,6 +188,21 @@ def run_detail(request, slug, run_id):
         "observed_pretty": json.dumps(run.observed, indent=2),
         "evidence_pretty": json.dumps(run.evidence, indent=2),
     })
+
+
+@login_required
+@require_GET
+def download_run_evidence(request, slug, run_id):
+    member = membership_for(request, slug)
+    run = get_object_or_404(TestRun, pk=run_id, organization=member.organization)
+    commitment = evidence_document(run)
+    if commitment is None:
+        raise Http404("No completed local Gno evidence to export.")
+    payload, digest = commitment
+    response = HttpResponse(payload, content_type="application/json")
+    response["Content-Disposition"] = f'attachment; filename="realmproof-{digest}.json"'
+    response["Cache-Control"] = "private, no-store"
+    return response
 
 
 @login_required

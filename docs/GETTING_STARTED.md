@@ -22,7 +22,7 @@ For Docker Compose, set `POSTGRES_PASSWORD` and `DJANGO_SECRET_KEY` in your shel
 
 ## Gno realm
 
-`realms/verification` contains an independently deployable evidence-hash registry written in Gno. It records digest commitments, **not the correctness of external evidence**. Install the official Gno tooling, validate with `gno test ./realms/verification`, and deploy with the official `gnokey` procedure for the target testnet. Check current chain IDs, gas requirements, and realm namespace ownership in the official documentation. No deployment address is claimed here.
+`realms/verification` contains an independently deployable evidence-hash registry written in Gno. It records digest commitments, **not the correctness of external evidence**. Install the official Gno tooling, then run `gno test -v .` from `realms/verification`. Follow the [testnet evidence guide](TESTNET_EVIDENCE.md) to download a report, publish the realm, and verify its digest. No deployment address is claimed here.
 
 ## Current limitations
 
