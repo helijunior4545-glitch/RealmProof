@@ -39,7 +39,7 @@ Open **Open Project Studio** from the landing page. Select **Insufficient balanc
 
 The transfer runner executes bundled Gno fixtures off-chain. Each run records the inputs, expectations, observed values, and source fingerprints used to interpret the result. The SHA-256 digest applies to the bytes of the individual evidence report.
 
-The **Network** tab reads Onyx RPC data for transactions signed and submitted outside RealmProof. Actor labels are supplied by the user. The RPC results establish what the queried node reported. The separate Gno registry under `realms/verification/` records report digests and rejects duplicates. Public activation of the registry and an end-to-end Onyx commitment lookup are pending confirmation.
+The **Network** tab reads Onyx RPC data for transactions signed and submitted outside RealmProof. Actor labels are supplied by the user. The RPC results establish what the queried node reported. The separate Gno registry under `realms/verification/` records report digests and rejects duplicates. The registry renders publicly on Onyx. A registered report digest lookup is pending confirmation. [Onyx evidence registry](https://onyx.testnets.gno.land/r/g16e6lg37nhkznu9vtzqka6amks6esgkaxe6x6vt/verification)
 
 ## Project layout
 
