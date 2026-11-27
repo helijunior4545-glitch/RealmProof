@@ -104,6 +104,19 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt -r requirements-browser.txt
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.3"
+          cache: false
+      - name: Install pinned Gno runtime
+        run: |
+          git clone --depth 1 --branch v1.8.0 https://github.com/gnolang/gno.git "$RUNNER_TEMP/gno"
+          cd "$RUNNER_TEMP/gno"
+          go build -o "$RUNNER_TEMP/gno-bin/gno" ./gnovm/cmd/gno
+          echo "$RUNNER_TEMP/gno-bin" >> "$GITHUB_PATH"
+          echo "GNOROOT=$RUNNER_TEMP/gno" >> "$GITHUB_ENV"
+      - name: Build static source parser
+        run: go build -o "$RUNNER_TEMP/gno-bin/realmproof-source-parser" tools/sourceparser/main.go
       - run: python -m playwright install --with-deps chromium
       - run: python manage.py setup_local_demo
       - name: Browser acceptance
