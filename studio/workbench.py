@@ -15,6 +15,7 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
+from . import network_experiments
 from .engine import stream_execution, transfer_files
 from .models import Project, Scenario, TestRun
 from .run_evidence import evidence_document
@@ -23,6 +24,7 @@ from .suites import queue_transfer_suite
 from .views import WRITE_ROLES, audit, execute_local_scenario, membership_for, record_local_error
 
 run_slots = BoundedSemaphore(2)
+network_slots = BoundedSemaphore(2)
 limit = 10**12
 
 
@@ -84,6 +86,7 @@ def home(request, slug, project_id):
         "suite": reverse("studio:workbench_suite", args=[slug, project.pk]),
         "catalog": reverse("studio:native_catalog", args=[slug]),
         "universal": reverse("studio:universal", args=[slug]),
+        "experiment": reverse("studio:workbench_experiment", args=[slug, project.pk]),
         "network": reverse("studio:network", args=[slug]),
         "ledger": reverse("studio:ledger_lab", args=[slug]),
         "icons": {name: static(f"studio/phosphor/{name}.svg") for name in (
@@ -234,3 +237,20 @@ def suite(request, slug, project_id):
     member, project = project_access(request, slug, project_id, write=True)
     count = queue_transfer_suite(member, request.user, project)
     return JsonResponse({"queued": count, "runs": [run_data(run, slug) for run in get_runs(project)[:30]]})
+
+@login_required
+@never_cache
+@require_POST
+def experiment(request, slug, project_id):
+    project_access(request, slug, project_id)
+    try:
+        payload = parse_json_object(request.body.decode())
+        steps = network_experiments.validate_steps(payload.get("steps"))
+    except (UnicodeError, ValueError) as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    if not network_slots.acquire(blocking=False):
+        return JsonResponse({"error": "The network verifier is busy. Try again in a moment."}, status=429)
+    try:
+        return JsonResponse(network_experiments.evaluate(steps))
+    finally:
+        network_slots.release()

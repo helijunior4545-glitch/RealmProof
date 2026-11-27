@@ -194,3 +194,14 @@
 .wb-output-line[data-tone="error"] { color: #ffaaa8; }
 .wb-output-line[data-tone="run"] { color: #c0b7ff; }
 .wb-terminal-toolbar button:disabled { cursor: default; }
+.wb-network-form, .wb-network-result { margin-top: 1rem; }
+.wb-network-step {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+  align-items: end; gap: .65rem; margin-bottom: .75rem;
+}
+.wb-network-step label + label { margin-top: 0; }
+.wb-network-step button { justify-self: start; }
+.wb-network-result ol { padding-inline-start: 1.4rem; }
+.wb-network-result li { padding-block: .45rem; }
+.wb-network-result summary { cursor: pointer; overflow-wrap: anywhere; }
+.wb-network-result .wb-terminal-buffer { margin-top: .55rem; }

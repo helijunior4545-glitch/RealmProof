@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { NetworkExperiment } from "./workbench-network";
 import { createRoot } from "react-dom/client";
 import { Terminal, type TerminalRun } from "./workbench-terminal";
 
@@ -9,7 +10,7 @@ type Run = TerminalRun & {
   reason: string; inputs: Fields; expected: Fields; observed: Fields; mismatches: Fields;
   duration: number | null; digest: string | null; report: string; download: string | null;
 };
-type WorkbenchData = { scenarios: Scenario[]; runs: Run[]; canWrite: boolean; history: string; suite: string; catalog: string; universal: string; create: string; network: string; ledger: string; icons: Record<string, string> };
+type WorkbenchData = { scenarios: Scenario[]; runs: Run[]; canWrite: boolean; history: string; suite: string; catalog: string; universal: string; create: string; experiment: string; network: string; ledger: string; icons: Record<string, string> };
 type ResponseData = { error?: string; run?: Run; runs?: Run[]; queued?: number };
 type LiveEvent = ResponseData & { stage?: string; output?: string };
 
@@ -40,7 +41,7 @@ async function readEvents(response: Response, onEvent: (event: LiveEvent) => voi
   }
 }
 
-const tabs = ["Configure", "Result", "Compare", "History", "Suites"] as const;
+const tabs = ["Configure", "Result", "Compare", "History", "Suites", "Network"] as const;
 type Tab = typeof tabs[number];
 type Selection = { tab: Tab; scenario: string; run: string };
 
@@ -405,6 +406,7 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
             <button type="button" onClick={() => navigate("Result", run.scenario, run.id)}><span><strong>{run.name}</strong><small>{runTime(run)}</small></span><Verdict run={run} /><img className="wb-arrow" alt="" src={data.icons["arrow-right"]} /></button>
           </li>)}</ul> : <p className="wb-empty">No runs recorded yet.</p>}
         </>}
+        <div hidden={selection.tab !== "Network"}><NetworkExperiment endpoint={data.experiment} csrf={csrf} /></div>
         {selection.tab === "Suites" && <>
           <div className="wb-panel-title"><div><span className="wb-label">Batch execution</span><h2>Suites and tools</h2><p>Queue a regression suite or open a specialized verification tool.</p></div></div>
           <div className="wb-subpanel wb-suite"><div><h3>Transfer regression</h3><p>Queue the saved transfer scenarios for the background worker. Review results in History.</p></div>
