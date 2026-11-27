@@ -119,8 +119,8 @@ export function Terminal({ run, execution, liveOutput, liveStage, onToggle, onEx
         {run && <span className="wb-verdict" data-status={run.status}>Assertions {run.status}</span>}
       </div>}
       {execution && <div className="wb-terminal-meta wb-live" role="status"><i aria-hidden="true" /><strong>{liveStage}</strong><span>{execution}</span></div>}
-      {content ? <pre ref={buffer} className="wb-terminal-buffer" data-expanded={expanded} tabIndex={0} aria-label={filenames[selectedView]}>{selectedView === "Output"
-        ? outputLines?.map((line, index) => <span key={index} className="wb-output-line" data-tone={outputTone(line)}>{line}{index < outputLines.length - 1 ? "\n" : ""}</span>)
+      {content ? <pre ref={buffer} className="wb-terminal-buffer" data-view={selectedView} data-expanded={expanded} tabIndex={0} aria-label={filenames[selectedView]}>{selectedView === "Output"
+        ? outputLines?.map((line, index) => <span key={index} className="wb-output-line" data-tone={outputTone(line)}>{line}</span>)
         : content}</pre>
         : <p className="wb-terminal-empty" role="status">{message}{run?.status === "error" && !execution && <> <a href={run.report}>Full report</a></>}</p>}
     </div>}

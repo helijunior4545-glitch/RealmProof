@@ -166,19 +166,24 @@ function Configuration({ scenario, writable, busy, arrow, submit }: {
 function Assertions({ run }: { run: Run }) {
   const keys = Object.keys(run.expected);
   if (!keys.length) return <p>This run has no saved assertions.</p>;
-  return <div className="wb-table-wrap" tabIndex={0} role="region" aria-label="Assertion results">
+  const evaluated = run.status === "passed" || run.status === "failed";
+  const matched = keys.filter(key => !Object.hasOwn(run.mismatches, key)).length;
+  return <section className="wb-assertions" aria-labelledby="wb-assertions-title">
+    <h3 id="wb-assertions-title">Assertions {evaluated && <span>{matched}/{keys.length} matched</span>}</h3>
+    <div className="wb-table-wrap" tabIndex={0} role="region" aria-label="Assertion results">
     <table><thead><tr><th>Assertion</th><th>Expected</th><th>Observed</th><th>Result</th></tr></thead>
       <tbody>{keys.map(key => {
         const observed = run.observed[key];
         const mismatch = Object.hasOwn(run.mismatches, key);
         return <tr key={key}><th scope="row">{fieldNames[key] ?? key}</th>
-          <td>{display(run.expected[key])}</td><td>{display(observed)}</td>
+          <td><code>{display(run.expected[key])}</code></td><td><code>{display(observed)}</code></td>
           <td>{(run.status === "pending" || run.status === "error") ? "—" :
-            <span className={mismatch ? "wb-negative" : "wb-positive"}>{mismatch ? "Mismatch" : "Match"}</span>}</td>
+            <span className={mismatch ? "wb-negative" : "wb-positive"}><i aria-hidden="true">{mismatch ? "×" : "✓"}</i>{mismatch ? "Mismatch" : "Match"}</span>}</td>
         </tr>;
       })}</tbody>
     </table>
-  </div>;
+    </div>
+  </section>;
 }
 
 function Result({ run, showTerminal }: { run: Run; showTerminal: () => void }) {
@@ -186,9 +191,20 @@ function Result({ run, showTerminal }: { run: Run; showTerminal: () => void }) {
   const outcome = run.execution === "local_gno" && (run.observed.status === "success" || run.observed.status === "rejected")
     ? (run.observed.status === "success" ? "Transfer accepted" : "Transfer rejected") : null;
   return <>
-    <div className="wb-panel-title"><div><span className="wb-label">Execution report</span><h2>{run.name}</h2><p>{runTime(run)}</p></div><Verdict run={run} /></div>
-    <div className="wb-result-meta"><span>{outcome ?? executionNames[run.execution] ?? run.execution.replaceAll("_", " ")}</span><span>{run.duration === null ? "—" : `${run.duration} ms`}</span></div>
-    {run.reason && <p>{run.reason}</p>}
+    <div className="wb-panel-title wb-report-header">
+      <div><span className="wb-label">Execution report</span><h2>{run.name}</h2>
+        <p>{runTime(run)}{run.duration !== null && <> · {run.duration} ms</>}</p>
+      </div>
+      <div className="wb-result-badges">
+        <span className="wb-outcome" data-outcome={outcome ? String(run.observed.status) : undefined}>
+          {outcome ?? executionNames[run.execution] ?? run.execution.replaceAll("_", " ")}
+        </span>
+        <span className="wb-verdict" data-status={run.status}>
+          {run.status === "passed" ? "Assertions passed" : run.status === "failed" ? "Assertions failed" : statusNames[run.status] ?? run.status}
+        </span>
+      </div>
+    </div>
+    {run.reason && run.status !== "passed" && <p>{run.reason}</p>}
     <Assertions run={run} />
     <div className="wb-actions">
       <button type="button" onClick={() => details.current?.showModal()}>Inspect evidence</button>
@@ -368,7 +384,7 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
 
   return <div className="wb-layout">
     <aside className="wb-panel wb-library" aria-labelledby="wb-library-title">
-      <div className="wb-library-header"><div><span className="wb-label">Test library</span><h2 id="wb-library-title">Scenarios</h2></div><span className="wb-count">{data.scenarios.length}</span></div>
+      <div className="wb-library-header"><div><h2 id="wb-library-title">Scenario library</h2></div><span className="wb-count">{data.scenarios.length}</span></div>
       <label className="wb-search"><span>Filter scenarios <kbd>Alt Shift F</kbd></span><input ref={searchInput} type="search" placeholder="Search by name or category" value={search} onChange={event => setSearch(event.target.value)} /></label>
       <div className="wb-scenarios">{visible.map(item =>
         <button key={item.id} type="button" className="wb-scenario" aria-pressed={scenario?.id === item.id}
