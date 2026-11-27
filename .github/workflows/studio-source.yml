@@ -1,0 +1,75 @@
+name: LojasNova Studio source
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  statuses: write
+
+jobs:
+  publish-source:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm install --no-package-lock --no-audit --no-fund
+          npm run build
+
+      - name: Package source snapshot
+        run: |
+          set -euo pipefail
+          stage="$RUNNER_TEMP/studio-source"
+          snapshot="$RUNNER_TEMP/studio-source-snapshot"
+          mkdir -p "$stage" "$snapshot"
+
+          git archive "$GITHUB_SHA" -- . \
+            ':(exclude,icase,glob)**/.env*' \
+            ':(exclude,icase,glob)**/.github' \
+            ':(exclude,icase,glob)**/.github/**' |
+            tar -x -C "$snapshot"
+          install -D -m 0644 studio/static/studio/react/landing.js \
+            "$snapshot/studio/static/studio/react/landing.js"
+          (cd "$snapshot" && find . -type f -print0 | tar --null -T - -czf "$stage/studio-source.tar.gz")
+          printf 'FROM scratch\nCOPY studio-source.tar.gz /studio-source.tar.gz\n' > "$stage/Dockerfile"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Publish source image to GHCR
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/${GITHUB_REPOSITORY,,}-studio-source"
+          stage="$RUNNER_TEMP/studio-source"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker buildx build --push --provenance=false --sbom=false \
+            --tag "$image:$GITHUB_SHA" --metadata-file "$stage/image.json" "$stage"
+          digest=$(jq -er '."containerimage.digest" | select(test("^sha256:[a-f0-9]{64}$"))' "$stage/image.json")
+          printf 'url=https://%s@%s\n' "$image" "$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Confirm artifact for the commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_URL: ${{ steps.publish.outputs.url }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            --raw-field state=success \
+            --raw-field context=lojasnova/studio-source \
+            --raw-field description="RealmProof source image published" \
+            --raw-field target_url="$SOURCE_URL" --silent
