@@ -20,12 +20,12 @@
 .lp-header { border-block-end: 1px solid var(--stroke); }
 .lp-header-inner, .lp-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 68px; }
 .lp-brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 750; letter-spacing: -.035em; }
-.lp-brand .lp-icon { color: var(--iris); width: 24px; height: 24px; }
+.lp-brand img { display: block; flex-shrink: 0; }
 .lp nav { display: flex; gap: clamp(12px, 3vw, 33px); font-size: 14px; }
 .lp nav a { display: flex; align-items: center; gap: 5px; transition: color 160ms; }
 .lp nav a:hover { color: var(--cyan); }
 .lp-icon { display: inline-block; flex: 0 0 auto; width: 1.15em; height: 1.15em; background: currentColor; mask: var(--icon) center / contain no-repeat; }
-.lp-brand-icon, .lp-shield { --icon: url("phosphor/shield-check.svg"); }
+.lp-shield { --icon: url("phosphor/shield-check.svg"); }
 .lp-file { --icon: url("phosphor/file-code.svg"); }
 .lp-terminal { --icon: url("phosphor/terminal-window.svg"); }
 .lp-warning { --icon: url("phosphor/shield-warning.svg"); }

@@ -26,7 +26,7 @@
   <div class="app-shell">
     <aside class="sidebar" aria-label="Main navigation">
       <a class="brand" href="{% url 'studio:public_demo' %}" aria-label="RealmProof home">
-        <span class="brand-icon" aria-hidden="true"><span class="factory-icon factory-reactor" aria-hidden="true"></span></span>
+        <span class="brand-icon">{% include "studio/brand_mark.html" %}</span>
         <span class="brand-name">realm<span>proof</span><small>CONSOLE</small></span>
       </a>
       <div class="nav-group-label">PLATFORM</div>
