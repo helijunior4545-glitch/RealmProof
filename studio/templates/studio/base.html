@@ -1,4 +1,4 @@
-{% load static i18n react_frontend %}
+{% load static i18n react_frontend studio_navigation %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -34,6 +34,10 @@
       {% if user.is_authenticated %}<a class="nav-link chroma-pink" {% if request.resolver_match.url_name == 'reference_demo' %}aria-current="page"{% endif %} href="{% url 'studio:reference_demo' %}"><span class="factory-icon factory-scanner" aria-hidden="true"></span> Reference demo</a>{% endif %}
       
       {% if user.is_authenticated %}<a class="nav-link chroma-violet" {% if request.resolver_match.url_name == 'dashboard' %}aria-current="page"{% endif %} href="{% url 'studio:dashboard' %}"><span class="factory-icon factory-reactor" aria-hidden="true"></span> My workspaces</a>{% endif %}
+      {% workbench_url as test_workbench %}
+      {% if test_workbench %}
+      <a class="nav-link chroma-cyan" {% if request.resolver_match.url_name == 'workbench' %}aria-current="page"{% endif %} href="{{ test_workbench }}"><span class="factory-icon factory-engine" aria-hidden="true"></span> Test Workbench</a>
+      {% endif %}
       {% if member %}
       <div class="nav-group-label nav-group-gap">WORKSPACE / {{ member.organization.name|truncatechars:16 }}</div>
       <a class="nav-link chroma-green" {% if request.resolver_match.url_name == 'organization' %}aria-current="page"{% endif %} href="{% url 'studio:organization' member.organization.slug %}"><span class="factory-icon factory-vault" aria-hidden="true"></span> {{ member.organization.name|truncatechars:19 }}</a>
