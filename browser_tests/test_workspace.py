@@ -122,6 +122,23 @@ class BrowserTests(unittest.TestCase):
         expect(page.get_by_role("heading", name="Test Workbench", exact=True)).to_be_visible()
 
     @unittest.skipUnless(shutil.which(os.getenv("REALMPROOF_GNO_BINARY", "gno")), "requires the Gno CLI")
+    def test_guest_guided_transfer_comparison(self):
+        page = self.context().new_page()
+        page.goto(BASE + "/studio/")
+        page.get_by_role("button", name="Open Project Studio").first.click()
+        expect(page.get_by_role("button", name="Insufficient balance")).to_have_attribute("aria-pressed", "true")
+        page.get_by_role("button", name="Run in Gno", exact=True).click()
+        expect(page.get_by_text("Transfer rejected", exact=True)).to_be_visible(timeout=25000)
+        expect(page.get_by_role("row", name="Remaining balance")).to_contain_text("100")
+        page.get_by_role("button", name="Try a valid transfer").click()
+        expect(page.get_by_role("heading", name="Compare runs")).to_be_visible(timeout=25000)
+        balance = page.get_by_role("row", name="Remaining balance")
+        expect(balance.get_by_role("cell").nth(0)).to_have_text("100")
+        expect(balance.get_by_role("cell").nth(1)).to_have_text("75")
+        expect(page.get_by_role("link", name="Baseline evidence")).to_be_visible()
+        expect(page.get_by_role("link", name="Candidate evidence")).to_be_visible()
+
+    @unittest.skipUnless(shutil.which(os.getenv("REALMPROOF_GNO_BINARY", "gno")), "requires the Gno CLI")
     def test_workbench_execution_and_comparison(self):
         page = self.context(viewport={"width": 1440, "height": 920}).new_page()
         page.goto(BASE + "/studio/")

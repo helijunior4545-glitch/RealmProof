@@ -272,3 +272,19 @@
   user-select: none;
 }
 .wb-output-line[data-tone="gas"] { color: var(--wb-violet); }
+
+.wb-jury-guide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .65rem 1rem;
+  margin-bottom: 1rem;
+  border-inline-start: 3px solid #77d6e6;
+}
+.wb-jury-guide h2 { margin: 0 0 .25rem; font-size: 1rem; }
+.wb-jury-guide p { margin: 0; }
+.wb-jury-progress { grid-column: 1 / -1; font-size: .85rem; }
+@media (max-width: 600px) {
+  .wb-jury-guide { grid-template-columns: minmax(0, 1fr); }
+  .wb-jury-guide .wb-primary { justify-self: start; }
+}

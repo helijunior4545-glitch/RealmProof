@@ -10,7 +10,7 @@ type Run = TerminalRun & {
   reason: string; inputs: Fields; expected: Fields; observed: Fields; mismatches: Fields;
   duration: number | null; digest: string | null; report: string; download: string | null;
 };
-type WorkbenchData = { scenarios: Scenario[]; runs: Run[]; canWrite: boolean; history: string; suite: string; catalog: string; universal: string; create: string; experiment: string; network: string; ledger: string; icons: Record<string, string> };
+type WorkbenchData = { scenarios: Scenario[]; runs: Run[]; canWrite: boolean; guidedDemo?: boolean; history: string; suite: string; catalog: string; universal: string; create: string; experiment: string; network: string; ledger: string; icons: Record<string, string> };
 type ResponseData = { error?: string; run?: Run; runs?: Run[]; queued?: number };
 type LiveEvent = ResponseData & { stage?: string; output?: string };
 
@@ -56,12 +56,18 @@ function display(value: unknown): string {
   return String(value);
 }
 
+function demoScenario(data: WorkbenchData, name: string) {
+  return data.guidedDemo && data.canWrite
+    ? data.scenarios.find(item => item.name === name && item.inputs.engine === "transfer")
+    : undefined;
+}
+
 function readSelection(data: WorkbenchData): Selection {
   const params = new URLSearchParams(window.location.search);
   const run = data.runs.find(item => item.id === params.get("run"));
   return {
     tab: tabs.find(item => item.toLowerCase() === params.get("view")) ?? "Configure",
-    scenario: params.get("scenario") ?? run?.scenario ?? data.scenarios[0]?.id ?? "",
+    scenario: params.get("scenario") ?? run?.scenario ?? demoScenario(data, "Insufficient balance")?.id ?? data.scenarios[0]?.id ?? "",
     run: run?.id ?? "",
   };
 }
@@ -223,10 +229,10 @@ function Result({ run, showTerminal }: { run: Run; showTerminal: () => void }) {
   </>;
 }
 
-function Compare({ runs }: { runs: Run[] }) {
+function Compare({ runs, pair }: { runs: Run[]; pair?: [string, string] }) {
   const comparable = runs.filter(run => run.status !== "error" && run.status !== "pending" && Object.keys(run.observed).length);
-  const [baseline, setBaseline] = useState("");
-  const [candidate, setCandidate] = useState("");
+  const [baseline, setBaseline] = useState(pair?.[0] ?? "");
+  const [candidate, setCandidate] = useState(pair?.[1] ?? "");
   const first = comparable.find(run => run.id === baseline) ?? comparable[1];
   const second = comparable.find(run => run.id === candidate) ?? comparable[0];
   const keys = first && second ? [...new Set([...Object.keys(first.observed), ...Object.keys(second.observed)])] : [];
@@ -239,6 +245,10 @@ function Compare({ runs }: { runs: Run[] }) {
           <select value={run.id} onChange={event => select(event.target.value)}>{comparable.map(item =>
             <option key={item.id} value={item.id}>{item.name} · {runTime(item)} · {item.id.slice(0, 8)}</option>)}</select>
         </label>)}
+      </div>
+      <div className="wb-actions">
+        <a href={first.report}>Baseline evidence</a>
+        <a href={second.report}>Candidate evidence</a>
       </div>
       {first.id === second.id ? <p className="wb-empty">Choose two different runs.</p> : <div className="wb-table-wrap" tabIndex={0} role="region" aria-label="Difference between runs">
         <table><thead><tr><th>Observed field</th><th>Baseline <Verdict run={first} /></th><th>Candidate <Verdict run={second} /></th><th>Difference</th></tr></thead>
@@ -263,14 +273,25 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
   const activeRequest = useRef(false);
   const searchInput = useRef<HTMLInputElement>(null);
   const terminalDock = useRef<HTMLDivElement>(null);
-  const [terminalOpen, setTerminalOpen] = useState(true);
+  const [terminalOpen, setTerminalOpen] = useState(!data.guidedDemo);
   const [terminalExpanded, setTerminalExpanded] = useState(false);
   const [executing, setExecuting] = useState("");
   const [liveOutput, setLiveOutput] = useState("");
   const [liveStage, setLiveStage] = useState("");
+  const [demoPair, setDemoPair] = useState<[string, string]>();
+  const insufficient = demoScenario(data, "Insufficient balance");
+  const valid = demoScenario(data, "Valid transfer");
 
   const scenario = data.scenarios.find(item => item.id === selection.scenario) ?? data.scenarios[0];
   const result = runs.find(item => item.id === selection.run) ?? runs.find(item => item.scenario === scenario?.id);
+  const baseline = insufficient && runs.find(item =>
+    item.scenario === insufficient?.id && item.execution === "local_gno" &&
+    item.status === "passed" && item.observed.status === "rejected" &&
+    item.inputs.balance === insufficient.inputs.balance &&
+    item.inputs.amount === insufficient.inputs.amount &&
+    item.inputs.authorized === insufficient.inputs.authorized
+  );
+  const showGuide = !!(insufficient && valid && (selection.tab === "Configure" || selection.tab === "Result"));
   const visible = data.scenarios.filter(item => `${item.name} ${item.family}`.toLowerCase().includes(search.trim().toLowerCase()));
 
   useEffect(() => {
@@ -311,18 +332,20 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
     setNotice("");
   }
 
-  async function request(url: string, payload?: Fields) {
+  async function request(url: string, payload?: Fields, guide?: { baseline?: string }) {
     if (activeRequest.current) return;
     activeRequest.current = true;
     setBusy(true);
-    const runRequest = scenario && url === scenario.execute;
-    const live = runRequest && scenario.inputs.engine === "transfer";
+    const runRequest = data.scenarios.find(item => item.execute === url);
+    const live = runRequest?.inputs.engine === "transfer";
     if (runRequest) {
       setLiveOutput("");
       setLiveStage(live ? "Connecting to Gno runner" : "Evaluating supplied evidence");
-      setExecuting(scenario.name);
-      setTerminalOpen(true);
-      requestAnimationFrame(() => terminalDock.current?.scrollIntoView({ block: "nearest" }));
+      setExecuting(runRequest.name);
+      if (!guide) {
+        setTerminalOpen(true);
+        requestAnimationFrame(() => terminalDock.current?.scrollIntoView({ block: "nearest" }));
+      }
     }
     setError("");
     setNotice("");
@@ -350,7 +373,12 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
       const run = body.run;
       if (run) {
         setRuns(current => [run, ...current.filter(item => item.id !== run.id)]);
-        navigate("Result", run.scenario, run.id);
+        if (guide?.baseline && run.execution === "local_gno" && run.status === "passed" && run.observed.status === "success") {
+          setDemoPair([guide.baseline, run.id]);
+          navigate("Compare", run.scenario, run.id);
+        } else {
+          navigate("Result", run.scenario, run.id);
+        }
         setNotice("Run recorded.");
       }
       if (body.runs) {
@@ -408,12 +436,25 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
       <div className="wb-console-body" aria-busy={busy}>
         {error && <p role="alert" className="wb-error">{error}</p>}
         <div role="status" className={notice ? "wb-notice" : "wb-silent"}>{notice}</div>
+        {showGuide && insufficient && valid && <section className="wb-subpanel wb-jury-guide" aria-labelledby="wb-jury-title">
+          <div>
+            <h2 id="wb-jury-title">{baseline ? "Compare a valid transfer" : "Run the insufficient balance scenario"}</h2>
+            <p>{baseline
+              ? "Run a valid transfer in Gno and compare it with the recorded rejection."
+              : "The contract should reject the saved transfer and preserve the balance."}</p>
+          </div>
+          <button type="button" className="wb-primary" disabled={busy}
+            onClick={() => void request(baseline ? valid.execute : insufficient.execute, {}, { baseline: baseline?.id })}>
+            {busy ? "Running…" : baseline ? "Try a valid transfer" : "Run in Gno"}
+          </button>
+          {executing && liveStage && <p className="wb-jury-progress" role="status">{liveStage}</p>}
+        </section>}
         <div hidden={selection.tab !== "Configure"}>{scenario ?
           <Configuration key={scenario.id} scenario={scenario} writable={data.canWrite} busy={busy} arrow={data.icons["arrow-right"]} submit={request} /> :
           <p className="wb-empty">Create a scenario to start testing.</p>}</div>
         {selection.tab === "Result" && (result ? <Result key={result.id} run={result} showTerminal={showTerminal} /> :
           <p className="wb-empty">Run the selected scenario to see its verdict and evidence.</p>)}
-        {selection.tab === "Compare" && <Compare runs={runs} />}
+        {selection.tab === "Compare" && <Compare key={demoPair?.join(":")} runs={runs} pair={demoPair} />}
         {selection.tab === "History" && <>
           <div className="wb-panel-title"><div><span className="wb-label">Recorded evidence</span><h2>Run history</h2><p>Recent executions in this project.</p></div>
             <button type="button" disabled={busy} onClick={() => void request(data.history)}>Refresh runs</button>

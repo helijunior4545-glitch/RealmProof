@@ -82,6 +82,7 @@ def home(request, slug, project_id):
         ],
         "runs": [run_data(run, slug) for run in runs],
         "canWrite": member.role in WRITE_ROLES,
+        "guidedDemo": bool(request.session.get("realmproof_guest")),
         "history": reverse("studio:workbench_history", args=[slug, project.pk]),
         "suite": reverse("studio:workbench_suite", args=[slug, project.pk]),
         "catalog": reverse("studio:native_catalog", args=[slug]),
