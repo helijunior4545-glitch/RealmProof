@@ -39,7 +39,19 @@ Open **Open Project Studio** from the landing page. Select **Insufficient balanc
 
 The transfer runner executes bundled Gno fixtures off-chain. Each run records the inputs, expectations, observed values, and source fingerprints used to interpret the result. The SHA-256 digest applies to the bytes of the individual evidence report.
 
-The **Network** tab reads Onyx RPC data for transactions signed and submitted outside RealmProof. Actor labels are supplied by the user. The RPC results establish what the queried node reported. The separate Gno registry under `realms/verification/` records report digests and rejects duplicates. The registry renders publicly on Onyx. A registered report digest lookup is pending confirmation. [Onyx evidence registry](https://onyx.testnets.gno.land/r/g16e6lg37nhkznu9vtzqka6amks6esgkaxe6x6vt/verification)
+The **Network** tab reads Onyx RPC data for transactions signed and submitted outside RealmProof. Actor labels are supplied by the user. The RPC results establish what the queried node reported. The separate Gno registry under `realms/verification/` records report digests and rejects duplicates. The registry renders publicly on Onyx. [Onyx evidence registry](https://onyx.testnets.gno.land/r/g16e6lg37nhkznu9vtzqka6amks6esgkaxe6x6vt/verification)
+
+## Onyx verification example
+
+On November 27, 2026, the SHA-256 of an exported Workbench report matched the digest registered on `onyx-1` and returned by a subsequent `vm/qrender` query.
+
+| Field | Value |
+| --- | --- |
+| Report SHA-256 | `2cafb80e0d13096b37eb3278f9c2607be7524fd3cdaca2c1191281459821ccfd` |
+| Registration height | `1451421` |
+| Registration transaction hash (Base64) | `tMPFYD44bZwWNVjTseyjhXySpPWT6P5cnTdfNjUwpjE=` |
+
+The registry lookup verifies that the digest was recorded. The report bytes are needed to recompute it. [Open the public digest lookup](https://onyx.testnets.gno.land/r/g16e6lg37nhkznu9vtzqka6amks6esgkaxe6x6vt/verification:2cafb80e0d13096b37eb3278f9c2607be7524fd3cdaca2c1191281459821ccfd) · [Reproduce the workflow](docs/TESTNET_EVIDENCE.md)
 
 ## Project layout
 

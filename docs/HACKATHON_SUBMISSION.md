@@ -21,7 +21,7 @@ The [hosted Studio](https://p-a3001f8f92554e758bcdac87e2a093e5.lojasnova.com.br/
 2. Run **Insufficient balance**. Show the rejection, all three matched assertions, and the Gno terminal output.
 3. Run **Valid transfer** and open **Compare**. Contrast the recorded balances from the two executions.
 4. In **Result**, download the individual **Evidence JSON** and compare `sha256sum <file>` with the report digest. **Export project evidence** is a separate project export and has different bytes.
-5. After confirming a write/read round trip, show the Onyx transaction and the public lookup for the same digest. See [Testnet evidence](TESTNET_EVIDENCE.md). Label local executions and testnet receipts separately.
+5. Show the Onyx registration and the public digest lookup from the verified example in the README. See [Testnet evidence](TESTNET_EVIDENCE.md). Label local executions and testnet receipts separately.
 
 For the guest rehearsal, follow [Local demo](LOCAL_DEMO.md). The Workbench runs bundled test scenarios through the Gno CLI. Its Onyx experiments verify the order and execution outcomes of previously submitted transactions through the public RPC.
 
@@ -35,3 +35,5 @@ gnokey query vm/qrender -remote "$rp_rpc" -data "$rp_package:"
 ```
 
 The reported upload hash is `I0cNKq1eUE4s9WELIggAOmqnT2SQ1Yl+zuBryIC3O5Y=`. For a clean testnet demonstration, register a fresh run digest after activation and check it from a separate browser. Keep the transaction hash, block height, public URL and individual evidence JSON together.
+
+The reported registration transaction was included at height `1451421` with hash `tMPFYD44bZwWNVjTseyjhXySpPWT6P5cnTdfNjUwpjE=`. The Onyx query returned the same digest that was computed from the downloaded report. [Public digest lookup](https://onyx.testnets.gno.land/r/g16e6lg37nhkznu9vtzqka6amks6esgkaxe6x6vt/verification:2cafb80e0d13096b37eb3278f9c2607be7524fd3cdaca2c1191281459821ccfd)
