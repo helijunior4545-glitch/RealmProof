@@ -186,3 +186,11 @@
 .wb-statusbar > span:last-child { margin-left: auto; }
 .wb-main { grid-template-columns: minmax(0, 1fr); }
 .wb-terminal-buffer { max-width: 100%; }
+.wb-live { background: #101d27; }
+.wb-live i { width: .42rem; height: .42rem; border-radius: 50%; background: var(--wb-cyan); box-shadow: 0 0 0 .2rem #80ebdc25; }
+.wb-live strong { color: var(--wb-cyan); }
+.wb-output-line[data-tone="pass"] { color: #83ecc5; }
+.wb-output-line[data-tone="rejected"], .wb-output-line[data-tone="gas"] { color: #ffd48d; }
+.wb-output-line[data-tone="error"] { color: #ffaaa8; }
+.wb-output-line[data-tone="run"] { color: #c0b7ff; }
+.wb-terminal-toolbar button:disabled { cursor: default; }

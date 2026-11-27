@@ -11,6 +11,35 @@ type Run = TerminalRun & {
 };
 type WorkbenchData = { scenarios: Scenario[]; runs: Run[]; canWrite: boolean; history: string; suite: string; catalog: string; universal: string; create: string; network: string; ledger: string; icons: Record<string, string> };
 type ResponseData = { error?: string; run?: Run; runs?: Run[]; queued?: number };
+type LiveEvent = ResponseData & { stage?: string; output?: string };
+
+async function readEvents(response: Response, onEvent: (event: LiveEvent) => void): Promise<ResponseData> {
+  if (!response.body) throw new Error("The runner returned no stream.");
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+  let pending = "";
+  let result: ResponseData | undefined;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        if (result) return result;
+        throw new Error("The live feed closed before a result arrived. Check History.");
+      }
+      const lines = (pending + value).split("\n");
+      pending = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line) continue;
+        const event: LiveEvent = JSON.parse(line);
+        if (event.run || event.error) result = event;
+        else onEvent(event);
+      }
+    }
+  } finally {
+    await reader.cancel().catch(() => undefined);
+    reader.releaseLock();
+  }
+}
+
 const tabs = ["Configure", "Result", "Compare", "History", "Suites"] as const;
 type Tab = typeof tabs[number];
 type Selection = { tab: Tab; scenario: string; run: string };
@@ -220,6 +249,9 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
   const [terminalOpen, setTerminalOpen] = useState(true);
   const [terminalExpanded, setTerminalExpanded] = useState(false);
   const [executing, setExecuting] = useState("");
+  const [liveOutput, setLiveOutput] = useState("");
+  const [liveStage, setLiveStage] = useState("");
+
   const scenario = data.scenarios.find(item => item.id === selection.scenario) ?? data.scenarios[0];
   const result = runs.find(item => item.id === selection.run) ?? runs.find(item => item.scenario === scenario?.id);
   const visible = data.scenarios.filter(item => `${item.name} ${item.family}`.toLowerCase().includes(search.trim().toLowerCase()));
@@ -266,9 +298,14 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
     if (activeRequest.current) return;
     activeRequest.current = true;
     setBusy(true);
-    if (scenario && url === scenario.execute) {
+    const runRequest = scenario && url === scenario.execute;
+    const live = runRequest && scenario.inputs.engine === "transfer";
+    if (runRequest) {
+      setLiveOutput("");
+      setLiveStage(live ? "Connecting to Gno runner" : "Evaluating supplied evidence");
       setExecuting(scenario.name);
       setTerminalOpen(true);
+      requestAnimationFrame(() => terminalDock.current?.scrollIntoView({ block: "nearest" }));
     }
     setError("");
     setNotice("");
@@ -277,14 +314,22 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
         headers: { Accept: "application/json" },
       } : {
         method: "POST",
-        headers: { Accept: "application/json", "Content-Type": "application/json", "X-CSRFToken": csrf },
+        headers: { Accept: live ? "application/x-ndjson" : "application/json", "Content-Type": "application/json", "X-CSRFToken": csrf },
         body: JSON.stringify(payload),
       });
-      if (!response.headers.get("Content-Type")?.includes("application/json")) {
+      const contentType = response.headers.get("Content-Type") ?? "";
+      let body: ResponseData;
+      if (contentType.includes("application/x-ndjson")) {
+        body = await readEvents(response, event => {
+          if (event.stage) setLiveStage(event.stage);
+          if (event.output) setLiveOutput(current => (current + event.output).slice(-12000));
+        });
+      } else if (contentType.includes("application/json")) {
+        body = await response.json();
+      } else {
         throw new Error("The workspace could not complete the request. Reload the page and try again.");
       }
-      const body: ResponseData = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "The request failed.");
+      if (!response.ok || body.error) throw new Error(body.error ?? "The request failed.");
       const run = body.run;
       if (run) {
         setRuns(current => [run, ...current.filter(item => item.id !== run.id)]);
@@ -372,7 +417,7 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
       </div>
     </section>
     <div ref={terminalDock}>
-      <Terminal key={result?.id ?? "empty"} run={result} execution={executing} open={terminalOpen} expanded={terminalExpanded}
+      <Terminal key={result?.id ?? "empty"} run={result} execution={executing} liveOutput={liveOutput} liveStage={liveStage} open={terminalOpen} expanded={terminalExpanded}
         icon={data.icons["terminal-window"]} onToggle={() => setTerminalOpen(value => !value)} onExpand={() => setTerminalExpanded(value => !value)} />
     </div>
     <div className="wb-statusbar"><span>{data.canWrite ? "Editor access" : "Read only"}</span><span>{runs.length} recent runs</span>

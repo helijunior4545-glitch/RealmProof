@@ -2,24 +2,25 @@
 
 import hashlib
 import json
+from subprocess import TimeoutExpired
 from threading import BoundedSemaphore
 from uuid import UUID
 
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.templatetags.static import static
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
-from .engine import transfer_files
+from .engine import stream_execution, transfer_files
 from .models import Project, Scenario, TestRun
 from .run_evidence import evidence_document
 from .services import parse_json_object, record_evaluation
 from .suites import queue_transfer_suite
-from .views import WRITE_ROLES, audit, execute_local_scenario, membership_for
+from .views import WRITE_ROLES, audit, execute_local_scenario, membership_for, record_local_error
 
 run_slots = BoundedSemaphore(2)
 limit = 10**12
@@ -125,6 +126,7 @@ def console(request, slug, project_id, run_id):
         "output": source.get("output") if local else None,
         "exitCode": source.get("exit_code") if local else None,
         "files": files,
+        "evidence": run.evidence,
     })
 
 
@@ -141,6 +143,41 @@ def transfer_draft(scenario, draft):
         {**scenario.input_data, "balance": balance, "amount": amount, "authorized": authorized},
         {**scenario.expected, "status": outcome, "balance": remaining, "state_changed": changed},
     )
+
+
+def execution_events(member, user, scenario, inputs, expected):
+    def event(**payload):
+        return json.dumps(payload) + "\n"
+
+    if not run_slots.acquire(blocking=False):
+        yield event(error="The runner is busy. Try again in a moment.")
+        return
+    try:
+        run = TestRun.objects.create(
+            organization=member.organization, scenario=scenario, initiated_by=user,
+            input_snapshot=inputs, expected_snapshot=expected, execution_status="local_running",
+        )
+        try:
+            yield event(stage="Runner started", id=str(run.pk))
+            with_output = stream_execution(inputs)
+            try:
+                while True:
+                    yield event(output=next(with_output))
+            except StopIteration as finished:
+                observed, evidence = finished.value
+            finally:
+                with_output.close()
+        except GeneratorExit:
+            record_local_error(run, RuntimeError("Execution interrupted when the live connection closed."))
+            raise
+        except (RuntimeError, ValueError, OSError, TimeoutExpired) as exc:
+            record_local_error(run, exc)
+        else:
+            record_evaluation(run, observed, execution_status="local_gno", evidence=evidence)
+        audit(member.organization, user, "run.local_execution", run.pk)
+        yield event(run=run_data(run, member.organization.slug))
+    finally:
+        run_slots.release()
 
 
 @login_required
@@ -162,6 +199,13 @@ def execute(request, slug, project_id, scenario_id):
                 inputs, expected = transfer_draft(scenario, payload["draft"])
             except ValueError as exc:
                 return JsonResponse({"error": str(exc)}, status=400)
+        if request.headers.get("Accept") == "application/x-ndjson":
+            response = StreamingHttpResponse(
+                execution_events(member, request.user, scenario, inputs, expected),
+                content_type="application/x-ndjson",
+            )
+            response["X-Accel-Buffering"] = "no"
+            return response
         if not run_slots.acquire(blocking=False):
             return JsonResponse({"error": "The runner is busy. Try again in a moment."}, status=429)
         try:
