@@ -1,5 +1,7 @@
 """Chromium acceptance against a disposable local Django server."""
 import unittest
+import os
+import shutil
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
@@ -31,7 +33,7 @@ class BrowserTests(unittest.TestCase):
         with page.expect_request("**/studio/guest/start/") as submitted:
             page.get_by_role("button", name="Open Project Studio").first.click()
         self.assertEqual(submitted.value.method, "POST")
-        expect(page.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
+        expect(page.get_by_role("heading", name="Test Workbench", exact=True)).to_be_visible()
         first = page.url
 
         page.goto(BASE + "/studio/")
@@ -41,7 +43,7 @@ class BrowserTests(unittest.TestCase):
         other = b.new_page()
         other.goto(BASE + "/studio/")
         other.get_by_role("button", name="Open Project Studio").first.click()
-        expect(other.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
+        expect(other.get_by_role("heading", name="Test Workbench", exact=True)).to_be_visible()
         self.assertNotEqual(first, other.url)
         self.assertEqual(other.goto(first).status, 404)
         page.screenshot(path=str(ART / "workspace.png"), full_page=True)
@@ -117,4 +119,35 @@ class BrowserTests(unittest.TestCase):
         expect(page.get_by_role("region", name="Trace Execution summary", exact=True)).to_be_visible()
         expect(page.get_by_role("radio", name="Insufficient balance")).to_be_checked()
         page.get_by_role("button", name="Open Project Studio").first.click()
-        expect(page.get_by_role("heading", name="Transfer verification lab", exact=True)).to_be_visible()
+        expect(page.get_by_role("heading", name="Test Workbench", exact=True)).to_be_visible()
+
+    @unittest.skipUnless(shutil.which(os.getenv("REALMPROOF_GNO_BINARY", "gno")), "requires the Gno CLI")
+    def test_workbench_execution_and_comparison(self):
+        page = self.context(viewport={"width": 1440, "height": 920}).new_page()
+        page.goto(BASE + "/studio/")
+        page.get_by_role("button", name="Open Project Studio").first.click()
+        expect(page.get_by_role("heading", name="Test Workbench", exact=True)).to_be_visible()
+        page.get_by_role("button", name="Valid transfer").click()
+        page.get_by_role("button", name="Run scenario").click()
+        expect(page.get_by_text("Transfer accepted", exact=True)).to_be_visible(timeout=25000)
+        expect(page.get_by_role("row", name="Remaining balance")).to_contain_text("75")
+        page.get_by_role("button", name="Insufficient balance").click()
+        page.get_by_role("button", name="Run scenario").click()
+        expect(page.get_by_text("Transfer rejected", exact=True)).to_be_visible(timeout=25000)
+        expect(page.get_by_role("row", name="Remaining balance")).to_contain_text("100")
+        page.get_by_role("button", name="Inspect evidence").click()
+        expect(page.get_by_role("dialog")).to_contain_text("Report SHA-256")
+        page.keyboard.press("Escape")
+        expect(page.get_by_role("dialog")).to_be_hidden()
+        page.get_by_role("button", name="Compare", exact=True).click()
+        expect(page.get_by_role("row", name="Remaining balance")).to_contain_text("Changed")
+        page.get_by_role("button", name="History", exact=True).click()
+        page.get_by_role("button", name="Refresh runs").click()
+        expect(page.get_by_text("Run history updated.")).to_be_visible()
+        page.get_by_role("button", name="Suites", exact=True).click()
+        expect(page.get_by_role("heading", name="Suites and tools")).to_be_visible()
+        page.get_by_role("button", name="Valid transfer").click()
+        page.screenshot(path=str(ART / "workbench-desktop.png"), full_page=True)
+        page.set_viewport_size({"width": 360, "height": 780})
+        self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
+        page.screenshot(path=str(ART / "workbench-mobile.png"), full_page=True)

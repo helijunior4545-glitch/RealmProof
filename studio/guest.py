@@ -27,7 +27,7 @@ preview_cases = [
     )
 ]
 
-def studio_destination(request):
+def studio_destination(request, route="studio:project"):
     if not request.user.is_authenticated:
         return None
     for slug in Membership.objects.filter(user=request.user).order_by("organization__slug").values_list("organization__slug", flat=True):
@@ -37,12 +37,12 @@ def studio_destination(request):
             continue
         project = Project.objects.filter(organization=member.organization).order_by("-created_at", "pk").first()
         if project:
-            return reverse("studio:project", kwargs={"slug": slug, "project_id": project.pk})
+            return reverse(route, kwargs={"slug": slug, "project_id": project.pk})
     return None
 
 def render_landing(request, case=None, result=None, error=None, status=200):
     return render(request, "studio/guest_entry.html", {
-        "studio_url": studio_destination(request),
+        "studio_url": studio_destination(request, "studio:workbench"),
         "dashboard_url": reverse("studio:dashboard"),
         "isolated_guest": os.getenv("REALMPROOF_ISOLATED_GUESTS") == "1",
         "preview_cases": preview_cases,
@@ -60,8 +60,9 @@ def entry(request):
 @never_cache
 @require_POST
 def start(request):
+    route = "studio:workbench" if request.POST.get("destination") == "workbench" else "studio:project"
     if request.user.is_authenticated:
-        return redirect(studio_destination(request) or "studio:dashboard")
+        return redirect(studio_destination(request, route) or "studio:dashboard")
     username = os.getenv("REALMPROOF_DEMO_USERNAME", "")
     password = os.getenv("REALMPROOF_DEMO_PASSWORD", "")
     user = authenticate(request, username=username, password=password) if username == "hackathon_demo_public" and password else None
@@ -78,13 +79,13 @@ def start(request):
                 login(request, visitor, backend="django.contrib.auth.backends.ModelBackend")
                 request.session.set_expiry(3600)
                 request.session["realmproof_guest"] = True
-                return redirect("studio:project", slug=org.slug, project_id=project.pk)
+                return redirect(route, slug=org.slug, project_id=project.pk)
             login(request, user)
             request.session.set_expiry(3600)
             request.session['realmproof_guest'] = True
             project = Project.objects.filter(organization=memberships[0].organization, name="Transfer verification lab").order_by("created_at").first()
             if project:
-                return redirect("studio:project", slug=memberships[0].organization.slug, project_id=project.pk)
+                return redirect(route, slug=memberships[0].organization.slug, project_id=project.pk)
             return redirect("studio:organization", slug=memberships[0].organization.slug)
     logger.warning("Demo launch rejected: configured=%s authenticated=%s", bool(username and password), bool(user))
     messages.error(request, "Demo access is temporarily unavailable. Please try again later.")

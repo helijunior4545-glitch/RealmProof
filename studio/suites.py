@@ -13,15 +13,20 @@ from .views import membership_for, audit
 def queue_suite(request, slug, project_id):
     member = membership_for(request, slug, write=True)
     project = get_object_or_404(Project, pk=project_id, organization=member.organization)
+    queue_transfer_suite(member, request.user, project)
+    return redirect("studio:project", slug=slug, project_id=project.pk)
+
+
+def queue_transfer_suite(member, user, project):
     with transaction.atomic():
         Organization.objects.select_for_update().get(pk=member.organization_id)
         pending = TestRun.objects.filter(organization=member.organization, execution_status__in=["queued","local_running"], status="pending").count()
         scenarios = list(Scenario.objects.filter(organization=member.organization, project=project, input_data__engine="transfer").order_by("pk")[:max(0, min(20, 20-pending))])
         for scenario in scenarios:
-            TestRun.objects.create(organization=member.organization, scenario=scenario, initiated_by=request.user,
+            TestRun.objects.create(organization=member.organization, scenario=scenario, initiated_by=user,
                 input_snapshot=scenario.input_data, expected_snapshot=scenario.expected, execution_status="queued", reason="Waiting for local execution worker.")
-        audit(member.organization, request.user, "suite.queued", project.pk)
-    return redirect("studio:project", slug=slug, project_id=project.pk)
+        audit(member.organization, user, "suite.queued", project.pk)
+    return len(scenarios)
 
 @login_required
 @require_GET

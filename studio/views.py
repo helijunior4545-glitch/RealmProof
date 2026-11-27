@@ -259,12 +259,17 @@ def execute_scenario(request, slug, scenario_id):
     scenario = get_object_or_404(Scenario, pk=scenario_id, organization=member.organization)
     if scenario.input_data.get("engine") != "transfer":
         raise Http404("No supported execution adapter.")
-    run = TestRun.objects.create(organization=member.organization, scenario=scenario, initiated_by=request.user,
-        input_snapshot=scenario.input_data, expected_snapshot=scenario.expected, status="pending",
+    run = execute_local_scenario(member, request.user, scenario, scenario.input_data, scenario.expected)
+    return redirect("studio:run_detail", slug=slug, run_id=run.pk)
+
+
+def execute_local_scenario(member, user, scenario, inputs, expected):
+    run = TestRun.objects.create(organization=member.organization, scenario=scenario, initiated_by=user,
+        input_snapshot=inputs, expected_snapshot=expected, status="pending",
         execution_status="local_running")
     complete_local_run(run)
-    audit(member.organization, request.user, "run.local_execution", run.pk)
-    return redirect("studio:run_detail", slug=slug, run_id=run.pk)
+    audit(member.organization, user, "run.local_execution", run.pk)
+    return run
 
 
 def complete_local_run(run):

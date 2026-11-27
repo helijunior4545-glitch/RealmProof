@@ -5,6 +5,7 @@
 {% elif isolated_guest %}
   <form class="jury-launch" method="post" action="{% url 'studio:guest_start' %}" data-pending-label="Opening Project Studio…">
     {% csrf_token %}
+    <input type="hidden" name="destination" value="workbench">
     <button class="lp-action" type="submit">Open Project Studio <i class="lp-icon lp-arrow" aria-hidden="true"></i></button>
   </form>
 {% else %}

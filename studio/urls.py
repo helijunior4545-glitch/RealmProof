@@ -3,7 +3,7 @@ from . import views, review, suites, builder, public_demo, guest
 
 from . import network, ledger_views, catalog_views, universal_views
 
-from . import source_views
+from . import source_views, workbench
 
 app_name = "studio"
 urlpatterns = [
@@ -16,6 +16,10 @@ urlpatterns = [
     path("organizations/<slug:slug>/", views.organization, name="organization"),
     path("organizations/<slug:slug>/projects/new/", views.create_project, name="create_project"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/", views.project, name="project"),
+    path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/", workbench.home, name="workbench"),
+    path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/runs/", workbench.history, name="workbench_history"),
+    path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/scenarios/<uuid:scenario_id>/execute/", workbench.execute, name="workbench_execute"),
+    path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/suite/", workbench.suite, name="workbench_suite"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/scenarios/new/", views.create_scenario, name="create_scenario"),
     path("organizations/<slug:slug>/runs/<uuid:run_id>/evidence.json", views.download_run_evidence, name="download_run_evidence"),
     path("organizations/<slug:slug>/runs/<uuid:run_id>/", views.run_detail, name="run_detail"),

@@ -1,0 +1,29 @@
+{% extends "studio/base.html" %}
+{% load static %}
+{% block title %}Test Workbench{% endblock %}
+{% block context_label %}TEST WORKBENCH{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'studio/workbench.css' %}">{% endblock %}
+{% block content %}
+<section class="wb" aria-labelledby="wb-title">
+  <header class="wb-heading">
+    <div>
+      <a class="wb-breadcrumb" href="{% url 'studio:project' member.organization.slug project.pk %}">{{ project.name }}</a>
+      <h1 id="wb-title">Test Workbench</h1>
+      <p>Configure scenarios, run tests, and compare the evidence in one workspace.</p>
+    </div>
+    <a class="button secondary" href="{% url 'studio:export_project' member.organization.slug project.pk %}">Export project evidence</a>
+  </header>
+  <div id="realmproof-workbench">
+    {% csrf_token %}
+    <section class="wb-panel wb-fallback">
+      <h2>Scenarios</h2>
+      <p>Open the project to run scenarios when the interactive bundle is unavailable.</p>
+      <a class="button primary" href="{% url 'studio:project' member.organization.slug project.pk %}">Open {{ project.name }}</a>
+      {% if runs %}<h2>Recent runs</h2>
+      <ul>{% for run in runs %}<li><a href="{% url 'studio:run_detail' member.organization.slug run.pk %}">{{ run.scenario.name }} · {{ run.get_status_display }}</a></li>{% endfor %}</ul>
+      {% endif %}
+    </section>
+  </div>
+  {{ workbench|json_script:"realmproof-workbench-data" }}
+</section>
+{% endblock %}
