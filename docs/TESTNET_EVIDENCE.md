@@ -85,3 +85,70 @@ allow viewers to check which report was committed.
 
 See the [Gno deployment guide](https://docs.gno.land/builders/getting-started)
 and the [network list](https://docs.gno.land/resources/gnoland-networks).
+
+## Onyx relay on an isolated Studio host
+
+With the relay, the signer and read-only testnet queries use
+`REALMPROOF_ONYX_RPC_RELAY`. They continue to validate the `onyx-1` chain ID.
+Mainnet queries use their existing endpoint.
+
+Run these steps on the Docker host. From a checkout of the app, identify the
+RealmProof bridge and install the standalone relay on the host:
+
+```bash
+docker network inspect ln-studio-a3001f8f92554e758bcdac87e2a093e5 \
+  --format '{{range .IPAM.Config}}{{println .Subnet .Gateway}}{{end}}'
+install -m 0755 tools/onyx_rpc_relay.py /usr/local/bin/realmproof-onyx-relay
+```
+
+In `/etc/systemd/system/realmproof-onyx-relay.service`, use the IPv4 subnet
+and gateway returned above. This example assumes `10.0.9.0/24` and
+`10.0.9.1`. Confirm both values before starting.
+
+```ini
+[Unit]
+Description=RealmProof private Onyx RPC relay
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ExecStart=/usr/bin/python3 /usr/local/bin/realmproof-onyx-relay --bind 10.0.9.1 --allow-subnet 10.0.9.0/24
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+systemctl daemon-reload
+systemctl enable --now realmproof-onyx-relay.service
+systemctl is-active realmproof-onyx-relay.service
+```
+
+The relay binds only to the project's bridge gateway, accepts only that
+subnet, and sends permitted RPC requests to the fixed Onyx HTTPS endpoint with
+TLS verification. It requires no keys or credentials. Traffic to the gateway
+terminates on the host. If the host's INPUT firewall blocks it, permit TCP
+8765 only on the RealmProof bridge, from its subnet to its gateway. Keep the
+Studio forwarding restrictions in place.
+
+In **RealmProof → Variáveis**, set `REALMPROOF_ONYX_RPC_RELAY` to
+`http://10.0.9.1:8765` using the actual gateway, then publish. The existing
+signer mounts and settings are required. If the Docker bridge gets a new
+gateway or subnet, update both the service and the project variable.
+
+From the published container, run:
+
+```bash
+python -c 'from studio.chain import status; print(status("testnet")["chain_id"])'
+python -c 'from studio.chain import evidence_registered; print(evidence_registered("b2b264b82ad4c1c0dda548b332edb64fec540852fbd6ace6182db2b5b25df0e9"))'
+```
+
+Expect `onyx-1` and `True` respectively. Submit a new report through the public
+Workbench and verify that the public Onyx lookup renders the same digest.

@@ -48,7 +48,8 @@ def register(digest):
             lock.write(str(now))
             lock.flush()
 
-            chain_id, rpc_url = chain.NETWORKS["testnet"]
+            chain_id = chain.NETWORKS["testnet"][0]
+            rpc_url = chain.rpc_endpoint("testnet")
             result = subprocess.run(
                 [binary, "maketx", "call", "-home", home, "-insecure-password-stdin",
                  "-pkgpath", chain.ONYX_EVIDENCE_REALM, "-func", "RegisterEvidence",

@@ -2,11 +2,13 @@
 import base64
 import binascii
 import hashlib
+import ipaddress
 import json
+import os
 import re
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 from urllib.error import URLError
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 
 NETWORKS = {
     "testnet": ("onyx-1", "https://rpc.onyx.testnets.gno.land"),
@@ -20,10 +22,34 @@ class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, *args, **kwargs):
         return None
 
+def rpc_endpoint(network):
+    default = NETWORKS[network][1]
+    if network != "testnet":
+        return default
+    relay = os.environ.get("REALMPROOF_ONYX_RPC_RELAY", "").strip()
+    if not relay:
+        return default
+    try:
+        url = urlsplit(relay)
+        address = ipaddress.IPv4Address(url.hostname)
+        if (
+            url.scheme != "http" or not url.port
+            or not any(address in ipaddress.IPv4Network(network) for network in (
+                "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
+            ))
+            or url.username is not None or url.password is not None
+            or url.path not in {"", "/"} or url.query or url.fragment
+        ):
+            raise ValueError
+    except ValueError as exc:
+        raise ChainError("Onyx relay must be a private IPv4 HTTP origin with an explicit port.") from exc
+    return relay.rstrip("/")
+
+
 def rpc(network, method, params=None):
     if network not in NETWORKS or method not in {"status", "tx", "block", "block_results", "abci_query"}:
         raise ChainError("Unsupported network or method.")
-    endpoint = NETWORKS[network][1]
+    endpoint = rpc_endpoint(network)
     headers = {"Accept": "application/json"}
     if method == "abci_query":
         headers["Content-Type"] = "application/json"
