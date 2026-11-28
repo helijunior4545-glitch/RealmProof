@@ -18,7 +18,15 @@ The generated JSON contains the run ID, inputs, expected and observed values,
 verdict, and source and test harness fingerprints. The realm stores the digest
 alone. Keep the JSON to independently reproduce the digest.
 
-## Publish and register
+## Register from the Workbench
+
+Open an execution report and choose **Register on Onyx**. Select Onyx
+(`onyx-1`) in Adena and use a funded testnet account. Review the report hash
+and network fee in Adena before approving. RealmProof displays the public
+verification link once it confirms the hash in the registry. If confirmation
+is pending, choose **Check registration** before submitting again.
+
+## Publish and register with gnokey
 
 From the checkout, set `rp_address` and `rp_key` to the signer’s public address
 and local key name. Set `rp_digest` to the 64-character digest copied from the

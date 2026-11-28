@@ -8,7 +8,7 @@ type Scenario = { id: string; name: string; family: string; objective: string; i
 type Run = TerminalRun & {
   id: string; scenario: string; name: string; status: string; execution: string; started: string;
   reason: string; inputs: Fields; expected: Fields; observed: Fields; mismatches: Fields;
-  duration: number | null; digest: string | null; report: string; download: string | null;
+  duration: number | null; digest: string | null; onyx: string | null; report: string; download: string | null;
 };
 type WorkbenchData = { scenarios: Scenario[]; runs: Run[]; canWrite: boolean; guidedDemo?: boolean; history: string; suite: string; catalog: string; universal: string; create: string; experiment: string; network: string; ledger: string; icons: Record<string, string> };
 type ResponseData = { error?: string; run?: Run; runs?: Run[]; queued?: number };
@@ -197,9 +197,102 @@ const onyxRegistry = "https://onyx.testnets.gno.land/r/g16e6lg37nhkznu9vtzqka6am
 // Public example documented in README.md and docs/TESTNET_EVIDENCE.md.
 const publishedExampleDigest = "2cafb80e0d13096b37eb3278f9c2607be7524fd3cdaca2c1191281459821ccfd";
 
-function EvidenceLinks({ digest }: { digest: string }) {
+const onyxChain = "onyx-1";
+const onyxRpc = "https://rpc.onyx.testnets.gno.land";
+const onyxRealm = onyxRegistry.replace("https://onyx.testnets.gno.land/", "gno.land/");
+
+type AdenaResponse = { status: string; type?: string; data?: { chainId?: string; address?: string } };
+type Adena = {
+  AddEstablish(name: string): Promise<AdenaResponse>;
+  GetNetwork(): Promise<AdenaResponse>;
+  GetAccount(): Promise<AdenaResponse>;
+  DoContract(params: {
+    networkInfo: { chainId: string; rpcUrl: string };
+    messages: { type: "/vm.m_call"; value: { pkg_path: string; func: string; args: string[]; caller: string; send: string } }[];
+  }): Promise<AdenaResponse>;
+};
+
+async function lookupOnyx(url: string, signal: AbortSignal): Promise<boolean> {
+  const response = await fetch(url, { signal, redirect: "error" });
+  if (!response.ok) throw new Error("Onyx lookup is temporarily unavailable.");
+  const result = await response.json();
+  if (typeof result.registered !== "boolean") throw new Error("Unexpected Onyx lookup response.");
+  return result.registered;
+}
+
+function EvidenceLinks({ digest, lookup }: { digest: string; lookup: string }) {
   const [copyStatus, setCopyStatus] = useState("");
-  const isPublishedExample = digest === publishedExampleDigest;
+  const [registered, setRegistered] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const operation = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    lookupOnyx(lookup, controller.signal).then(
+      result => { if (!controller.signal.aborted && !operation.current) setRegistered(result); },
+      () => {},
+    );
+    return () => {
+      controller.abort();
+      operation.current?.abort();
+    };
+  }, [lookup]);
+
+  async function verifyOrRegister(register: boolean) {
+    if (operation.current) return;
+    const controller = new AbortController();
+    operation.current = controller;
+    const { signal } = controller;
+    setBusy(true);
+    setFeedback("Checking the Onyx registry…");
+    try {
+      const exists = await lookupOnyx(lookup, signal);
+      setRegistered(exists);
+      if (signal.aborted) return;
+      if (exists || !register) {
+        setFeedback(exists ? "Registration confirmed by the Onyx registry." : "This hash is not registered on Onyx yet.");
+        return;
+      }
+      const wallet = (window as Window & { adena?: Adena }).adena;
+      if (!wallet) throw new Error("Open this page in a browser with the Adena wallet extension installed, or use the CLI guide below.");
+      setFeedback("Connect Adena to RealmProof.");
+      const connection = await wallet.AddEstablish("RealmProof");
+      if (connection.status !== "success" && connection.type !== "ALREADY_CONNECTED") throw new Error("Adena did not authorize the connection.");
+      const network = await wallet.GetNetwork();
+      if (network.status !== "success" || network.data?.chainId !== onyxChain) throw new Error("Select the Onyx testnet (onyx-1) in Adena, then retry.");
+      const account = await wallet.GetAccount();
+      const caller = account.data?.address;
+      if (account.status !== "success" || account.data?.chainId !== onyxChain || !caller) throw new Error("Select a funded Onyx testnet account in Adena.");
+      if (signal.aborted) return;
+      setFeedback("Review the hash and testnet fee in Adena, then approve the transaction.");
+      const transaction = await wallet.DoContract({
+        networkInfo: { chainId: onyxChain, rpcUrl: onyxRpc },
+        messages: [{ type: "/vm.m_call", value: { pkg_path: onyxRealm, func: "RegisterEvidence", args: [digest], caller, send: "" } }],
+      });
+      if (signal.aborted) return;
+      setFeedback("Waiting for the Onyx registry to reflect the transaction…");
+      const attempts = transaction.status === "success" ? 5 : 1;
+      for (let attempt = 0; attempt < attempts && !signal.aborted; attempt++) {
+        if (attempt) await new Promise(resolve => setTimeout(resolve, 3000));
+        if (signal.aborted) return;
+        if (await lookupOnyx(lookup, signal)) {
+          setRegistered(true);
+          setFeedback("Registration confirmed by the Onyx registry.");
+          return;
+        }
+      }
+      setFeedback(transaction.status === "success"
+        ? "Adena submitted the transaction. Check registration again in a moment."
+        : "Adena did not confirm submission. Review the wallet and check registration before retrying.");
+    } catch (error) {
+      if (!signal.aborted) setFeedback(error instanceof Error ? error.message : "Registration could not be verified.");
+    } finally {
+      operation.current = null;
+      if (!signal.aborted) setBusy(false);
+    }
+  }
+
   async function copyDigest() {
     try {
       await navigator.clipboard.writeText(digest);
@@ -211,18 +304,28 @@ function EvidenceLinks({ digest }: { digest: string }) {
   return <section className="wb-subpanel wb-evidence-links" aria-labelledby="wb-onyx-title">
     <div className="wb-evidence-heading">
       <div><span className="wb-label">Report SHA-256</span><h3 id="wb-onyx-title">Verify evidence on Gno.land</h3></div>
-      <span className="wb-verdict" data-status={isPublishedExample ? "passed" : undefined}>
-        {isPublishedExample ? "Published example" : "Publication unverified"}
+      <span className="wb-verdict" data-status={registered ? "passed" : undefined}>
+        {registered ? "Registered on Onyx" : registered === false ? "Not registered on Onyx" : "Onyx registration unconfirmed"}
       </span>
     </div>
     <div className="wb-evidence-digest"><code>{digest}</code>
       <button type="button" onClick={() => void copyDigest()}>Copy hash</button>
     </div>
-    <p>Onyx confirms whether this report hash was registered. The execution took place outside the chain.</p>
+    <p>{registered
+      ? "Onyx stores this report hash. The execution took place outside the chain."
+      : "Running a test generates a report hash locally. Onyx can display it after a registration transaction is confirmed."}</p>
     <div className="wb-actions">
-      <a className="wb-onyx-link" href={`${onyxRegistry}:${digest}`} target="_blank" rel="noopener noreferrer">Look up this hash on Onyx ↗</a>
-      {!isPublishedExample && <a href={`${onyxRegistry}:${publishedExampleDigest}`} target="_blank" rel="noopener noreferrer">View a published example ↗</a>}
+      {registered ? (
+        <a className="wb-onyx-link" href={`${onyxRegistry}:${digest}`} target="_blank" rel="noopener noreferrer">Verify registered hash on Onyx ↗</a>
+      ) : <>
+        <button type="button" className="wb-primary" disabled={busy} onClick={() => void verifyOrRegister(true)}>Register on Onyx</button>
+        <button type="button" disabled={busy} onClick={() => void verifyOrRegister(false)}>Check registration</button>
+        <a className="wb-onyx-link" href="https://github.com/helijunior4545-glitch/RealmProof/blob/main/docs/TESTNET_EVIDENCE.md" target="_blank" rel="noopener noreferrer">How to register this hash ↗</a>
+        <a href={`${onyxRegistry}:${digest}`} target="_blank" rel="noopener noreferrer">Check registration on Onyx ↗</a>
+        <a href={`${onyxRegistry}:${publishedExampleDigest}`} target="_blank" rel="noopener noreferrer">View a registered example ↗</a>
+      </>}
     </div>
+    <p role="status" className={feedback ? "wb-evidence-feedback" : "wb-silent"}>{feedback}</p>
     <span role="status" className={copyStatus ? "wb-evidence-feedback" : "wb-silent"}>{copyStatus}</span>
   </section>;
 }
@@ -247,7 +350,7 @@ function Result({ run, showTerminal }: { run: Run; showTerminal: () => void }) {
     </div>
     {run.reason && run.status !== "passed" && <p>{run.reason}</p>}
     <Assertions run={run} />
-    {run.digest && /^[a-f0-9]{64}$/.test(run.digest) && <EvidenceLinks digest={run.digest} />}
+    {run.onyx && run.digest && /^[a-f0-9]{64}$/.test(run.digest) && <EvidenceLinks key={run.id} digest={run.digest} lookup={run.onyx} />}
     <div className="wb-actions">
       <button type="button" onClick={() => details.current?.showModal()}>Inspect evidence</button>
       <button type="button" onClick={showTerminal}>Open in terminal</button>

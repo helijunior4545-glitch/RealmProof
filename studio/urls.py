@@ -19,6 +19,7 @@ urlpatterns = [
     path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/", workbench.home, name="workbench"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/experiment/", workbench.experiment, name="workbench_experiment"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/runs/", workbench.history, name="workbench_history"),
+    path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/runs/<uuid:run_id>/onyx/", workbench.onyx_evidence, name="workbench_onyx"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/runs/<uuid:run_id>/console/", workbench.console, name="workbench_console"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/scenarios/<uuid:scenario_id>/execute/", workbench.execute, name="workbench_execute"),
     path("organizations/<slug:slug>/projects/<uuid:project_id>/workbench/suite/", workbench.suite, name="workbench_suite"),

@@ -15,7 +15,7 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
-from . import network_experiments
+from . import chain, network_experiments
 from .engine import stream_execution, transfer_files
 from .models import Project, Scenario, TestRun
 from .run_evidence import evidence_document
@@ -50,6 +50,7 @@ def run_data(run, slug):
         "mismatches": (run.evidence.get("assertions") or {}).get("mismatches", {}),
         "duration": (run.evidence.get("source") or {}).get("duration_ms"),
         "digest": commitment[1] if commitment else None,
+        "onyx": reverse("studio:workbench_onyx", args=[slug, run.scenario.project_id, run.pk]) if commitment else None,
         "console": reverse("studio:workbench_console", args=[slug, run.scenario.project_id, run.pk]),
         "report": reverse("studio:run_detail", args=[slug, run.pk]),
         "download": reverse("studio:download_run_evidence", args=[slug, run.pk]) if commitment else None,
@@ -106,6 +107,22 @@ def home(request, slug, project_id):
 def history(request, slug, project_id):
     _, project = project_access(request, slug, project_id)
     return JsonResponse({"runs": [run_data(run, slug) for run in get_runs(project)[:30]]})
+
+
+@login_required
+@never_cache
+@require_GET
+def onyx_evidence(request, slug, project_id, run_id):
+    _, project = project_access(request, slug, project_id)
+    run = get_object_or_404(get_runs(project), pk=run_id)
+    commitment = evidence_document(run)
+    if commitment is None:
+        return JsonResponse({"error": "Evidence is unavailable."}, status=404)
+    try:
+        registered = chain.evidence_registered(commitment[1])
+    except chain.ChainError:
+        return JsonResponse({"error": "Onyx lookup is temporarily unavailable."}, status=503)
+    return JsonResponse({"registered": registered})
 
 
 @login_required

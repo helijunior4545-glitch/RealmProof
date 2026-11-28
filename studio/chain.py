@@ -21,7 +21,7 @@ class NoRedirect(HTTPRedirectHandler):
         return None
 
 def rpc(network, method, params=None):
-    if network not in NETWORKS or method not in {"status", "tx", "block", "block_results"}:
+    if network not in NETWORKS or method not in {"status", "tx", "block", "block_results", "abci_query"}:
         raise ChainError("Unsupported network or method.")
     url = NETWORKS[network][1] + "/" + method
     if params:
@@ -106,3 +106,29 @@ def transaction(network, digest, height=None):
                 "receipt": receipt, "trust": "RPC-reported block and receipt; not a consensus proof"}
     except (KeyError, TypeError, ValueError, AttributeError, binascii.Error) as exc:
         raise ChainError("Unexpected block or receipt response.") from exc
+
+
+ONYX_EVIDENCE_REALM = "gno.land/r/g16e6lg37nhkznu9vtzqka6amks6esgkaxe6x6vt/verification"
+
+
+def evidence_registered(digest):
+    if not re.fullmatch(r"[0-9a-f]{64}", digest):
+        raise ChainError("Invalid evidence digest.")
+    if status("testnet")["catching_up"]:
+        raise ChainError("Onyx node is synchronizing.")
+    result = rpc("testnet", "abci_query", {
+        "path": '"vm/qrender"',
+        "data": json.dumps(base64.b64encode(f"{ONYX_EVIDENCE_REALM}:{digest}".encode()).decode()),
+    })
+    try:
+        response = result["response"]["ResponseBase"]
+        if response["Error"] is not None:
+            raise ChainError("Onyx rejected the evidence lookup.")
+        rendered = base64.b64decode(response["Data"], validate=True).decode()
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ChainError("Unexpected evidence lookup response.") from exc
+    if f"Registered evidence digest: `{digest}`" in rendered.splitlines():
+        return True
+    if "Evidence digest not found." in rendered.splitlines():
+        return False
+    raise ChainError("Unexpected evidence registry content.")
