@@ -152,3 +152,73 @@ python -c 'from studio.chain import evidence_registered; print(evidence_register
 
 Expect `onyx-1` and `True` respectively. Submit a new report through the public
 Workbench and verify that the public Onyx lookup renders the same digest.
+
+## Private host signer for Studio projects without volumes
+
+The Studio rejects persistent mounts on managed applications. Run signing on the
+host alongside the relay for those applications. Preserve the existing
+`/srv/realmproof/onyx-keys` and `/srv/realmproof/onyx-password` files when removing
+the two mounts from Coolify. The key must be funded on `onyx-1`.
+
+On the host, from a checkout containing this version, install the service code:
+
+```bash
+install -d -m 0755 /opt/realmproof-onyx/tools /opt/realmproof-onyx/studio
+install -m 0644 tools/onyx_rpc_relay.py /opt/realmproof-onyx/tools/
+install -m 0644 studio/{__init__,chain,onyx_signer}.py /opt/realmproof-onyx/studio/
+```
+
+Install the pinned `gnokey` v1.8.0 binary on the host. It can be copied from
+the already approved RealmProof runtime container with
+`docker cp CONTAINER_ID:/usr/local/bin/gnokey /usr/local/bin/gnokey`. Confirm
+the binary runs on the host. Use the same dedicated UID/GID as the existing
+key files (10001 in this example). The parent directory must be traversable:
+`chgrp 10001 /srv/realmproof && chmod 0710 /srv/realmproof`. Keep the key
+directory private and writable by UID 10001, and the password file private and
+readable by UID 10001.
+
+Create a separate authentication token, keeping the host copy readable only
+by root. Run once:
+
+```bash
+(umask 077; set -o noclobber; openssl rand -hex 32 > /srv/realmproof/onyx-signer-token)
+```
+
+Replace the relay service's existing `[Service]` section with the following.
+Retain its existing `[Unit]` and `[Install]` sections. Use the actual project
+bridge gateway and subnet. This service occupies the original relay port.
+
+```ini
+[Service]
+Type=simple
+User=10001
+Group=10001
+WorkingDirectory=/opt/realmproof-onyx
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/srv/realmproof/onyx-keys
+LoadCredential=onyx-signer-token:/srv/realmproof/onyx-signer-token
+Environment=REALMPROOF_ONYX_KEY_HOME=/srv/realmproof/onyx-keys
+Environment=REALMPROOF_ONYX_KEY_NAME=realmproof-onyx
+Environment=REALMPROOF_ONYX_PASSWORD_FILE=/srv/realmproof/onyx-password
+ExecStart=/usr/bin/python3 -m tools.onyx_rpc_relay --bind 10.0.9.1 --allow-subnet 10.0.9.0/24 --signer-token-file %d/onyx-signer-token
+Restart=on-failure
+RestartSec=5
+```
+
+Run `systemctl daemon-reload` and
+`systemctl enable --now realmproof-onyx-relay.service`, then restart it if
+it was already running. In the RealmProof project's protected runtime
+variables, set `REALMPROOF_ONYX_RPC_RELAY` to its confirmed bridge gateway URL
+and `REALMPROOF_ONYX_SIGNER_TOKEN` to the token generated above. The three
+keybase-related variables belong on the host service in this mode and may be
+removed from the app. Resolve the previous operation in the Studio once the
+mounts are gone, then publish a fresh version.
+
+The app sends only the report digest on the isolated bridge. The token
+authenticates that request, and the host signer chooses the fixed realm,
+function, and fee. Raw broadcast RPC is disabled on this relay in signer
+mode. Public confirmation remains a separate read from the live registry.
+Keep the relay private to the RealmProof bridge and avoid exposing port 8765
+through the public reverse proxy.

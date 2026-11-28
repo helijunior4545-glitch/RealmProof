@@ -2,12 +2,16 @@
 
 import errno
 import fcntl
+import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
 from time import time
+from urllib.error import HTTPError, URLError
+from urllib.request import ProxyHandler, Request, build_opener
 
 from . import chain
 
@@ -20,7 +24,45 @@ class SignerError(RuntimeError):
         self.status = status
 
 
+TOKEN_PATTERN = r"[0-9a-f]{64}"
+DIGEST_PATTERN = r"[0-9a-f]{64}"
+SIGNER_PATH = "/realmproof/register"
+
+
 def register(digest):
+    if not re.fullmatch(DIGEST_PATTERN, digest):
+        raise SignerError("Invalid evidence digest.", 400)
+    token = os.environ.get("REALMPROOF_ONYX_SIGNER_TOKEN")
+    if token is None:
+        return register_local(digest)
+    if not re.fullmatch(TOKEN_PATTERN, token) or not os.environ.get("REALMPROOF_ONYX_RPC_RELAY", "").strip():
+        raise SignerError("The private Onyx signer is not configured correctly.")
+    request = Request(
+        chain.rpc_endpoint("testnet") + SIGNER_PATH,
+        data=json.dumps({"digest": digest}).encode(),
+        headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"},
+    )
+    try:
+        with build_opener(chain.NoRedirect(), ProxyHandler({})).open(request, timeout=30) as response:
+            payload = json.loads(response.read(2049))
+            if not isinstance(payload, dict) or type(payload.get("registered")) is not bool:
+                raise ValueError
+            if (response.status, payload["registered"]) not in {(200, True), (202, False)}:
+                raise ValueError
+            return payload["registered"]
+    except HTTPError as exc:
+        if exc.code == 429:
+            raise SignerError("The private Onyx signer is busy. Try again shortly.", 429) from exc
+        if exc.code in (401, 403):
+            raise SignerError("The private Onyx signer rejected authentication.") from exc
+        raise SignerError("The private Onyx signer could not register the evidence.") from exc
+    except TimeoutError:
+        return False  # The host may have submitted before the timeout.
+    except (URLError, OSError, ValueError) as exc:
+        raise SignerError("The private Onyx signer is unavailable.") from exc
+
+
+def register_local(digest):
     home = os.environ.get("REALMPROOF_ONYX_KEY_HOME")
     key = os.environ.get("REALMPROOF_ONYX_KEY_NAME")
     password_file = os.environ.get("REALMPROOF_ONYX_PASSWORD_FILE")
