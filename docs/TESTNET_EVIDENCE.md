@@ -222,3 +222,24 @@ function, and fee. Raw broadcast RPC is disabled on this relay in signer
 mode. Public confirmation remains a separate read from the live registry.
 Keep the relay private to the RealmProof bridge and avoid exposing port 8765
 through the public reverse proxy.
+
+### Persist the RealmProof bridge exception on zion2test
+
+Once the relay works, run `bash tools/install_onyx_relay_firewall.sh` as root
+on zion2test. This installer is scoped to the current RealmProof bridge,
+`10.0.9.0/24`, and its private relay at `10.0.9.1:8765`. It validates the
+Docker network before installing an INPUT rule and reconciles that rule via
+systemd after boot and after firewall reloads. The Studio-managed chains
+remain untouched. If the gateway or subnet changes, update the installer,
+the relay service and the project's relay URL together.
+
+Verify with:
+
+```bash
+systemctl is-active realmproof-onyx-firewall.timer
+iptables -w -S INPUT 1
+```
+
+The timer should be active and the first INPUT rule should carry the
+`realmproof-onyx-relay` comment. From the RealmProof container, check
+`studio.chain.status("testnet")` before testing a new registration.
