@@ -192,6 +192,40 @@ function Assertions({ run }: { run: Run }) {
   </section>;
 }
 
+const onyxRegistry = "https://onyx.testnets.gno.land/r/g16e6lg37nhkznu9vtzqka6amks6esgkaxe6x6vt/verification";
+// Public example documented in README.md and docs/TESTNET_EVIDENCE.md.
+const publishedExampleDigest = "2cafb80e0d13096b37eb3278f9c2607be7524fd3cdaca2c1191281459821ccfd";
+
+function EvidenceLinks({ digest }: { digest: string }) {
+  const [copyStatus, setCopyStatus] = useState("");
+  const isPublishedExample = digest === publishedExampleDigest;
+  async function copyDigest() {
+    try {
+      await navigator.clipboard.writeText(digest);
+      setCopyStatus("SHA-256 copied.");
+    } catch {
+      setCopyStatus("Copy unavailable. Select the hash to copy it.");
+    }
+  }
+  return <section className="wb-subpanel wb-evidence-links" aria-labelledby="wb-onyx-title">
+    <div className="wb-evidence-heading">
+      <div><span className="wb-label">Report SHA-256</span><h3 id="wb-onyx-title">Verify evidence on Gno.land</h3></div>
+      <span className="wb-verdict" data-status={isPublishedExample ? "passed" : undefined}>
+        {isPublishedExample ? "Published example" : "Publication unverified"}
+      </span>
+    </div>
+    <div className="wb-evidence-digest"><code>{digest}</code>
+      <button type="button" onClick={() => void copyDigest()}>Copy hash</button>
+    </div>
+    <p>Onyx confirms whether this report hash was registered. The execution took place outside the chain.</p>
+    <div className="wb-actions">
+      <a className="wb-onyx-link" href={`${onyxRegistry}:${digest}`} target="_blank" rel="noopener noreferrer">Look up this hash on Onyx ↗</a>
+      {!isPublishedExample && <a href={`${onyxRegistry}:${publishedExampleDigest}`} target="_blank" rel="noopener noreferrer">View a published example ↗</a>}
+    </div>
+    <span role="status" className={copyStatus ? "wb-evidence-feedback" : "wb-silent"}>{copyStatus}</span>
+  </section>;
+}
+
 function Result({ run, showTerminal }: { run: Run; showTerminal: () => void }) {
   const details = useRef<HTMLDialogElement>(null);
   const outcome = run.execution === "local_gno" && (run.observed.status === "success" || run.observed.status === "rejected")
@@ -212,6 +246,7 @@ function Result({ run, showTerminal }: { run: Run; showTerminal: () => void }) {
     </div>
     {run.reason && run.status !== "passed" && <p>{run.reason}</p>}
     <Assertions run={run} />
+    {run.digest && /^[a-f0-9]{64}$/.test(run.digest) && <EvidenceLinks digest={run.digest} />}
     <div className="wb-actions">
       <button type="button" onClick={() => details.current?.showModal()}>Inspect evidence</button>
       <button type="button" onClick={showTerminal}>Open in terminal</button>

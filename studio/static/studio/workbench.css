@@ -288,3 +288,27 @@
   .wb-jury-guide { grid-template-columns: minmax(0, 1fr); }
   .wb-jury-guide .wb-primary { justify-self: start; }
 }
+
+.wb-evidence-links {
+  display: grid;
+  gap: .65rem;
+  margin: 1rem 0;
+  border-inline-start: 3px solid #77d6e6;
+}
+.wb-evidence-heading, .wb-evidence-digest {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .6rem;
+}
+.wb-evidence-heading h3, .wb-evidence-links p { margin: 0; }
+.wb-evidence-digest {
+  padding: .6rem;
+  border: 1px solid var(--border, #334756);
+  border-radius: .5rem;
+}
+.wb-evidence-digest code { flex: 1 1 17rem; min-width: 0; overflow-wrap: anywhere; user-select: all; }
+.wb-evidence-links .wb-actions { margin: 0; }
+.wb-evidence-links .wb-onyx-link { color: #90e1ed; }
+.wb-evidence-feedback { font-size: .85rem; }
