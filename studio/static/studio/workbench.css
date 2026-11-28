@@ -312,3 +312,9 @@
 .wb-evidence-links .wb-actions { margin: 0; }
 .wb-evidence-links .wb-onyx-link { color: #90e1ed; }
 .wb-evidence-feedback { font-size: .85rem; }
+
+.wb-transfer-suite { display: grid; gap: .8rem; margin-bottom: 1rem; border-inline-start: 3px solid #77d6e6; }
+.wb-transfer-suite h2 { font-size: 1rem; margin: 0 0 .25rem; }
+.wb-transfer-suite p { margin: 0; }
+.wb-transfer-suite > button { justify-self: start; }
+.wb-suite-progress { font-size: .85rem; }

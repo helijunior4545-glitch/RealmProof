@@ -12,6 +12,7 @@ type Run = TerminalRun & {
 };
 type WorkbenchData = { scenarios: Scenario[]; runs: Run[]; canWrite: boolean; guidedDemo?: boolean; history: string; suite: string; catalog: string; universal: string; create: string; experiment: string; network: string; ledger: string; icons: Record<string, string> };
 type ResponseData = { error?: string; run?: Run; runs?: Run[]; queued?: number };
+type SuiteRow = { scenario: Scenario; state: "waiting" | "running" | "finished" | "unavailable"; run?: Run; error?: string };
 type LiveEvent = ResponseData & { stage?: string; output?: string };
 
 async function readEvents(response: Response, onEvent: (event: LiveEvent) => void): Promise<ResponseData> {
@@ -90,7 +91,7 @@ function FieldsList({ title, fields }: { title: string; fields: Fields }) {
 }
 
 function Configuration({ scenario, writable, busy, arrow, submit }: {
-  scenario: Scenario; writable: boolean; busy: boolean; arrow: string; submit: (url: string, payload: Fields) => Promise<void>;
+  scenario: Scenario; writable: boolean; busy: boolean; arrow: string; submit: (url: string, payload: Fields) => void;
 }) {
   const transfer = scenario.inputs.engine === "transfer";
   const editable = transfer && [scenario.inputs.balance, scenario.inputs.amount, scenario.expected.balance].every(value => typeof value === "number")
@@ -302,7 +303,11 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
   const [selection, setSelection] = useState(() => readSelection(data));
   const [runs, setRuns] = useState(data.runs);
   const [search, setSearch] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [requestBusy, setRequestBusy] = useState(false);
+  const [suiteBusy, setSuiteBusy] = useState(false);
+  const [suiteRows, setSuiteRows] = useState<SuiteRow[]>([]);
+  const runningSuite = useRef(false);
+  const busy = requestBusy || suiteBusy;
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const activeRequest = useRef(false);
@@ -316,6 +321,8 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
   const [demoPair, setDemoPair] = useState<[string, string]>();
   const insufficient = demoScenario(data, "Insufficient balance");
   const valid = demoScenario(data, "Valid transfer");
+  const exact = demoScenario(data, "Exact balance");
+  const demoSuite = insufficient && valid && exact ? [valid, insufficient, exact] : [];
 
   const scenario = data.scenarios.find(item => item.id === selection.scenario) ?? data.scenarios[0];
   const result = runs.find(item => item.id === selection.run) ?? runs.find(item => item.scenario === scenario?.id);
@@ -367,10 +374,10 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
     setNotice("");
   }
 
-  async function request(url: string, payload?: Fields, guide?: { baseline?: string }) {
-    if (activeRequest.current) return;
+  async function request(url: string, payload?: Fields, guide?: { baseline?: string; batch?: boolean }) {
+    if (activeRequest.current || (runningSuite.current && !guide?.batch)) return;
     activeRequest.current = true;
-    setBusy(true);
+    setRequestBusy(true);
     const runRequest = data.scenarios.find(item => item.execute === url);
     const live = runRequest?.inputs.engine === "transfer";
     if (runRequest) {
@@ -408,6 +415,7 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
       const run = body.run;
       if (run) {
         setRuns(current => [run, ...current.filter(item => item.id !== run.id)]);
+        if (guide?.batch) return { run };
         if (guide?.baseline && run.execution === "local_gno" && run.status === "passed" && run.observed.status === "success") {
           setDemoPair([guide.baseline, run.id]);
           navigate("Compare", run.scenario, run.id);
@@ -422,11 +430,32 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
           body.queued ? `${body.queued} runs queued for the background worker.` : "No new runs queued. The suite may already be pending.");
       }
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "The request failed.");
+      const message = failure instanceof Error ? failure.message : "The request failed.";
+      if (guide?.batch) return { error: message };
+      setError(message);
     } finally {
       activeRequest.current = false;
-      setBusy(false);
+      setRequestBusy(false);
       setExecuting("");
+    }
+  }
+
+  async function runTransferSuite() {
+    if (!demoSuite.length || runningSuite.current || activeRequest.current) return;
+    runningSuite.current = true;
+    setSuiteBusy(true);
+    setSuiteRows(demoSuite.map(scenario => ({ scenario, state: "waiting" })));
+    try {
+      for (const item of demoSuite) {
+        setSuiteRows(rows => rows.map(row => row.scenario.id === item.id ? { ...row, state: "running" } : row));
+        const response = await request(item.execute, {}, { batch: true });
+        setSuiteRows(rows => rows.map(row => row.scenario.id === item.id
+          ? { ...row, state: response?.run ? "finished" : "unavailable", run: response?.run, error: response?.error }
+          : row));
+      }
+    } finally {
+      runningSuite.current = false;
+      setSuiteBusy(false);
     }
   }
 
@@ -484,6 +513,37 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
           </button>
           {executing && liveStage && <p className="wb-jury-progress" role="status">{liveStage}</p>}
         </section>}
+        {demoSuite.length > 0 && (selection.tab === "Compare" || suiteBusy) &&
+          <section className="wb-subpanel wb-transfer-suite" aria-labelledby="wb-transfer-suite-title">
+            <div className="wb-evidence-heading">
+              <div><h2 id="wb-transfer-suite-title">Transfer suite</h2>
+                <p>Compare expected and observed outcomes across three Gno scenarios.</p></div>
+              <button type="button" className="wb-primary" disabled={busy} onClick={() => void runTransferSuite()}>
+                {suiteBusy ? "Running suite…" : suiteRows.length ? "Run suite again" : "Run transfer suite"}
+              </button>
+            </div>
+            {suiteRows.length > 0 && <>
+              <div className="wb-suite-progress" role="status">
+                {suiteRows.filter(row => row.state === "finished" || row.state === "unavailable").length} of {suiteRows.length} completed
+                {suiteBusy && executing ? ` · ${executing}${liveStage ? ` · ${liveStage}` : ""}` : ""}
+              </div>
+              <div className="wb-table-wrap" tabIndex={0} role="region" aria-label="Transfer suite results">
+                <table><thead><tr><th>Scenario</th><th>Expected outcome / balance</th><th>Observed outcome / balance</th><th>Result</th></tr></thead>
+                  <tbody>{suiteRows.map(({ scenario: item, state, run, error: rowError }) => {
+                    const expected = run?.expected ?? item.expected;
+                    return <tr key={item.id}>
+                      <th scope="row">{item.name}</th>
+                      <td>{display(expected.status)} / {display(expected.balance)}</td>
+                      <td>{run ? `${display(run.observed.status)} / ${display(run.observed.balance)}` : "—"}</td>
+                      <td>{run ? <><Verdict run={run} /> <button type="button" disabled={suiteBusy} onClick={() => navigate("Result", run.scenario, run.id)}>View evidence</button></>
+                        : state === "unavailable" ? <span>{rowError || "Execution unavailable"}</span> : state === "running" ? "Running" : "Waiting"}</td>
+                    </tr>;
+                  })}</tbody>
+                </table>
+              </div>
+              {!suiteBusy && <button type="button" onClick={() => navigate("Configure", insufficient?.id)}>Edit inputs and rerun</button>}
+            </>}
+          </section>}
         <div hidden={selection.tab !== "Configure"}>{scenario ?
           <Configuration key={scenario.id} scenario={scenario} writable={data.canWrite} busy={busy} arrow={data.icons["arrow-right"]} submit={request} /> :
           <p className="wb-empty">Create a scenario to start testing.</p>}</div>
