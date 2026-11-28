@@ -13,9 +13,9 @@ from django.shortcuts import get_object_or_404, render
 from django.templatetags.static import static
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
-from . import chain, network_experiments
+from . import chain, network_experiments, onyx_signer
 from .engine import stream_execution, transfer_files
 from .models import Project, Scenario, TestRun
 from .run_evidence import evidence_document
@@ -111,18 +111,21 @@ def history(request, slug, project_id):
 
 @login_required
 @never_cache
-@require_GET
+@require_http_methods(["GET", "POST"])
 def onyx_evidence(request, slug, project_id, run_id):
-    _, project = project_access(request, slug, project_id)
+    submit = request.method == "POST"
+    _, project = project_access(request, slug, project_id, write=submit)
     run = get_object_or_404(get_runs(project), pk=run_id)
     commitment = evidence_document(run)
     if commitment is None:
         return JsonResponse({"error": "Evidence is unavailable."}, status=404)
     try:
-        registered = chain.evidence_registered(commitment[1])
+        registered = onyx_signer.register(commitment[1]) if submit else chain.evidence_registered(commitment[1])
+    except onyx_signer.SignerError as exc:
+        return JsonResponse({"error": str(exc)}, status=exc.status)
     except chain.ChainError:
         return JsonResponse({"error": "Onyx lookup is temporarily unavailable."}, status=503)
-    return JsonResponse({"registered": registered})
+    return JsonResponse({"registered": registered}, status=202 if submit and not registered else 200)
 
 
 @login_required

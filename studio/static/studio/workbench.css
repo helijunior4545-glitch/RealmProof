@@ -318,3 +318,10 @@
 .wb-transfer-suite p { margin: 0; }
 .wb-transfer-suite > button { justify-self: start; }
 .wb-suite-progress { font-size: .85rem; }
+
+.wb-evidence-links .wb-evidence-action {
+  padding: .5rem .75rem;
+  border: 1px solid var(--border, #334756);
+  border-radius: .5rem;
+  text-decoration: none;
+}

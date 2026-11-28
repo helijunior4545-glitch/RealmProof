@@ -194,47 +194,29 @@ function Assertions({ run }: { run: Run }) {
 }
 
 const onyxRegistry = "https://onyx.testnets.gno.land/r/g16e6lg37nhkznu9vtzqka6amks6esgkaxe6x6vt/verification";
-// Public example documented in README.md and docs/TESTNET_EVIDENCE.md.
-const publishedExampleDigest = "2cafb80e0d13096b37eb3278f9c2607be7524fd3cdaca2c1191281459821ccfd";
-
-const onyxChain = "onyx-1";
-const onyxRpc = "https://rpc.onyx.testnets.gno.land";
-const onyxRealm = onyxRegistry.replace("https://onyx.testnets.gno.land/", "gno.land/");
-
-type AdenaResponse = { status: string; type?: string; data?: { chainId?: string; address?: string } };
-type Adena = {
-  AddEstablish(name: string): Promise<AdenaResponse>;
-  GetNetwork(): Promise<AdenaResponse>;
-  GetAccount(): Promise<AdenaResponse>;
-  DoContract(params: {
-    networkInfo: { chainId: string; rpcUrl: string };
-    messages: { type: "/vm.m_call"; value: { pkg_path: string; func: string; args: string[]; caller: string; send: string } }[];
-  }): Promise<AdenaResponse>;
-};
-
-async function lookupOnyx(url: string, signal: AbortSignal): Promise<boolean> {
-  const response = await fetch(url, { signal, redirect: "error" });
-  if (!response.ok) throw new Error("Onyx lookup is temporarily unavailable.");
-  const result = await response.json();
-  if (typeof result.registered !== "boolean") throw new Error("Unexpected Onyx lookup response.");
+async function lookupOnyx(url: string, signal: AbortSignal, csrf?: string): Promise<boolean> {
+  const response = await fetch(url, {
+    signal, redirect: "error",
+    ...(csrf ? { method: "POST", headers: { "X-CSRFToken": csrf } } : {}),
+  });
+  const result = await response.json().catch(() => null);
+  if (!response.ok || typeof result?.registered !== "boolean") {
+    throw new Error(result?.error ?? "Onyx registration is temporarily unavailable.");
+  }
   return result.registered;
 }
 
-function adenaFailure(response: AdenaResponse, description: string): Error {
-  const code = response.type && /^[A-Z][A-Z0-9_]{1,63}$/.test(response.type) ? ` (${response.type})` : "";
-  return new Error(`${description}${code}`);
-}
-
-function EvidenceLinks({ digest, lookup }: { digest: string; lookup: string }) {
-  const [copyStatus, setCopyStatus] = useState("");
-  const [registered, setRegistered] = useState<boolean | null>(null);
+function EvidenceLinks({ run, csrf, canWrite }: { run: Run; csrf: string; canWrite: boolean }) {
+  const [registered, setRegistered] = useState(false);
+  const [pending, setPending] = useState(false);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
   const operation = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    if (!run.onyx) return;
     const controller = new AbortController();
-    lookupOnyx(lookup, controller.signal).then(
+    lookupOnyx(run.onyx, controller.signal).then(
       result => { if (!controller.signal.aborted && !operation.current) setRegistered(result); },
       () => {},
     );
@@ -242,102 +224,69 @@ function EvidenceLinks({ digest, lookup }: { digest: string; lookup: string }) {
       controller.abort();
       operation.current?.abort();
     };
-  }, [lookup]);
+  }, [run.onyx]);
 
-  async function verifyOrRegister(register: boolean) {
-    if (operation.current) return;
+  async function registerOrCheck() {
+    if (operation.current || !run.onyx) return;
+    const lookup = run.onyx;
     const controller = new AbortController();
     operation.current = controller;
     const { signal } = controller;
+    const submit = canWrite && !pending;
     setBusy(true);
-    setFeedback("Checking the Onyx registry…");
+    setFeedback(submit ? "Submitting evidence to Onyx…" : "Checking the Onyx registry…");
     try {
-      const exists = await lookupOnyx(lookup, signal);
-      setRegistered(exists);
+      let confirmed = await lookupOnyx(lookup, signal, submit ? csrf : undefined);
       if (signal.aborted) return;
-      if (exists || !register) {
-        setFeedback(exists ? "Registration confirmed by the Onyx registry." : "This hash is not registered on Onyx yet.");
-        return;
-      }
-      const wallet = (window as Window & { adena?: Adena }).adena;
-      if (!wallet) throw new Error("Open this page in a browser with the Adena wallet extension installed, or use the CLI guide below.");
-      setFeedback("Connect Adena to RealmProof.");
-      const connection = await wallet.AddEstablish("RealmProof");
-      if (connection.status !== "success" && connection.type !== "ALREADY_CONNECTED") throw adenaFailure(connection, "Adena did not authorize the connection.");
-      const network = await wallet.GetNetwork();
-      if (network.status !== "success" || network.data?.chainId !== onyxChain) throw new Error("Select the Onyx testnet (onyx-1) in Adena, then retry.");
-      const account = await wallet.GetAccount();
-      const caller = account.data?.address;
-      if (account.status !== "success" || account.data?.chainId !== onyxChain || !caller) throw adenaFailure(account, "Select a funded Onyx testnet account in Adena.");
-      if (signal.aborted) return;
-      setFeedback("Review the hash and testnet fee in Adena, then approve the transaction.");
-      const transaction = await wallet.DoContract({
-        networkInfo: { chainId: onyxChain, rpcUrl: onyxRpc },
-        messages: [{ type: "/vm.m_call", value: { pkg_path: onyxRealm, func: "RegisterEvidence", args: [digest], caller, send: "" } }],
-      });
-      if (signal.aborted) return;
-      setFeedback("Waiting for the Onyx registry to reflect the transaction…");
-      const attempts = transaction.status === "success" ? 8 : 1;
-      for (let attempt = 0; attempt < attempts && !signal.aborted; attempt++) {
-        if (attempt) await new Promise(resolve => setTimeout(resolve, 3000));
-        if (signal.aborted) return;
-        const confirmed = await lookupOnyx(lookup, signal).catch(() => false);
-        if (signal.aborted) return;
-        if (confirmed) {
-          setRegistered(true);
-          setFeedback("Registration confirmed by the Onyx registry.");
-          return;
+      if (submit && !confirmed) {
+        setPending(true);
+        setFeedback("Waiting for the Onyx registry to confirm this hash…");
+        for (let attempt = 0; attempt < 6 && !confirmed && !signal.aborted; attempt++) {
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          if (signal.aborted) return;
+          confirmed = await lookupOnyx(lookup, signal).catch(() => false);
         }
       }
-      if (transaction.status !== "success") {
-        throw adenaFailure(transaction, "Adena did not confirm submission. Review the wallet and check registration before retrying.");
+      if (signal.aborted) return;
+      setRegistered(confirmed);
+      if (confirmed) {
+        setPending(false);
+        setFeedback("Registration confirmed on Onyx.");
+      } else if (submit) {
+        setFeedback("Confirmation is pending. Check again shortly.");
+      } else {
+        setPending(false);
+        setFeedback("The Onyx registry has not confirmed this hash.");
       }
-      setFeedback("Adena submitted the transaction. Check registration again in a moment.");
     } catch (error) {
-      if (!signal.aborted) setFeedback(error instanceof Error ? error.message : "Registration could not be verified.");
+      if (!signal.aborted) setFeedback(error instanceof Error ? error.message : "Onyx registration is temporarily unavailable.");
     } finally {
       operation.current = null;
       if (!signal.aborted) setBusy(false);
     }
   }
 
-  async function copyDigest() {
-    try {
-      await navigator.clipboard.writeText(digest);
-      setCopyStatus("SHA-256 copied.");
-    } catch {
-      setCopyStatus("Copy unavailable. Select the hash to copy it.");
-    }
-  }
   return <section className="wb-subpanel wb-evidence-links" aria-labelledby="wb-onyx-title">
     <div className="wb-evidence-heading">
-      <div><span className="wb-label">Report SHA-256</span><h3 id="wb-onyx-title">Verify evidence on Gno.land</h3></div>
+      <div><span className="wb-label">Report SHA-256</span><h3 id="wb-onyx-title">Evidence on Onyx</h3></div>
       <span className="wb-verdict" data-status={registered ? "passed" : undefined}>
-        {registered ? "Registered on Onyx" : registered === false ? "Not registered on Onyx" : "Onyx registration unconfirmed"}
+        {registered ? "Registered on Onyx" : pending ? "Awaiting confirmation" : "Registration unconfirmed"}
       </span>
     </div>
-    <div className="wb-evidence-digest"><code>{digest}</code>
-      <button type="button" onClick={() => void copyDigest()}>Copy hash</button>
-    </div>
-    <p>{registered
-      ? "Onyx stores this report hash. The execution took place outside the chain."
-      : "Running a test generates a report hash locally. Onyx can display it after a registration transaction is confirmed."}</p>
+    <div className="wb-evidence-digest"><code>{run.digest}</code></div>
     <div className="wb-actions">
       {registered ? (
-        <a className="wb-onyx-link" href={`${onyxRegistry}:${digest}`} target="_blank" rel="noopener noreferrer">Look up this hash on Onyx ↗</a>
-      ) : <>
-        <button type="button" className="wb-primary" disabled={busy} onClick={() => void verifyOrRegister(true)}>Register on Onyx</button>
-        <button type="button" disabled={busy} onClick={() => void verifyOrRegister(false)}>Check registration</button>
-        <a className="wb-onyx-link" href="https://github.com/helijunior4545-glitch/RealmProof/blob/main/docs/TESTNET_EVIDENCE.md" target="_blank" rel="noopener noreferrer">How to register this hash ↗</a>
-        <a href={`${onyxRegistry}:${publishedExampleDigest}`} target="_blank" rel="noopener noreferrer">View a registered example ↗</a>
-      </>}
+        <a className="wb-primary wb-evidence-action" href={`${onyxRegistry}:${run.digest}`} target="_blank" rel="noopener noreferrer">Look up this hash on Onyx ↗</a>
+      ) : <button type="button" className="wb-primary" disabled={busy} onClick={() => void registerOrCheck()}>
+        {busy ? "Working…" : pending || !canWrite ? "Check registration" : "Register on Onyx"}
+      </button>}
+      {run.download && <a className="wb-evidence-action" href={run.download}>Download JSON</a>}
     </div>
-    <p role="status" className={feedback ? "wb-evidence-feedback" : "wb-silent"}>{feedback}</p>
-    <span role="status" className={copyStatus ? "wb-evidence-feedback" : "wb-silent"}>{copyStatus}</span>
+    <span role="status" className={feedback ? "wb-evidence-feedback" : "wb-silent"}>{feedback}</span>
   </section>;
 }
 
-function Result({ run, showTerminal }: { run: Run; showTerminal: () => void }) {
+function Result({ run, showTerminal, csrf, canWrite }: { run: Run; showTerminal: () => void; csrf: string; canWrite: boolean }) {
   const details = useRef<HTMLDialogElement>(null);
   const outcome = run.execution === "local_gno" && (run.observed.status === "success" || run.observed.status === "rejected")
     ? (run.observed.status === "success" ? "Transfer accepted" : "Transfer rejected") : null;
@@ -357,13 +306,15 @@ function Result({ run, showTerminal }: { run: Run; showTerminal: () => void }) {
     </div>
     {run.reason && run.status !== "passed" && <p>{run.reason}</p>}
     <Assertions run={run} />
-    {run.onyx && run.digest && /^[a-f0-9]{64}$/.test(run.digest) && <EvidenceLinks key={run.id} digest={run.digest} lookup={run.onyx} />}
-    <div className="wb-actions">
-      <button type="button" onClick={() => details.current?.showModal()}>Inspect evidence</button>
-      <button type="button" onClick={showTerminal}>Open in terminal</button>
-      <a href={run.report}>Full report</a>
-      {run.download && <a href={run.download}>Download JSON</a>}
-    </div>
+    {run.onyx && run.digest && /^[a-f0-9]{64}$/.test(run.digest) && <EvidenceLinks key={run.id} run={run} csrf={csrf} canWrite={canWrite} />}
+    <details>
+      <summary>More report actions</summary>
+      <div className="wb-actions">
+        <button type="button" onClick={() => details.current?.showModal()}>Inspect evidence</button>
+        <button type="button" onClick={showTerminal}>Open in terminal</button>
+        <a href={run.report}>Full report</a>
+      </div>
+    </details>
     <dialog className="wb-dialog" ref={details} aria-labelledby="wb-evidence-title">
       <div className="wb-panel-title"><h2 id="wb-evidence-title">Execution evidence</h2>
         <form method="dialog"><button autoFocus aria-label="Close evidence">Close</button></form>
@@ -657,7 +608,7 @@ function Workbench({ data, csrf }: { data: WorkbenchData; csrf: string }) {
         <div hidden={selection.tab !== "Configure"}>{scenario ?
           <Configuration key={scenario.id} scenario={scenario} writable={data.canWrite} busy={busy} arrow={data.icons["arrow-right"]} submit={request} /> :
           <p className="wb-empty">Create a scenario to start testing.</p>}</div>
-        {selection.tab === "Result" && (result ? <Result key={result.id} run={result} showTerminal={showTerminal} /> :
+        {selection.tab === "Result" && (result ? <Result key={result.id} run={result} showTerminal={showTerminal} csrf={csrf} canWrite={data.canWrite} /> :
           <p className="wb-empty">Run the selected scenario to see its verdict and evidence.</p>)}
         {selection.tab === "Compare" && <Compare key={demoPair?.join(":")} runs={runs} pair={demoPair} />}
         {selection.tab === "History" && <>

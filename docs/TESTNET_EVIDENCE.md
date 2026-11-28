@@ -20,11 +20,28 @@ alone. Keep the JSON to independently reproduce the digest.
 
 ## Register from the Workbench
 
-Open an execution report and choose **Register on Onyx**. Select Onyx
-(`onyx-1`) in Adena and use a funded testnet account. Review the report hash
-and network fee in Adena before approving. RealmProof displays the public
-verification link once it confirms the hash in the registry. If confirmation
-is pending, choose **Check registration** before submitting again.
+Create a dedicated key in a private keybase with the same `gnokey` version as
+the server image, for example `gnokey add -home /path/to/onyx-keys realmproof-onyx`.
+Fund its public address on Onyx and configure the RealmProof process:
+
+| Environment variable | Value |
+| --- | --- |
+| `REALMPROOF_ONYX_KEY_HOME` | Absolute path to the dedicated keybase directory, writable by the app user |
+| `REALMPROOF_ONYX_KEY_NAME` | Name of the testnet key in that directory |
+| `REALMPROOF_ONYX_PASSWORD_FILE` | Absolute path to a private file containing the keybase password |
+
+Mount the keybase and password file outside the repository with access limited to
+the app user. Use a key dedicated to testnet and keep only demo funds in it. Both
+runtime Dockerfiles include `gnokey`. The signer needs outbound HTTPS access to
+the pinned Onyx RPC. Workers using the same signer must share the same keybase
+directory for locking. Keep a single signer instance if the keybase cannot be
+shared. The registry must already be deployed. The app submits only the report
+digest and checks the registry before sending to avoid duplicate submissions.
+
+Open an execution report and choose **Register on Onyx**. The operator's signer
+pays the testnet fee. **Look up this hash on Onyx** appears after the public
+registry confirms the hash. While confirmation is pending, use **Check
+registration** to refresh the state. **Download JSON** is available throughout.
 
 ## Publish and register with gnokey
 
