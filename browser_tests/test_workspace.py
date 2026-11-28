@@ -146,7 +146,7 @@ class BrowserTests(unittest.TestCase):
         expect(page.get_by_role("heading", name="Test Workbench", exact=True)).to_be_visible()
         page.get_by_role("button", name="Valid transfer").click()
         page.get_by_label("Initial balance").press("Control+Enter")
-        expect(page.get_by_text("Runner started", exact=True)).to_be_visible()
+        expect(page.get_by_label("Test console", exact=True).get_by_text("Runner started", exact=True)).to_be_visible()
         expect(page.get_by_text("Transfer accepted", exact=True)).to_be_visible(timeout=25000)
         expect(page.get_by_role("row", name="Remaining balance")).to_contain_text("75")
         page.get_by_role("button", name="Insufficient balance").click()
