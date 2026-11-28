@@ -220,6 +220,11 @@ async function lookupOnyx(url: string, signal: AbortSignal): Promise<boolean> {
   return result.registered;
 }
 
+function adenaFailure(response: AdenaResponse, description: string): Error {
+  const code = response.type && /^[A-Z][A-Z0-9_]{1,63}$/.test(response.type) ? ` (${response.type})` : "";
+  return new Error(`${description}${code}`);
+}
+
 function EvidenceLinks({ digest, lookup }: { digest: string; lookup: string }) {
   const [copyStatus, setCopyStatus] = useState("");
   const [registered, setRegistered] = useState<boolean | null>(null);
@@ -258,12 +263,12 @@ function EvidenceLinks({ digest, lookup }: { digest: string; lookup: string }) {
       if (!wallet) throw new Error("Open this page in a browser with the Adena wallet extension installed, or use the CLI guide below.");
       setFeedback("Connect Adena to RealmProof.");
       const connection = await wallet.AddEstablish("RealmProof");
-      if (connection.status !== "success" && connection.type !== "ALREADY_CONNECTED") throw new Error("Adena did not authorize the connection.");
+      if (connection.status !== "success" && connection.type !== "ALREADY_CONNECTED") throw adenaFailure(connection, "Adena did not authorize the connection.");
       const network = await wallet.GetNetwork();
       if (network.status !== "success" || network.data?.chainId !== onyxChain) throw new Error("Select the Onyx testnet (onyx-1) in Adena, then retry.");
       const account = await wallet.GetAccount();
       const caller = account.data?.address;
-      if (account.status !== "success" || account.data?.chainId !== onyxChain || !caller) throw new Error("Select a funded Onyx testnet account in Adena.");
+      if (account.status !== "success" || account.data?.chainId !== onyxChain || !caller) throw adenaFailure(account, "Select a funded Onyx testnet account in Adena.");
       if (signal.aborted) return;
       setFeedback("Review the hash and testnet fee in Adena, then approve the transaction.");
       const transaction = await wallet.DoContract({
@@ -272,19 +277,22 @@ function EvidenceLinks({ digest, lookup }: { digest: string; lookup: string }) {
       });
       if (signal.aborted) return;
       setFeedback("Waiting for the Onyx registry to reflect the transaction…");
-      const attempts = transaction.status === "success" ? 5 : 1;
+      const attempts = transaction.status === "success" ? 8 : 1;
       for (let attempt = 0; attempt < attempts && !signal.aborted; attempt++) {
         if (attempt) await new Promise(resolve => setTimeout(resolve, 3000));
         if (signal.aborted) return;
-        if (await lookupOnyx(lookup, signal)) {
+        const confirmed = await lookupOnyx(lookup, signal).catch(() => false);
+        if (signal.aborted) return;
+        if (confirmed) {
           setRegistered(true);
           setFeedback("Registration confirmed by the Onyx registry.");
           return;
         }
       }
-      setFeedback(transaction.status === "success"
-        ? "Adena submitted the transaction. Check registration again in a moment."
-        : "Adena did not confirm submission. Review the wallet and check registration before retrying.");
+      if (transaction.status !== "success") {
+        throw adenaFailure(transaction, "Adena did not confirm submission. Review the wallet and check registration before retrying.");
+      }
+      setFeedback("Adena submitted the transaction. Check registration again in a moment.");
     } catch (error) {
       if (!signal.aborted) setFeedback(error instanceof Error ? error.message : "Registration could not be verified.");
     } finally {

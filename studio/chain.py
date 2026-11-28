@@ -23,11 +23,19 @@ class NoRedirect(HTTPRedirectHandler):
 def rpc(network, method, params=None):
     if network not in NETWORKS or method not in {"status", "tx", "block", "block_results", "abci_query"}:
         raise ChainError("Unsupported network or method.")
-    url = NETWORKS[network][1] + "/" + method
-    if params:
-        url += "?" + urlencode(params)
+    endpoint = NETWORKS[network][1]
+    headers = {"Accept": "application/json"}
+    if method == "abci_query":
+        headers["Content-Type"] = "application/json"
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode()
+        request = Request(endpoint + "/", data=body, headers=headers)
+    else:
+        url = endpoint + "/" + method
+        if params:
+            url += "?" + urlencode(params)
+        request = Request(url, headers=headers)
     try:
-        with build_opener(NoRedirect()).open(Request(url, headers={"Accept":"application/json"}), timeout=5) as response:
+        with build_opener(NoRedirect()).open(request, timeout=5) as response:
             raw = response.read(1048577)
         if len(raw) > 1048576:
             raise ChainError("RPC response exceeds limit.")
@@ -117,8 +125,10 @@ def evidence_registered(digest):
     if status("testnet")["catching_up"]:
         raise ChainError("Onyx node is synchronizing.")
     result = rpc("testnet", "abci_query", {
-        "path": '"vm/qrender"',
-        "data": json.dumps(base64.b64encode(f"{ONYX_EVIDENCE_REALM}:{digest}".encode()).decode()),
+        "path": "vm/qrender",
+        "data": base64.b64encode(f"{ONYX_EVIDENCE_REALM}:{digest}".encode()).decode(),
+        "height": "0",
+        "prove": False,
     })
     try:
         response = result["response"]["ResponseBase"]

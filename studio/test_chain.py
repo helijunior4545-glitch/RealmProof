@@ -48,3 +48,31 @@ class ChainTests(SimpleTestCase):
         rpc.side_effect = [block, results]
         with self.assertRaises(chain.ChainError):
             chain.transaction("testnet", "a"*64, "42")
+
+    @patch("studio.chain.build_opener")
+    @patch("studio.chain.status", return_value={"catching_up": False})
+    def test_evidence_lookup_uses_onyx_json_rpc(self, status, opener):
+        import base64
+        import json
+
+        digest = "a" * 64
+        response = opener.return_value.open.return_value.__enter__.return_value
+        response.read.return_value = json.dumps({
+            "result": {"response": {"ResponseBase": {
+                "Error": None,
+                "Data": base64.b64encode(f"Registered evidence digest: `{digest}`".encode()).decode(),
+            }}},
+        }).encode()
+
+        self.assertTrue(chain.evidence_registered(digest))
+        status.assert_called_once_with("testnet")
+        request = opener.return_value.open.call_args.args[0]
+        self.assertEqual(request.full_url, chain.NETWORKS["testnet"][1] + "/")
+        self.assertEqual(request.get_method(), "POST")
+        payload = json.loads(request.data)
+        self.assertEqual(payload["method"], "abci_query")
+        self.assertEqual(payload["params"]["path"], "vm/qrender")
+        self.assertEqual(
+            base64.b64decode(payload["params"]["data"]).decode(),
+            f"{chain.ONYX_EVIDENCE_REALM}:{digest}",
+        )
