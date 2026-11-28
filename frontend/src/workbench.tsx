@@ -316,12 +316,11 @@ function EvidenceLinks({ digest, lookup }: { digest: string; lookup: string }) {
       : "Running a test generates a report hash locally. Onyx can display it after a registration transaction is confirmed."}</p>
     <div className="wb-actions">
       {registered ? (
-        <a className="wb-onyx-link" href={`${onyxRegistry}:${digest}`} target="_blank" rel="noopener noreferrer">Verify registered hash on Onyx ↗</a>
+        <a className="wb-onyx-link" href={`${onyxRegistry}:${digest}`} target="_blank" rel="noopener noreferrer">Look up this hash on Onyx ↗</a>
       ) : <>
         <button type="button" className="wb-primary" disabled={busy} onClick={() => void verifyOrRegister(true)}>Register on Onyx</button>
         <button type="button" disabled={busy} onClick={() => void verifyOrRegister(false)}>Check registration</button>
         <a className="wb-onyx-link" href="https://github.com/helijunior4545-glitch/RealmProof/blob/main/docs/TESTNET_EVIDENCE.md" target="_blank" rel="noopener noreferrer">How to register this hash ↗</a>
-        <a href={`${onyxRegistry}:${digest}`} target="_blank" rel="noopener noreferrer">Check registration on Onyx ↗</a>
         <a href={`${onyxRegistry}:${publishedExampleDigest}`} target="_blank" rel="noopener noreferrer">View a registered example ↗</a>
       </>}
     </div>
